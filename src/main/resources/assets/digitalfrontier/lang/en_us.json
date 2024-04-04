@@ -1,0 +1,11 @@
+{
+  "item.digitalfrontier.binary_0": "Binary 0",
+  "item.digitalfrontier.binary_1": "Binary 1",
+  "item.digitalfrontier.pixel_dust": "Pixel Dust",
+
+  "block.digitalfrontier.pixel_block": "Pixel",
+  "block.digitalfrontier.gridstone": "Gridstone",
+  "block.digitalfrontier.cracked_gridstone": "Cracked Gridstone",
+
+  "itemgroup.digitalfrontier": "Digital Frontier Items"
+}

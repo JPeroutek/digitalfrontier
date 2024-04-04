@@ -1,0 +1,44 @@
+{
+	"schemaVersion": 1,
+	"id": "digitalfrontier",
+	"version": "${version}",
+	"name": "DigitalFrontier",
+	"description": "This mod adds the Digital Frontier, taking inspiration from the world of TRON.",
+	"authors": [
+		"Partatoes"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "MIT",
+	"icon": "assets/digitalfrontier/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.partatoes.digitalfrontier.DigitalFrontier"
+		],
+		"client": [
+			"com.partatoes.digitalfrontier.DigitalFrontierClient"
+		],
+		"fabric-datagen": [
+			"com.partatoes.digitalfrontier.DigitalFrontierDataGenerator"
+		]
+	},
+	"mixins": [
+		"digitalfrontier.mixins.json",
+		{
+			"config": "digitalfrontier.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.15.9",
+		"minecraft": "~1.20.4",
+		"java": ">=17",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
