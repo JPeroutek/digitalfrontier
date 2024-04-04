@@ -15,6 +15,7 @@ public class ModItems {
     public static final Item BINARY_0 = registerItem("binary_0", new Item(new FabricItemSettings()));
     public static final Item BINARY_1 = registerItem("binary_1", new Item(new FabricItemSettings()));
     public static final Item PIXEL_DUST = registerItem("pixel_dust", new Item(new FabricItemSettings()));
+    public static final Item LUMINESSENCE = registerItem("luminessence", new Item(new FabricItemSettings()));
 
     private static Item registerItem(String name, Item item) {
         return Registry.register(Registries.ITEM, new Identifier(DigitalFrontier.MOD_ID, name), item);
@@ -29,5 +30,6 @@ public class ModItems {
         entries.add(BINARY_0);
         entries.add(BINARY_1);
         entries.add(PIXEL_DUST);
+        entries.add(LUMINESSENCE);
     }
 }

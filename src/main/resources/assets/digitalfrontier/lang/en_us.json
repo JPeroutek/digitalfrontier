@@ -2,10 +2,12 @@
   "item.digitalfrontier.binary_0": "Binary 0",
   "item.digitalfrontier.binary_1": "Binary 1",
   "item.digitalfrontier.pixel_dust": "Pixel Dust",
+  "item.digitalfrontier.luminessence": "Luminessence",
 
   "block.digitalfrontier.pixel_block": "Pixel",
   "block.digitalfrontier.gridstone": "Gridstone",
   "block.digitalfrontier.cracked_gridstone": "Cracked Gridstone",
+  "block.digitalfrontier.luminance_ore": "Luminance Ore",
 
   "itemgroup.digitalfrontier": "Digital Frontier Items"
 }

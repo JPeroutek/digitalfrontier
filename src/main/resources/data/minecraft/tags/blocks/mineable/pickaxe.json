@@ -2,6 +2,7 @@
   "replace": false,
   "values": [
     "digitalfrontier:gridstone",
-    "digitalfrontier:cracked_gridstone"
+    "digitalfrontier:cracked_gridstone",
+    "digitalfrontier:luminance_ore"
   ]
 }

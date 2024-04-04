@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 *   TODO: Luminessence and Luminessence Ore and deepslate, nether, end, grid variants
 *   TODO: Luminessence + binary_1 = Pixel Dust
 *   TODO: Luminessence + binary_0 = Coal (or charcoal, some kind of fuel)
+*   TODO: Luminessence + Redstone = 2 redstone
 *	TODO: Add "Bit" tag to binary items
 *   TODO: Add "Byte" item, crafted with random assortment of bits
 *   TODO: Make Byte edible

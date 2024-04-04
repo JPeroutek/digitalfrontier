@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.RedstoneOreBlock;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
@@ -16,9 +17,12 @@ public class ModBlocks {
             new Block(FabricBlockSettings.copyOf(Blocks.GLOWSTONE)));
     public static final Block GRIDSTONE_BLOCK = registerBlock("gridstone",
             new Block(FabricBlockSettings.copyOf(Blocks.DEEPSLATE)));
-
     public static final Block CRACKED_GRIDSTONE_BLOCK = registerBlock("cracked_gridstone",
             new Block(FabricBlockSettings.copyOf(Blocks.COBBLED_DEEPSLATE)));
+
+    // TODO: create custom class for this
+    public static final Block LUMINANCE_ORE = registerBlock("luminance_ore",
+            new RedstoneOreBlock(FabricBlockSettings.copyOf(Blocks.REDSTONE_ORE)));
 
     private static Block registerBlock(String name, Block block) {
         registerBlockItem(name, block);
