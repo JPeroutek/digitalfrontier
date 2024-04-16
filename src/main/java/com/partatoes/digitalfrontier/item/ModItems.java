@@ -20,6 +20,8 @@ public class ModItems {
             new LuminanceOreDetector(new FabricItemSettings().maxDamage(128)));
     public static final Item LUMINESSENCE = registerItem("luminessence", new Item(new FabricItemSettings()));
 
+    public static final Item BYTE = registerItem("byte", new Item(new FabricItemSettings().food(ModFoodComponents.BYTE)));
+
     private static Item registerItem(String name, Item item) {
         return Registry.register(Registries.ITEM, new Identifier(DigitalFrontier.MOD_ID, name), item);
     }
@@ -27,6 +29,7 @@ public class ModItems {
     public static void registerModItems() {
         DigitalFrontier.LOGGER.info("Registering Mod Items for " + DigitalFrontier.MOD_ID);
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.INGREDIENTS).register(ModItems::addItemsToIngredientTabItemGroup);
+        ItemGroupEvents.modifyEntriesEvent(ItemGroups.FOOD_AND_DRINK).register(ModItems::addItemsToFoodTabItemGroup);
     }
 
     private static void addItemsToIngredientTabItemGroup(FabricItemGroupEntries entries) {
@@ -34,5 +37,9 @@ public class ModItems {
         entries.add(BINARY_1);
         entries.add(PIXEL_DUST);
         entries.add(LUMINESSENCE);
+    }
+
+    private static void addItemsToFoodTabItemGroup(FabricItemGroupEntries entries) {
+        entries.add(BYTE);
     }
 }

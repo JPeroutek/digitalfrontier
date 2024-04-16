@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 *   TODO: Luminessence and Luminessence Ore and deepslate, nether, end, grid variants
 *	TODO: Add "Bit" tag to binary items
 *   TODO: Add "Byte" item, crafted with random assortment of bits
-*   TODO: Make Byte edible
 *   TODO: dimension, biomes, etc
 *   TODO: Synthesizer block? Like a multi-noteblock with new GUI?
 * */

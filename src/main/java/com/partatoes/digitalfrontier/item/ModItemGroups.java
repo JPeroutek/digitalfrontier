@@ -21,6 +21,7 @@ public class ModItemGroups {
                         entries.add(ModItems.PIXEL_DUST);
                         entries.add(ModItems.LUMINESSENCE);
                         entries.add(ModItems.LUMINANCE_ORE_DETECTOR);
+                        entries.add(ModItems.BYTE);
 
                         entries.add(ModBlocks.PIXEL_BLOCK);
                         entries.add(ModBlocks.GRIDSTONE_BLOCK);
