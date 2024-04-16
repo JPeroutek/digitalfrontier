@@ -1,6 +1,7 @@
 package com.partatoes.digitalfrontier;
 
 import com.partatoes.digitalfrontier.block.ModBlocks;
+import com.partatoes.digitalfrontier.item.ModFuelItems;
 import com.partatoes.digitalfrontier.item.ModItemGroups;
 import com.partatoes.digitalfrontier.item.ModItems;
 import net.fabricmc.api.ModInitializer;
@@ -35,5 +36,6 @@ public class DigitalFrontier implements ModInitializer {
 		ModItemGroups.registerItemGroups();
 		ModItems.registerModItems();
 		ModBlocks.registerModBlocks();
+		ModFuelItems.registerModFuelItems();
 	}
 }
