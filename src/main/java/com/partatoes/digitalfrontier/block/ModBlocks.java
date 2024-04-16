@@ -1,6 +1,7 @@
 package com.partatoes.digitalfrontier.block;
 
 import com.partatoes.digitalfrontier.DigitalFrontier;
+import com.partatoes.digitalfrontier.block.custom.LuminanceOreBlock;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.Block;
@@ -20,9 +21,8 @@ public class ModBlocks {
     public static final Block CRACKED_GRIDSTONE_BLOCK = registerBlock("cracked_gridstone",
             new Block(FabricBlockSettings.copyOf(Blocks.COBBLED_DEEPSLATE)));
 
-    // TODO: create custom class for this
     public static final Block LUMINANCE_ORE = registerBlock("luminance_ore",
-            new RedstoneOreBlock(FabricBlockSettings.copyOf(Blocks.REDSTONE_ORE)));
+            new LuminanceOreBlock(FabricBlockSettings.copyOf(Blocks.REDSTONE_ORE)));
 
     private static Block registerBlock(String name, Block block) {
         registerBlockItem(name, block);
