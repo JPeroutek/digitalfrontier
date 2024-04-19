@@ -1,0 +1,47 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_binary_0": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "digitalfrontier:binary_0"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_luminessence": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "digitalfrontier:luminessence"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "digitalfrontier:coal_dust"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_binary_0",
+      "has_luminessence"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "digitalfrontier:coal_dust"
+    ]
+  }
+}
