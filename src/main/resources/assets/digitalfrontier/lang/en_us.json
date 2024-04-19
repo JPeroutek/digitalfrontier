@@ -5,6 +5,7 @@
   "item.digitalfrontier.coal_dust": "Coal Dust",
   "item.digitalfrontier.luminessence": "Luminessence",
   "item.digitalfrontier.luminance_detector": "Luminessence Detector",
+  "item.digitalfrontier.luminance_detector.tooltip": "Right click a block to detect luminance ore below it.",
   "item.digitalfrontier.byte": "Byte",
 
   "block.digitalfrontier.pixel_block": "Pixel",

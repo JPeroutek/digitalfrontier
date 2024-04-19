@@ -2,12 +2,18 @@ package com.partatoes.digitalfrontier.item.custom;
 
 import com.partatoes.digitalfrontier.block.ModBlocks;
 import net.minecraft.block.BlockState;
+import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemUsageContext;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 public class LuminanceOreDetector extends Item {
 
@@ -35,5 +41,11 @@ public class LuminanceOreDetector extends Item {
         }
         context.getStack().damage(1, context.getPlayer(), playerEntity -> playerEntity.sendToolBreakStatus(playerEntity.getActiveHand()));
         return ActionResult.SUCCESS;
+    }
+
+    @Override
+    public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+        tooltip.add(Text.translatable("item.digitalfrontier.luminance_detector.tooltip"));
+        super.appendTooltip(stack, world, tooltip, context);
     }
 }
