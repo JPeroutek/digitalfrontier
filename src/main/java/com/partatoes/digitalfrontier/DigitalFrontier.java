@@ -9,16 +9,6 @@ import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/*
-*	TODO: Add the rest of the blocks (possibly with variants to account for colors?
-*   TODO: Gridstone other blocks, stairs, walls, slabs, etc
-*   TODO: Luminessence and Luminessence Ore and deepslate, nether, end, grid variants
-*	TODO: Add "Bit" tag to binary items
-*   TODO: Add "Byte" item, crafted with random assortment of bits
-*   TODO: dimension, biomes, etc
-*   TODO: Synthesizer block? Like a multi-noteblock with new GUI?
-*   TODO: Light Infuser - Used to infuse gridstone with a color
-* */
 public class DigitalFrontier implements ModInitializer {
 	public static final String MOD_ID = "digitalfrontier";
 
