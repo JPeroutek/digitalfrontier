@@ -19,6 +19,7 @@ public class ModRecipeProvider extends FabricRecipeProvider {
 
     @Override
     public void generate(RecipeExporter exporter) {
+        // 8 bits in a byte
         ShapelessRecipeJsonBuilder.create(RecipeCategory.MISC, ModItems.BYTE,1)
                 .input(ModTags.Items.BIT)
                 .input(ModTags.Items.BIT)
@@ -53,5 +54,7 @@ public class ModRecipeProvider extends FabricRecipeProvider {
                 .offerTo(exporter);
 
         offer2x2CompactingRecipe(exporter, RecipeCategory.REDSTONE, ModBlocks.PIXEL_BLOCK, ModItems.PIXEL_DUST);
+
+        offer2x2CompactingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS, ModBlocks.GRIDSTONE_BRICKS_BLOCK, ModBlocks.GRIDSTONE_BLOCK);
     }
 }

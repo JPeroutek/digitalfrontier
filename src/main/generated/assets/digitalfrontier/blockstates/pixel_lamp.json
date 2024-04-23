@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "lit=false": {
+      "model": "digitalfrontier:block/pixel_lamp"
+    },
+    "lit=true": {
+      "model": "digitalfrontier:block/pixel_lamp_lit"
+    }
+  }
+}

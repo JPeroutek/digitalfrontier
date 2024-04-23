@@ -25,6 +25,13 @@ public class ModLootTableProvider extends FabricBlockLootTableProvider {
     public void generate() {
         // Self-dropping blocks
         addDrop(ModBlocks.CRACKED_GRIDSTONE_BLOCK);
+        addDrop(ModBlocks.GRIDSTONE_BRICKS_BLOCK);
+        addDrop(ModBlocks.LIME_GRIDSTONE_BLOCK);
+        addDrop(ModBlocks.BLUE_GRIDSTONE_BLOCK);
+        addDrop(ModBlocks.RED_GRIDSTONE_BLOCK);
+        addDrop(ModBlocks.WHITE_GRIDSTONE_BLOCK);
+        addDrop(ModBlocks.ORANGE_GRIDSTONE_BLOCK);
+        addDrop(ModBlocks.PIXEL_LAMP);
 
         // Blocks that drop others if not using silk
         addDrop(ModBlocks.GRIDSTONE_BLOCK, drops(ModBlocks.GRIDSTONE_BLOCK, ModBlocks.CRACKED_GRIDSTONE_BLOCK));

@@ -19,6 +19,12 @@ public class ModBlockTagProvider extends FabricTagProvider.BlockTagProvider {
         getOrCreateTagBuilder(BlockTags.PICKAXE_MINEABLE)
                 .add(ModBlocks.GRIDSTONE_BLOCK)
                 .add(ModBlocks.CRACKED_GRIDSTONE_BLOCK)
+                .add(ModBlocks.GRIDSTONE_BRICKS_BLOCK)
+                .add(ModBlocks.LIME_GRIDSTONE_BLOCK)
+                .add(ModBlocks.BLUE_GRIDSTONE_BLOCK)
+                .add(ModBlocks.RED_GRIDSTONE_BLOCK)
+                .add(ModBlocks.WHITE_GRIDSTONE_BLOCK)
+                .add(ModBlocks.ORANGE_GRIDSTONE_BLOCK)
                 .add(ModBlocks.LUMINANCE_ORE);
 
         getOrCreateTagBuilder(BlockTags.NEEDS_IRON_TOOL)

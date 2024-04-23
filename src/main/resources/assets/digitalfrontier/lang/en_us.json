@@ -9,8 +9,15 @@
   "item.digitalfrontier.byte": "Byte",
 
   "block.digitalfrontier.pixel_block": "Pixel",
+  "block.digitalfrontier.pixel_lamp": "Pixel Lamp",
   "block.digitalfrontier.gridstone": "Gridstone",
   "block.digitalfrontier.cracked_gridstone": "Cracked Gridstone",
+  "block.digitalfrontier.gridstone_bricks": "Gridstone Bricks",
+  "block.digitalfrontier.lime_gridstone": "Lime Gridstone",
+  "block.digitalfrontier.blue_gridstone": "Blue Gridstone",
+  "block.digitalfrontier.red_gridstone": "Red Gridstone",
+  "block.digitalfrontier.white_gridstone": "White Gridstone",
+  "block.digitalfrontier.orange_gridstone": "Orange Gridstone",
   "block.digitalfrontier.luminance_ore": "Luminance Ore",
 
   "itemgroup.digitalfrontier": "Digital Frontier Items"
