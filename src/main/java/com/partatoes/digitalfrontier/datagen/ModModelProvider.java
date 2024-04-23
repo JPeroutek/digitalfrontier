@@ -26,6 +26,7 @@ public class ModModelProvider extends FabricModelProvider {
         blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.ORANGE_GRIDSTONE_BLOCK);
         blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.PIXEL_BLOCK);
         blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.LUMINANCE_ORE);
+        blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.BOOSTER_BLOCK);
 
         // Horrifying mess to create blockstates and models for Lamp
         blockStateModelGenerator.blockStateCollector.accept(

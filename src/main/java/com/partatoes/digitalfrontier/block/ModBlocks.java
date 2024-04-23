@@ -1,6 +1,7 @@
 package com.partatoes.digitalfrontier.block;
 
 import com.partatoes.digitalfrontier.DigitalFrontier;
+import com.partatoes.digitalfrontier.block.custom.BoosterBlock;
 import com.partatoes.digitalfrontier.block.custom.LuminanceOreBlock;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
@@ -38,6 +39,8 @@ public class ModBlocks {
 
     public static final Block LUMINANCE_ORE = registerBlock("luminance_ore",
             new LuminanceOreBlock(FabricBlockSettings.copyOf(Blocks.REDSTONE_ORE)));
+    public static final Block BOOSTER_BLOCK = registerBlock("booster",
+            new BoosterBlock(FabricBlockSettings.copyOf(Blocks.DEEPSLATE)));
 
     private static Block registerBlock(String name, Block block) {
         registerBlockItem(name, block);

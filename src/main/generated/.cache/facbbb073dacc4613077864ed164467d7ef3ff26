@@ -1,4 +1,4 @@
-// 1.20.4	2024-04-22T19:34:19.969585	DigitalFrontier/Model Definitions
+// 1.20.4	2024-04-22T20:49:30.3675477	DigitalFrontier/Model Definitions
 8d8934a9c07f3dde177bb2f8006ce05e4ede25ca assets\digitalfrontier\models\block\blue_gridstone.json
 53cf651db218fdcc024b13d31dd5770613ddeefd assets\digitalfrontier\models\block\white_gridstone.json
 7839b325cce04ace15e551a42d6a1b33a99ade84 assets\digitalfrontier\models\item\cracked_gridstone.json
@@ -14,10 +14,13 @@ ca1cd9fdc17586b8cfe3c436377860f1fd899758 assets\digitalfrontier\models\item\pixe
 47ddb850af74589087c6de9325670edc3a4ad80d assets\digitalfrontier\models\item\binary_1.json
 f01505ee387648eea85da60d11f4d8fe56d82cf1 assets\digitalfrontier\models\block\luminance_ore.json
 103ede1f51a61876114038506cb8181453c0f8d1 assets\digitalfrontier\models\block\pixel_lamp.json
+077c1e8bfdd1827bd88cdfcbcd2e2ab7f4b0c383 assets\digitalfrontier\models\block\booster.json
 67739347356c194d2bb834bcc81bd6475d014af1 assets\digitalfrontier\models\item\pixel_dust.json
 673e9799664aae3ae88d18a9aec374ca835280aa assets\digitalfrontier\models\block\red_gridstone.json
 3a5ded0e0dc049fcf28e853d7eead46dbfc4784f assets\digitalfrontier\models\block\lime_gridstone.json
 7750eff66706e320a95410c5b743fad2fcd090b6 assets\digitalfrontier\models\block\pixel_lamp_lit.json
+0bea2f930f225d8d78536d8fa0f15bcc7ad90d2d assets\digitalfrontier\blockstates\booster.json
+87a9f82f347ac57856c76744cacfd4f332c1229a assets\digitalfrontier\models\item\booster.json
 1fc337fc06732d08cbba9d9057af67593793668a assets\digitalfrontier\models\item\luminessence.json
 39cbd82a73cbf9094d521277d1a6aaea23807989 assets\digitalfrontier\models\item\lime_gridstone.json
 5368f72dc8f60257a7dc7229a7e7454e1f737d8f assets\digitalfrontier\blockstates\orange_gridstone.json

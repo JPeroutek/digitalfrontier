@@ -35,6 +35,7 @@ public class ModItemGroups {
                         entries.add(ModBlocks.WHITE_GRIDSTONE_BLOCK);
                         entries.add(ModBlocks.ORANGE_GRIDSTONE_BLOCK);
                         entries.add(ModBlocks.LUMINANCE_ORE);
+                        entries.add(ModBlocks.BOOSTER_BLOCK);
                     })
                     .build());
 

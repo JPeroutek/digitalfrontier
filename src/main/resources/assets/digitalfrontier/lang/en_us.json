@@ -19,6 +19,7 @@
   "block.digitalfrontier.white_gridstone": "White Gridstone",
   "block.digitalfrontier.orange_gridstone": "Orange Gridstone",
   "block.digitalfrontier.luminance_ore": "Luminance Ore",
+  "block.digitalfrontier.booster": "Boost Block",
 
   "itemgroup.digitalfrontier": "Digital Frontier Items"
 }
