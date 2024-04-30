@@ -1,4 +1,4 @@
-// 1.20.4	2024-04-30T15:52:27.0783536	DigitalFrontier/Tags for minecraft:block
+// 1.20.4	2024-04-30T18:05:32.4704444	DigitalFrontier/Tags for minecraft:block
 bf00cff9dbdd396f09565398f05490f506d4bbf1 data\minecraft\tags\blocks\mineable\pickaxe.json
-1a3fe435b09e8c5c1c90c19ee9288c840d216791 data\minecraft\tags\blocks\walls.json
 3e50b9c302600b0f60546fada420da702a0d9a39 data\minecraft\tags\blocks\needs_iron_tool.json
+1a3fe435b09e8c5c1c90c19ee9288c840d216791 data\minecraft\tags\blocks\walls.json
