@@ -36,6 +36,11 @@ public class ModItemGroups {
                         entries.add(ModBlocks.ORANGE_GRIDSTONE_BLOCK);
                         entries.add(ModBlocks.LUMINANCE_ORE);
                         entries.add(ModBlocks.BOOSTER_BLOCK);
+
+                        entries.add(ModBlocks.GRIDSTONE_STAIRS);
+                        entries.add(ModBlocks.GRIDSTONE_SLAB);
+                        entries.add(ModBlocks.GRIDSTONE_WALL);
+                        entries.add(ModBlocks.GRIDSTONE_PRESSURE_PLATE);
                     })
                     .build());
 

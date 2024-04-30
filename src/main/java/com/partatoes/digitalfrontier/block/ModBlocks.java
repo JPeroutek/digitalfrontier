@@ -5,10 +5,7 @@ import com.partatoes.digitalfrontier.block.custom.BoosterBlock;
 import com.partatoes.digitalfrontier.block.custom.LuminanceOreBlock;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.RedstoneLampBlock;
-import net.minecraft.block.RedstoneOreBlock;
+import net.minecraft.block.*;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
@@ -41,6 +38,15 @@ public class ModBlocks {
             new LuminanceOreBlock(FabricBlockSettings.copyOf(Blocks.REDSTONE_ORE)));
     public static final Block BOOSTER_BLOCK = registerBlock("booster",
             new BoosterBlock(FabricBlockSettings.copyOf(Blocks.DEEPSLATE)));
+
+    public static final Block GRIDSTONE_STAIRS = registerBlock("gridstone_stairs",
+            new StairsBlock(ModBlocks.GRIDSTONE_BLOCK.getDefaultState(), FabricBlockSettings.copyOf(Blocks.DEEPSLATE)));
+    public static final Block GRIDSTONE_SLAB = registerBlock("gridstone_slab",
+            new SlabBlock(FabricBlockSettings.copyOf(Blocks.DEEPSLATE)));
+    public static final Block GRIDSTONE_WALL = registerBlock("gridstone_wall",
+            new WallBlock(FabricBlockSettings.copyOf(Blocks.DEEPSLATE)));
+    public static final Block GRIDSTONE_PRESSURE_PLATE = registerBlock("gridstone_pressure_plate",
+            new PressurePlateBlock(BlockSetType.STONE, FabricBlockSettings.copyOf(Blocks.DEEPSLATE)));
 
     private static Block registerBlock(String name, Block block) {
         registerBlockItem(name, block);

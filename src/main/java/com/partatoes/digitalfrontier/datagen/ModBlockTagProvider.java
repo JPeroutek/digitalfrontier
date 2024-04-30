@@ -26,9 +26,16 @@ public class ModBlockTagProvider extends FabricTagProvider.BlockTagProvider {
                 .add(ModBlocks.WHITE_GRIDSTONE_BLOCK)
                 .add(ModBlocks.ORANGE_GRIDSTONE_BLOCK)
                 .add(ModBlocks.LUMINANCE_ORE)
-                .add(ModBlocks.BOOSTER_BLOCK);
+                .add(ModBlocks.BOOSTER_BLOCK)
+                .add(ModBlocks.GRIDSTONE_STAIRS)
+                .add(ModBlocks.GRIDSTONE_SLAB)
+                .add(ModBlocks.GRIDSTONE_WALL)
+                .add(ModBlocks.GRIDSTONE_PRESSURE_PLATE);
 
         getOrCreateTagBuilder(BlockTags.NEEDS_IRON_TOOL)
                 .add(ModBlocks.LUMINANCE_ORE);
+
+        getOrCreateTagBuilder(BlockTags.WALLS)
+                .add(ModBlocks.GRIDSTONE_WALL);
     }
 }

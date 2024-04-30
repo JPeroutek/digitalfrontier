@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab",
+  "textures": {
+    "bottom": "digitalfrontier:block/gridstone",
+    "side": "digitalfrontier:block/gridstone",
+    "top": "digitalfrontier:block/gridstone"
+  }
+}

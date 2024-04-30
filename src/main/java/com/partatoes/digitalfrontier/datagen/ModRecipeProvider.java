@@ -8,9 +8,11 @@ import net.fabricmc.fabric.api.datagen.v1.provider.FabricRecipeProvider;
 import net.minecraft.advancement.AdvancementCriterion;
 import net.minecraft.data.server.recipe.RecipeExporter;
 import net.minecraft.data.server.recipe.RecipeProvider;
+import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder;
 import net.minecraft.data.server.recipe.ShapelessRecipeJsonBuilder;
 import net.minecraft.item.Items;
 import net.minecraft.recipe.book.RecipeCategory;
+import net.minecraft.util.Identifier;
 
 public class ModRecipeProvider extends FabricRecipeProvider {
     public ModRecipeProvider(FabricDataOutput output) {
@@ -56,5 +58,16 @@ public class ModRecipeProvider extends FabricRecipeProvider {
         offer2x2CompactingRecipe(exporter, RecipeCategory.REDSTONE, ModBlocks.PIXEL_BLOCK, ModItems.PIXEL_DUST);
 
         offer2x2CompactingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS, ModBlocks.GRIDSTONE_BRICKS_BLOCK, ModBlocks.GRIDSTONE_BLOCK);
+
+        offerPressurePlateRecipe(exporter, ModBlocks.GRIDSTONE_PRESSURE_PLATE, ModBlocks.GRIDSTONE_BLOCK);
+        offerSlabRecipe(exporter, RecipeCategory.BUILDING_BLOCKS, ModBlocks.GRIDSTONE_SLAB, ModBlocks.GRIDSTONE_BLOCK);
+        offerWallRecipe(exporter, RecipeCategory.BUILDING_BLOCKS, ModBlocks.GRIDSTONE_WALL, ModBlocks.GRIDSTONE_BLOCK);
+        ShapedRecipeJsonBuilder.create(RecipeCategory.BUILDING_BLOCKS, ModBlocks.GRIDSTONE_STAIRS)
+                .pattern("G  ")
+                .pattern("GG ")
+                .pattern("GGG")
+                .input('G', ModBlocks.GRIDSTONE_BLOCK)
+                .criterion(hasItem(ModBlocks.GRIDSTONE_BLOCK), conditionsFromItem(ModBlocks.GRIDSTONE_BLOCK))
+                .offerTo(exporter, new Identifier(getRecipeName(ModBlocks.GRIDSTONE_STAIRS)));
     }
 }

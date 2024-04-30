@@ -34,6 +34,12 @@ public class ModLootTableProvider extends FabricBlockLootTableProvider {
         addDrop(ModBlocks.PIXEL_LAMP);
         addDrop(ModBlocks.BOOSTER_BLOCK);
 
+        addDrop(ModBlocks.GRIDSTONE_STAIRS);
+        addDrop(ModBlocks.GRIDSTONE_WALL);
+        addDrop(ModBlocks.GRIDSTONE_PRESSURE_PLATE);
+
+        addDrop(ModBlocks.GRIDSTONE_SLAB, slabDrops(ModBlocks.GRIDSTONE_SLAB));
+
         // Blocks that drop others if not using silk
         addDrop(ModBlocks.GRIDSTONE_BLOCK, drops(ModBlocks.GRIDSTONE_BLOCK, ModBlocks.CRACKED_GRIDSTONE_BLOCK));
 

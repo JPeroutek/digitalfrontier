@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "key": {
+    "#": {
+      "item": "digitalfrontier:gridstone"
+    }
+  },
+  "pattern": [
+    "##"
+  ],
+  "result": {
+    "item": "digitalfrontier:gridstone_pressure_plate"
+  }
+}

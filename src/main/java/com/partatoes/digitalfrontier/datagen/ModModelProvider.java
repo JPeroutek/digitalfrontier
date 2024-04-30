@@ -16,7 +16,8 @@ public class ModModelProvider extends FabricModelProvider {
 
     @Override
     public void generateBlockStateModels(BlockStateModelGenerator blockStateModelGenerator) {
-        blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.GRIDSTONE_BLOCK);
+        BlockStateModelGenerator.BlockTexturePool gridstonePool = blockStateModelGenerator.registerCubeAllModelTexturePool(ModBlocks.GRIDSTONE_BLOCK);
+
         blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.CRACKED_GRIDSTONE_BLOCK);
         blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.GRIDSTONE_BRICKS_BLOCK);
         blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.LIME_GRIDSTONE_BLOCK);
@@ -27,6 +28,11 @@ public class ModModelProvider extends FabricModelProvider {
         blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.PIXEL_BLOCK);
         blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.LUMINANCE_ORE);
         blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.BOOSTER_BLOCK);
+
+        gridstonePool.wall(ModBlocks.GRIDSTONE_WALL);
+        gridstonePool.stairs(ModBlocks.GRIDSTONE_STAIRS);
+        gridstonePool.slab(ModBlocks.GRIDSTONE_SLAB);
+        gridstonePool.pressurePlate(ModBlocks.GRIDSTONE_PRESSURE_PLATE);
 
         // Horrifying mess to create blockstates and models for Lamp
         blockStateModelGenerator.blockStateCollector.accept(

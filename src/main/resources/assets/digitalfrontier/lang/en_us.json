@@ -21,5 +21,10 @@
   "block.digitalfrontier.luminance_ore": "Luminance Ore",
   "block.digitalfrontier.booster": "Boost Block",
 
+  "block.digitalfrontier.gridstone_stairs": "Gridstone Stairs",
+  "block.digitalfrontier.gridstone_slab": "Gridstone Slab",
+  "block.digitalfrontier.gridstone_wall": "Gridstone Wall",
+  "block.digitalfrontier.gridstone_pressure_plate": "Gridstone Pressure Plate",
+
   "itemgroup.digitalfrontier": "Digital Frontier Items"
 }
