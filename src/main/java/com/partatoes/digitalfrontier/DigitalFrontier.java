@@ -4,6 +4,7 @@ import com.partatoes.digitalfrontier.block.ModBlocks;
 import com.partatoes.digitalfrontier.item.ModFuelItems;
 import com.partatoes.digitalfrontier.item.ModItemGroups;
 import com.partatoes.digitalfrontier.item.ModItems;
+import com.partatoes.digitalfrontier.world.gen.ModWorldGeneration;
 import net.fabricmc.api.ModInitializer;
 
 import org.slf4j.Logger;
@@ -28,5 +29,7 @@ public class DigitalFrontier implements ModInitializer {
 		ModItems.registerModItems();
 		ModBlocks.registerModBlocks();
 		ModFuelItems.registerModFuelItems();
+
+		ModWorldGeneration.generateModWorldGen();
 	}
 }
