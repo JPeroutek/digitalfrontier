@@ -5,7 +5,7 @@
       "conditions": {
         "items": [
           {
-            "tag": "digitalfrontier:bit"
+            "items": "#digitalfrontier:bit"
           }
         ]
       },

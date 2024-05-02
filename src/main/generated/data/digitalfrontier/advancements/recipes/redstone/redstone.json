@@ -5,9 +5,7 @@
       "conditions": {
         "items": [
           {
-            "items": [
-              "digitalfrontier:luminessence"
-            ]
+            "items": "digitalfrontier:luminessence"
           }
         ]
       },
@@ -17,9 +15,7 @@
       "conditions": {
         "items": [
           {
-            "items": [
-              "minecraft:redstone"
-            ]
+            "items": "minecraft:redstone"
           }
         ]
       },

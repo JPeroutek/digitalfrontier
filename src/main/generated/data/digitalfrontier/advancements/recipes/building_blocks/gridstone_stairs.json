@@ -5,9 +5,7 @@
       "conditions": {
         "items": [
           {
-            "items": [
-              "digitalfrontier:gridstone"
-            ]
+            "items": "digitalfrontier:gridstone"
           }
         ]
       },

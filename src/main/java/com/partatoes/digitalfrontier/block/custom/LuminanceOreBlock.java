@@ -20,6 +20,7 @@ import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.ItemActionResult;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -51,19 +52,15 @@ public class LuminanceOreBlock extends Block {
         }
         super.onSteppedOn(world, pos, state, entity);
     }
-
     @Override
-    public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+    protected ItemActionResult onUseWithItem(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         if (world.isClient) {
             LuminanceOreBlock.spawnParticles(world, pos);
         } else {
             LuminanceOreBlock.light(state, world, pos);
         }
-        ItemStack itemStack = player.getStackInHand(hand);
-        if (itemStack.getItem() instanceof BlockItem && new ItemPlacementContext(player, hand, itemStack, hit).canPlace()) {
-            return ActionResult.PASS;
-        }
-        return ActionResult.SUCCESS;
+
+        return stack.getItem() instanceof BlockItem && (new ItemPlacementContext(player, hand, stack, hit)).canPlace() ? ItemActionResult.SKIP_DEFAULT_BLOCK_INTERACTION : ItemActionResult.SUCCESS;
     }
 
     @Override
@@ -77,14 +74,14 @@ public class LuminanceOreBlock extends Block {
 
     @Override
     public void randomTick(BlockState state, ServerWorld world, BlockPos pos, Random random) {
-        if (state.get(LIT).booleanValue()) {
+        if (state.get(LIT)) {
             world.setBlockState(pos, (BlockState)state.with(LIT, false), Block.NOTIFY_ALL);
         }
     }
 
     @Override
     public void randomDisplayTick(BlockState state, World world, BlockPos pos, Random random) {
-        if (state.get(LIT).booleanValue()) {
+        if (state.get(LIT)) {
             LuminanceOreBlock.spawnParticles(world, pos);
         }
     }
@@ -96,7 +93,7 @@ public class LuminanceOreBlock extends Block {
 
     private static void light(BlockState state, World world, BlockPos pos) {
         LuminanceOreBlock.spawnParticles(world, pos);
-        if (!state.get(LIT).booleanValue()) {
+        if (!state.get(LIT)) {
             world.setBlockState(pos, (BlockState)state.with(LIT, true), Block.NOTIFY_ALL);
         }
     }
