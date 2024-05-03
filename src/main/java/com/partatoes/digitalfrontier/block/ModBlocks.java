@@ -3,8 +3,6 @@ package com.partatoes.digitalfrontier.block;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.block.custom.BoosterBlock;
 import com.partatoes.digitalfrontier.block.custom.LuminanceOreBlock;
-//import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
-import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.*;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;

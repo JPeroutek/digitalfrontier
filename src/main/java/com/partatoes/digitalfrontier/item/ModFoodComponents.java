@@ -1,7 +1,5 @@
 package com.partatoes.digitalfrontier.item;
 
-//import net.minecraft.item.FoodComponent;
-
 import net.minecraft.component.type.FoodComponent;
 
 public class ModFoodComponents {

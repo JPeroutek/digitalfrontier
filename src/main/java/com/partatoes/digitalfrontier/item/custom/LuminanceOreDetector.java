@@ -40,21 +40,13 @@ public class LuminanceOreDetector extends Item {
             }
         }
 
-//        context.getStack().damage(1, context.getPlayer(), playerEntity -> playerEntity.sendToolBreakStatus(playerEntity.getActiveHand()));
         context.getStack().damage(1, context.getPlayer(), context.getHand().equals(Hand.MAIN_HAND) ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
         return ActionResult.SUCCESS;
     }
 
-
-    //ItemStack stack, Item.TooltipContext context, List<Text> tooltip, TooltipType type
     @Override
     public void appendTooltip(ItemStack stack, Item.TooltipContext context, List<Text> tooltip, TooltipType type) {
         tooltip.add(Text.translatable("item.digitalfrontier.luminance_detector.tooltip"));
         super.appendTooltip(stack, context, tooltip, type);
     }
-//    @Override
-//    public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-//        tooltip.add(Text.translatable("item.digitalfrontier.luminance_detector.tooltip"));
-//        super.appendTooltip(stack, world, tooltip, context);
-//    }
 }

@@ -1,11 +1,8 @@
 package com.partatoes.digitalfrontier.block.custom;
 
-import com.mojang.serialization.MapCodec;
 import com.partatoes.digitalfrontier.particle.LuminanceDustParticleEffect;
-import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.RedstoneTorchBlock;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.Entity;
@@ -13,12 +10,10 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
-import net.minecraft.particle.DustParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.state.property.Properties;
-import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.ItemActionResult;
 import net.minecraft.util.hit.BlockHitResult;
@@ -31,7 +26,7 @@ public class LuminanceOreBlock extends Block {
     public static final BooleanProperty LIT = Properties.LIT;
     public LuminanceOreBlock(Settings settings) {
         super(settings);
-        this.setDefaultState((BlockState) this.getDefaultState().with(LIT, false));
+        this.setDefaultState(this.getDefaultState().with(LIT, false));
     }
 
     @Override
@@ -75,7 +70,7 @@ public class LuminanceOreBlock extends Block {
     @Override
     public void randomTick(BlockState state, ServerWorld world, BlockPos pos, Random random) {
         if (state.get(LIT)) {
-            world.setBlockState(pos, (BlockState)state.with(LIT, false), Block.NOTIFY_ALL);
+            world.setBlockState(pos, state.with(LIT, false), Block.NOTIFY_ALL);
         }
     }
 
@@ -94,7 +89,7 @@ public class LuminanceOreBlock extends Block {
     private static void light(BlockState state, World world, BlockPos pos) {
         LuminanceOreBlock.spawnParticles(world, pos);
         if (!state.get(LIT)) {
-            world.setBlockState(pos, (BlockState)state.with(LIT, true), Block.NOTIFY_ALL);
+            world.setBlockState(pos, state.with(LIT, true), Block.NOTIFY_ALL);
         }
     }
 
