@@ -12,6 +12,7 @@ import net.minecraft.client.render.entity.model.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.RotationAxis;
 
 public class LightCycleRenderer extends EntityRenderer<LightCycleEntity> {
     private final LightCycleModel<LightCycleEntity> MODEL;
@@ -31,6 +32,10 @@ public class LightCycleRenderer extends EntityRenderer<LightCycleEntity> {
     }
     @Override
     public void render(LightCycleEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+        // Flip it rightside-up
+        matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(180f));
+        // Shift it back into position
+        matrices.translate(0f, -1.5f, 0f);
         VertexConsumer vertexConsumer = vertexConsumers.getBuffer(this.MODEL.getLayer(TEXTURE));
         this.MODEL.render(matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV, 1f, 1f, 1f, 1f);
         super.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
