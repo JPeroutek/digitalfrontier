@@ -53,6 +53,7 @@ public class ModModelProvider extends FabricModelProvider {
         itemModelGenerator.register(ModItems.COAL_DUST, Models.GENERATED);
         itemModelGenerator.register(ModItems.PIXEL_DUST, Models.GENERATED);
         itemModelGenerator.register(ModItems.LUMINESSENCE, Models.GENERATED);
+        itemModelGenerator.register(ModItems.LIGHTCYCLE_BATON, Models.GENERATED);
 
     }
 }

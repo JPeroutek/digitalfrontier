@@ -24,6 +24,8 @@ public class ModItems {
 
     public static final Item COAL_DUST = registerItem("coal_dust", new Item(new Item.Settings()));
 
+    public static final Item LIGHTCYCLE_BATON = registerItem("lightcycle_baton", new Item(new Item.Settings()));
+
     private static Item registerItem(String name, Item item) {
         return Registry.register(Registries.ITEM, new Identifier(DigitalFrontier.MOD_ID, name), item);
     }

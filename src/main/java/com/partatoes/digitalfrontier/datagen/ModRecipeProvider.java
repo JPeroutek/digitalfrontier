@@ -72,5 +72,12 @@ public class ModRecipeProvider extends FabricRecipeProvider {
                 .input('G', ModBlocks.GRIDSTONE_BLOCK)
                 .criterion(hasItem(ModBlocks.GRIDSTONE_BLOCK), conditionsFromItem(ModBlocks.GRIDSTONE_BLOCK))
                 .offerTo(exporter, new Identifier(getRecipeName(ModBlocks.GRIDSTONE_STAIRS)));
+
+        ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, ModItems.LIGHTCYCLE_BATON, 1)
+                .pattern("B")
+                .pattern("B")
+                .input('B', ModItems.BINARY_1)
+                .criterion(hasItem(ModItems.BINARY_1), conditionsFromItem(ModItems.BINARY_1))
+                .offerTo(exporter);
     }
 }
