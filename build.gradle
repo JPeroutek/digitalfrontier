@@ -19,6 +19,7 @@ repositories {
 }
 
 loom {
+	accessWidenerPath = file("src/client/resources/digitalfrontier.accesswidener")
     splitEnvironmentSourceSets()
 
 	mods {
