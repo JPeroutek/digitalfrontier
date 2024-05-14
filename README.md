@@ -7,4 +7,3 @@ The current progress can be tracked via [this Trello board.](https://trello.com/
 ## Credits
 - Partatoes (Development)
 - Blindassassin111 (Some art assets and ideas)
-- Kaupenjoe (excellent tutorials)
