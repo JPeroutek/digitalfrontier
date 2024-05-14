@@ -14,7 +14,9 @@ public class ModVehicles {
     public static final EntityType<LightCycleEntity> LIGHTCYCLE = Registry.register(
             Registries.ENTITY_TYPE,
             LIGHTCYCLE_ID,
-            EntityType.Builder.create(LightCycleEntity::new, SpawnGroup.MISC).build());
+            EntityType.Builder.create(LightCycleEntity::new, SpawnGroup.MISC)
+                    .dimensions(1f, 1f)
+                    .build());
 
     public static void registerModVehicles() {
         DigitalFrontier.LOGGER.info("Registering ModVehicles for " + DigitalFrontier.MOD_ID);

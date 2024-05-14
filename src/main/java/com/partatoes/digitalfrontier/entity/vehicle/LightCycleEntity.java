@@ -16,15 +16,15 @@ public class LightCycleEntity extends Entity {
         super(type, world);
     }
 
-    @Override
-    public void setPosition(double x, double y, double z) {
-        this.setPos(x, y, z);
-        this.setBoundingBox(this.createBoundingBox(x, y, z));
-    }
-
-    private Box createBoundingBox(double x, double y, double z) {
-        return new Box(x, y + .2, z, x - LightCycleEntity.MODEL_WIDTH, y + LightCycleEntity.MODEL_HEIGHT, z + LightCycleEntity.MODEL_LENGTH);
-    }
+//    @Override
+//    public void setPosition(double x, double y, double z) {
+//        this.setPos(x, y + .2, z);
+////        this.setBoundingBox(this.createBoundingBox(x, y, z));
+//    }
+//
+//    private Box createBoundingBox(double x, double y, double z) {
+//        return new Box(x, y + .2, z, x - LightCycleEntity.MODEL_WIDTH, y + LightCycleEntity.MODEL_HEIGHT, z + LightCycleEntity.MODEL_LENGTH);
+//    }
 
     @Override
     protected void initDataTracker(DataTracker.Builder builder) {
