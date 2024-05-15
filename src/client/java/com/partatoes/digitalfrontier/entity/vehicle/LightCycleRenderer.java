@@ -32,12 +32,17 @@ public class LightCycleRenderer extends EntityRenderer<LightCycleEntity> {
     }
     @Override
     public void render(LightCycleEntity entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+        matrices.push();
+        matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-yaw));
+
         // Flip it rightside-up
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(180f));
         // Shift it back into position
         matrices.translate(0f, -1.5f, 0f);
         VertexConsumer vertexConsumer = vertexConsumers.getBuffer(this.MODEL.getLayer(TEXTURE));
         this.MODEL.render(matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV, 1f, 1f, 1f, 1f);
+
+        matrices.pop();
         super.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
     }
 }
