@@ -1,11 +1,15 @@
 package com.partatoes.digitalfrontier.datagen;
 
+import com.google.gson.JsonElement;
+import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.block.ModBlocks;
 import com.partatoes.digitalfrontier.item.ModItems;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricModelProvider;
+import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.data.client.*;
+import net.minecraft.registry.Registries;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.Identifier;
 
@@ -43,6 +47,7 @@ public class ModModelProvider extends FabricModelProvider {
                                 TexturedModel.CUBE_ALL.upload(ModBlocks.PIXEL_LAMP, blockStateModelGenerator.modelCollector)))
         );
 
+        blockStateModelGenerator.registerNorthDefaultHorizontalRotation(ModBlocks.KEYBOARD_BLOCK);
     }
 
     @Override

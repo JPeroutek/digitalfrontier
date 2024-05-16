@@ -2,6 +2,7 @@ package com.partatoes.digitalfrontier.block;
 
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.block.custom.BoosterBlock;
+import com.partatoes.digitalfrontier.block.custom.KeyboardBlock;
 import com.partatoes.digitalfrontier.block.custom.LuminanceOreBlock;
 import net.minecraft.block.*;
 import net.minecraft.item.BlockItem;
@@ -45,6 +46,8 @@ public class ModBlocks {
             new WallBlock(AbstractBlock.Settings.copy(Blocks.DEEPSLATE)));
     public static final Block GRIDSTONE_PRESSURE_PLATE = registerBlock("gridstone_pressure_plate",
             new PressurePlateBlock(BlockSetType.STONE, AbstractBlock.Settings.copy(Blocks.DEEPSLATE)));
+    public static final Block KEYBOARD_BLOCK = registerBlock("keyboard",
+            new KeyboardBlock(AbstractBlock.Settings.copy(Blocks.COMPARATOR)));
 
     private static Block registerBlock(String name, Block block) {
         registerBlockItem(name, block);
