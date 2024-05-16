@@ -87,7 +87,6 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
 
     public LightCycleEntity(EntityType<? extends LightCycleEntity> entityType, World world) {
         super(entityType, world);
-        this.paddlePhases = new float[2];
         this.intersectionChecked = true;
     }
 
