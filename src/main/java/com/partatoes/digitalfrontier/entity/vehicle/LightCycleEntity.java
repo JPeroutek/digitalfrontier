@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.function.IntFunction;
 import java.util.function.ToIntFunction;
 
+import com.partatoes.digitalfrontier.item.ModItems;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -257,37 +258,7 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
     }
 
     public Item asItem() {
-        Item var10000;
-        switch (this.getVariant().ordinal()) {
-            case 1:
-                var10000 = Items.SPRUCE_BOAT;
-                break;
-            case 2:
-                var10000 = Items.BIRCH_BOAT;
-                break;
-            case 3:
-                var10000 = Items.JUNGLE_BOAT;
-                break;
-            case 4:
-                var10000 = Items.ACACIA_BOAT;
-                break;
-            case 5:
-                var10000 = Items.CHERRY_BOAT;
-                break;
-            case 6:
-                var10000 = Items.DARK_OAK_BOAT;
-                break;
-            case 7:
-                var10000 = Items.MANGROVE_BOAT;
-                break;
-            case 8:
-                var10000 = Items.BAMBOO_RAFT;
-                break;
-            default:
-                var10000 = Items.OAK_BOAT;
-        }
-
-        return var10000;
+        return ModItems.LIGHTCYCLE_BATON;
     }
 
     public void animateDamage(float yaw) {

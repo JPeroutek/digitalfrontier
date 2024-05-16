@@ -1,6 +1,7 @@
 package com.partatoes.digitalfrontier.item;
 
 import com.partatoes.digitalfrontier.DigitalFrontier;
+import com.partatoes.digitalfrontier.item.custom.LightCycleBaton;
 import com.partatoes.digitalfrontier.item.custom.LuminanceOreDetector;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroupEntries;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
@@ -24,7 +25,7 @@ public class ModItems {
 
     public static final Item COAL_DUST = registerItem("coal_dust", new Item(new Item.Settings()));
 
-    public static final Item LIGHTCYCLE_BATON = registerItem("lightcycle_baton", new Item(new Item.Settings()));
+    public static final Item LIGHTCYCLE_BATON = registerItem("lightcycle_baton", new LightCycleBaton(new Item.Settings().maxCount(1)));
 
     private static Item registerItem(String name, Item item) {
         return Registry.register(Registries.ITEM, new Identifier(DigitalFrontier.MOD_ID, name), item);

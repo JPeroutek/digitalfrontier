@@ -27,5 +27,8 @@
   "block.digitalfrontier.gridstone_wall": "Gridstone Wall",
   "block.digitalfrontier.gridstone_pressure_plate": "Gridstone Pressure Plate",
 
-  "itemgroup.digitalfrontier": "Digital Frontier Items"
+  "itemgroup.digitalfrontier": "Digital Frontier Items",
+
+  "entity.digitalfrontier.lightcycle": "Light Cycle",
+  "entity.digitalfrontier.program": "Program"
 }
