@@ -33,20 +33,16 @@ import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.WaterCreatureEntity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.vehicle.VehicleEntity;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.packet.c2s.play.BoatPaddleStateC2SPacket;
-import net.minecraft.particle.ParticleTypes;
 import net.minecraft.predicate.entity.EntityPredicates;
 import net.minecraft.registry.tag.EntityTypeTags;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.StringIdentifiable;
@@ -68,22 +64,10 @@ import org.jetbrains.annotations.Nullable;
 
 public class LightCycleEntity extends Entity implements VariantHolder<LightCycleEntity.Type> {
     private static final TrackedData<Integer> LIGHTCYCLE_TYPE;
-    private static final TrackedData<Boolean> LEFT_PADDLE_MOVING;
-    private static final TrackedData<Boolean> RIGHT_PADDLE_MOVING;
-    private static final TrackedData<Integer> BUBBLE_WOBBLE_TICKS;
-
     private static final TrackedData<Integer> DAMAGE_WOBBLE_TICKS;
     private static final TrackedData<Integer> DAMAGE_WOBBLE_SIDE;
     private static final TrackedData<Float> DAMAGE_WOBBLE_STRENGTH;
-    public static final int field_30697 = 0;
-    public static final int field_30698 = 1;
-    private static final int field_30695 = 60;
-    private static final float NEXT_PADDLE_PHASE = 0.3926991F;
-    public static final double EMIT_SOUND_EVENT_PADDLE_ROTATION = 0.7853981852531433;
-    public static final int field_30700 = 60;
-    private final float[] paddlePhases;
     private float velocityDecay;
-    private float ticksUnderwater;
     private float yawVelocity;
     private int lerpTicks;
     private double x;
@@ -100,11 +84,6 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
     private Location location;
     private Location lastLocation;
     private double fallVelocity;
-    private boolean onBubbleColumnSurface;
-    private boolean bubbleColumnIsDrag;
-    private float bubbleWobbleStrength;
-    private float bubbleWobble;
-    private float lastBubbleWobble;
 
     public LightCycleEntity(EntityType<? extends LightCycleEntity> entityType, World world) {
         super(entityType, world);
@@ -140,7 +119,7 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
     }
 
     boolean shouldAlwaysKill(DamageSource source) {
-        return false;
+        return source.isSourceCreativePlayer();
     }
 
     public void killAndDropItem(Item selfAsItem) {
@@ -162,11 +141,11 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
     }
 
     public void setDamageWobbleStrength(float damageWobbleStrength) {
-        this.dataTracker.set(DAMAGE_WOBBLE_STRENGTH, Float.valueOf(damageWobbleStrength));
+        this.dataTracker.set(DAMAGE_WOBBLE_STRENGTH, damageWobbleStrength);
     }
 
     public float getDamageWobbleStrength() {
-        return this.dataTracker.get(DAMAGE_WOBBLE_STRENGTH).floatValue();
+        return this.dataTracker.get(DAMAGE_WOBBLE_STRENGTH);
     }
 
     public int getDamageWobbleTicks() {
@@ -186,9 +165,6 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
         builder.add(DAMAGE_WOBBLE_SIDE, 1);
         builder.add(DAMAGE_WOBBLE_STRENGTH, Float.valueOf(0.0f));
         builder.add(LIGHTCYCLE_TYPE, LightCycleEntity.Type.OAK.ordinal());
-        builder.add(LEFT_PADDLE_MOVING, false);
-        builder.add(RIGHT_PADDLE_MOVING, false);
-        builder.add(BUBBLE_WOBBLE_TICKS, 0);
     }
 
     public boolean collidesWith(Entity other) {
@@ -227,23 +203,6 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
         }
 
         return (new Vec3d(0.0, this.getVariant() == LightCycleEntity.Type.BAMBOO ? (double)(dimensions.height() * 0.8888889F) : (double)(dimensions.height() / 3.0F), (double)f)).rotateY(-this.getYaw() * 0.017453292F);
-    }
-
-    public void onBubbleColumnSurfaceCollision(boolean drag) {
-        if (!this.getWorld().isClient) {
-            this.onBubbleColumnSurface = true;
-            this.bubbleColumnIsDrag = drag;
-            if (this.getBubbleWobbleTicks() == 0) {
-                this.setBubbleWobbleTicks(60);
-            }
-        }
-
-        this.getWorld().addParticle(ParticleTypes.SPLASH, this.getX() + (double)this.random.nextFloat(), this.getY() + 0.7, this.getZ() + (double)this.random.nextFloat(), 0.0, 0.0, 0.0);
-        if (this.random.nextInt(20) == 0) {
-            this.getWorld().playSound(this.getX(), this.getY(), this.getZ(), this.getSplashSound(), this.getSoundCategory(), 1.0F, 0.8F + 0.4F * this.random.nextFloat(), false);
-            this.emitGameEvent(GameEvent.SPLASH, this.getControllingPassenger());
-        }
-
     }
 
     public void pushAwayFrom(Entity entity) {
@@ -307,14 +266,12 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
     public void tick() {
         this.lastLocation = this.location;
         this.location = this.checkLocation();
-        if (this.location != LightCycleEntity.Location.UNDER_WATER && this.location != LightCycleEntity.Location.UNDER_FLOWING_WATER) {
-            this.ticksUnderwater = 0.0F;
-        } else {
-            ++this.ticksUnderwater;
-        }
-
-        if (!this.getWorld().isClient && this.ticksUnderwater >= 60.0F) {
-            this.removeAllPassengers();
+        if(this.location == Location.UNDER_WATER || this.location == Location.UNDER_FLOWING_WATER || this.location == Location.IN_WATER) {
+            // Shouldn't live underwater.  Find a way to drop it later maybe?
+            if (!this.getWorld().isClient) {
+                this.removeAllPassengers();
+            }
+//            this.killAndDropSelf();
         }
 
         if (this.getDamageWobbleTicks() > 0) {
@@ -328,14 +285,10 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
         super.tick();
         this.updatePositionAndRotation();
         if (this.isLogicalSideForUpdatingMovement()) {
-            if (!(this.getFirstPassenger() instanceof PlayerEntity)) {
-                this.setPaddleMovings(false, false);
-            }
-
             this.updateVelocity();
+
             if (this.getWorld().isClient) {
-                this.updatePaddles();
-                this.getWorld().sendPacket(new BoatPaddleStateC2SPacket(this.isPaddleMoving(0), this.isPaddleMoving(1)));
+                this.updateVelocityFromControls();
             }
 
             this.move(MovementType.SELF, this.getVelocity());
@@ -343,32 +296,11 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
             this.setVelocity(Vec3d.ZERO);
         }
 
-        this.handleBubbleColumn();
-
-        for(int i = 0; i <= 1; ++i) {
-            if (this.isPaddleMoving(i)) {
-                if (!this.isSilent() && (double)(this.paddlePhases[i] % 6.2831855F) <= 0.7853981852531433 && (double)((this.paddlePhases[i] + 0.3926991F) % 6.2831855F) >= 0.7853981852531433) {
-                    SoundEvent soundEvent = this.getPaddleSoundEvent();
-                    if (soundEvent != null) {
-                        Vec3d vec3d = this.getRotationVec(1.0F);
-                        double d = i == 1 ? -vec3d.z : vec3d.z;
-                        double e = i == 1 ? vec3d.x : -vec3d.x;
-                        this.getWorld().playSound((PlayerEntity)null, this.getX() + d, this.getY(), this.getZ() + e, soundEvent, this.getSoundCategory(), 1.0F, 0.8F + 0.4F * this.random.nextFloat());
-                    }
-                }
-
-                float[] var10000 = this.paddlePhases;
-                var10000[i] += 0.3926991F;
-            } else {
-                this.paddlePhases[i] = 0.0F;
-            }
-        }
-
         this.checkBlockCollision();
         List<Entity> list = this.getWorld().getOtherEntities(this, this.getBoundingBox().expand(0.20000000298023224, -0.009999999776482582, 0.20000000298023224), EntityPredicates.canBePushedBy(this));
         if (!list.isEmpty()) {
             boolean bl = !this.getWorld().isClient && !(this.getControllingPassenger() instanceof PlayerEntity);
-            Iterator var10 = list.iterator();
+            Iterator<Entity> var10 = list.iterator();
 
             while(true) {
                 while(true) {
@@ -381,7 +313,7 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
                         entity = (Entity)var10.next();
                     } while(entity.hasPassenger(this));
 
-                    if (bl && this.getPassengerList().size() < this.getMaxPassengers() && !entity.hasVehicle() && this.isSmallerThanBoat(entity) && entity instanceof LivingEntity && !(entity instanceof WaterCreatureEntity) && !(entity instanceof PlayerEntity)) {
+                    if (bl && this.getPassengerList().size() < this.getMaxPassengers() && !entity.hasVehicle() && this.isSmallerThanVehicle(entity) && entity instanceof LivingEntity && !(entity instanceof WaterCreatureEntity) && !(entity instanceof PlayerEntity)) {
                         entity.startRiding(this);
                     } else {
                         this.pushAwayFrom(entity);
@@ -389,48 +321,6 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
                 }
             }
         }
-    }
-
-    private void handleBubbleColumn() {
-        int i;
-        if (this.getWorld().isClient) {
-            i = this.getBubbleWobbleTicks();
-            if (i > 0) {
-                this.bubbleWobbleStrength += 0.05F;
-            } else {
-                this.bubbleWobbleStrength -= 0.1F;
-            }
-
-            this.bubbleWobbleStrength = MathHelper.clamp(this.bubbleWobbleStrength, 0.0F, 1.0F);
-            this.lastBubbleWobble = this.bubbleWobble;
-            this.bubbleWobble = 10.0F * (float)Math.sin((double)(0.5F * (float)this.getWorld().getTime())) * this.bubbleWobbleStrength;
-        } else {
-            if (!this.onBubbleColumnSurface) {
-                this.setBubbleWobbleTicks(0);
-            }
-
-            i = this.getBubbleWobbleTicks();
-            if (i > 0) {
-                --i;
-                this.setBubbleWobbleTicks(i);
-                int j = 60 - i - 1;
-                if (j > 0 && i == 0) {
-                    this.setBubbleWobbleTicks(0);
-                    Vec3d vec3d = this.getVelocity();
-                    if (this.bubbleColumnIsDrag) {
-                        this.setVelocity(vec3d.add(0.0, -0.7, 0.0));
-                        this.removeAllPassengers();
-                    } else {
-                        this.setVelocity(vec3d.x, this.hasPassenger((entity) -> {
-                            return entity instanceof PlayerEntity;
-                        }) ? 2.7 : 0.6, vec3d.z);
-                    }
-                }
-
-                this.onBubbleColumnSurface = false;
-            }
-        }
-
     }
 
     @Nullable
@@ -458,15 +348,6 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
             this.lerpPosAndRotation(this.lerpTicks, this.x, this.y, this.z, this.boatYaw, this.boatPitch);
             --this.lerpTicks;
         }
-    }
-
-    public void setPaddleMovings(boolean leftMoving, boolean rightMoving) {
-        this.dataTracker.set(LEFT_PADDLE_MOVING, leftMoving);
-        this.dataTracker.set(RIGHT_PADDLE_MOVING, rightMoving);
-    }
-
-    public float interpolatePaddlePhase(int paddle, float tickDelta) {
-        return this.isPaddleMoving(paddle) ? MathHelper.clampedLerp(this.paddlePhases[paddle] - 0.3926991F, this.paddlePhases[paddle], tickDelta) : 0.0F;
     }
 
     private Location checkLocation() {
@@ -627,43 +508,25 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
         double d = -this.getFinalGravity();
         double e = 0.0;
         this.velocityDecay = 0.05F;
-        if (this.lastLocation == LightCycleEntity.Location.IN_AIR && this.location != LightCycleEntity.Location.IN_AIR && this.location != LightCycleEntity.Location.ON_LAND) {
-            this.waterLevel = this.getBodyY(1.0);
-            this.setPosition(this.getX(), (double)(this.getWaterHeightBelow() - this.getHeight()) + 0.101, this.getZ());
-            this.setVelocity(this.getVelocity().multiply(1.0, 0.0, 1.0));
-            this.fallVelocity = 0.0;
-            this.location = LightCycleEntity.Location.IN_WATER;
-        } else {
-            if (this.location == LightCycleEntity.Location.IN_WATER) {
-                e = (this.waterLevel - this.getY()) / (double)this.getHeight();
-                this.velocityDecay = 0.9F;
-            } else if (this.location == LightCycleEntity.Location.UNDER_FLOWING_WATER) {
-                d = -7.0E-4;
-                this.velocityDecay = 0.9F;
-            } else if (this.location == LightCycleEntity.Location.UNDER_WATER) {
-                e = 0.009999999776482582;
-                this.velocityDecay = 0.45F;
-            } else if (this.location == LightCycleEntity.Location.IN_AIR) {
-                this.velocityDecay = 0.9F;
-            } else if (this.location == LightCycleEntity.Location.ON_LAND) {
-                this.velocityDecay = this.nearbySlipperiness;
-                if (this.getControllingPassenger() instanceof PlayerEntity) {
-                    this.nearbySlipperiness /= 2.0F;
-                }
-            }
 
-            Vec3d vec3d = this.getVelocity();
-            this.setVelocity(vec3d.x * (double)this.velocityDecay, vec3d.y + d, vec3d.z * (double)this.velocityDecay);
-            this.yawVelocity *= this.velocityDecay;
-            if (e > 0.0) {
-                Vec3d vec3d2 = this.getVelocity();
-                this.setVelocity(vec3d2.x, (vec3d2.y + e * (this.getGravity() / 0.65)) * 0.75, vec3d2.z);
-            }
+        if (this.location == LightCycleEntity.Location.IN_AIR) {
+            this.velocityDecay = 0.97F;
+        } else if (this.location == LightCycleEntity.Location.ON_LAND) {
+            this.velocityDecay = 0.95f;
         }
+
+        Vec3d vec3d = this.getVelocity();
+        this.setVelocity(vec3d.x * (double)this.velocityDecay, vec3d.y + d, vec3d.z * (double)this.velocityDecay);
+        this.yawVelocity *= this.velocityDecay;
+        if (e > 0.0) {
+            Vec3d vec3d2 = this.getVelocity();
+            this.setVelocity(vec3d2.x, (vec3d2.y + e * (this.getGravity() / 0.65)) * 0.75, vec3d2.z);
+        }
+
 
     }
 
-    private void updatePaddles() {
+    private void updateVelocityFromControls() {
         if (this.hasPassengers()) {
             float f = 0.0F;
             if (this.pressingLeft) {
@@ -688,7 +551,6 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
             }
 
             this.setVelocity(this.getVelocity().add((double)(MathHelper.sin(-this.getYaw() * 0.017453292F) * f), 0.0, (double)(MathHelper.cos(this.getYaw() * 0.017453292F) * f)));
-            this.setPaddleMovings(this.pressingRight && !this.pressingLeft || this.pressingForward, this.pressingLeft && !this.pressingRight || this.pressingForward);
         }
     }
 
@@ -696,7 +558,7 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
         return 0.0F;
     }
 
-    public boolean isSmallerThanBoat(Entity entity) {
+    public boolean isSmallerThanVehicle(Entity entity) {
         return entity.getWidth() < this.getWidth();
     }
 
@@ -733,11 +595,11 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
                 list.add(new Vec3d(d, (double)blockPos2.getY() + g, e));
             }
 
-            UnmodifiableIterator var14 = passenger.getPoses().iterator();
+            UnmodifiableIterator<EntityPose> var14 = passenger.getPoses().iterator();
 
             while(var14.hasNext()) {
                 EntityPose entityPose = (EntityPose)var14.next();
-                Iterator var16 = list.iterator();
+                Iterator<Vec3d> var16 = list.iterator();
 
                 while(var16.hasNext()) {
                     Vec3d vec3d2 = (Vec3d)var16.next();
@@ -779,12 +641,8 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
     public ActionResult interact(PlayerEntity player, Hand hand) {
         if (player.shouldCancelInteraction()) {
             return ActionResult.PASS;
-        } else if (this.ticksUnderwater < 60.0F) {
-            if (!this.getWorld().isClient) {
-                return player.startRiding(this) ? ActionResult.CONSUME : ActionResult.PASS;
-            } else {
-                return ActionResult.SUCCESS;
-            }
+        } else if (!this.getWorld().isClient) {
+            return player.startRiding(this) ? ActionResult.CONSUME : ActionResult.PASS;
         } else {
             return ActionResult.PASS;
         }
@@ -824,22 +682,6 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
         }
     }
 
-    public boolean isPaddleMoving(int paddle) {
-        return (Boolean)this.dataTracker.get(paddle == 0 ? LEFT_PADDLE_MOVING : RIGHT_PADDLE_MOVING) && this.getControllingPassenger() != null;
-    }
-
-    private void setBubbleWobbleTicks(int wobbleTicks) {
-        this.dataTracker.set(BUBBLE_WOBBLE_TICKS, wobbleTicks);
-    }
-
-    private int getBubbleWobbleTicks() {
-        return (Integer)this.dataTracker.get(BUBBLE_WOBBLE_TICKS);
-    }
-
-    public float interpolateBubbleWobble(float tickDelta) {
-        return MathHelper.lerp(tickDelta, this.lastBubbleWobble, this.bubbleWobble);
-    }
-
     public void setVariant(Type type) {
         this.dataTracker.set(LIGHTCYCLE_TYPE, type.ordinal());
     }
@@ -853,7 +695,7 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
     }
 
     protected int getMaxPassengers() {
-        return 2;
+        return 1;
     }
 
     @Nullable
@@ -876,10 +718,6 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
         this.pressingBack = pressingBack;
     }
 
-//    protected Text getDefaultName() {
-//        return Text.translatable(this.asItem().getTranslationKey());
-//    }
-
     public boolean isSubmergedInWater() {
         return this.location == LightCycleEntity.Location.UNDER_WATER || this.location == LightCycleEntity.Location.UNDER_FLOWING_WATER;
     }
@@ -890,9 +728,6 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
 
     static {
         LIGHTCYCLE_TYPE = DataTracker.registerData(LightCycleEntity.class, TrackedDataHandlerRegistry.INTEGER);
-        LEFT_PADDLE_MOVING = DataTracker.registerData(LightCycleEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
-        RIGHT_PADDLE_MOVING = DataTracker.registerData(LightCycleEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
-        BUBBLE_WOBBLE_TICKS = DataTracker.registerData(LightCycleEntity.class, TrackedDataHandlerRegistry.INTEGER);
         DAMAGE_WOBBLE_TICKS = DataTracker.registerData(LightCycleEntity.class, TrackedDataHandlerRegistry.INTEGER);
         DAMAGE_WOBBLE_SIDE = DataTracker.registerData(LightCycleEntity.class, TrackedDataHandlerRegistry.INTEGER);
         DAMAGE_WOBBLE_STRENGTH = DataTracker.registerData(LightCycleEntity.class, TrackedDataHandlerRegistry.FLOAT);
