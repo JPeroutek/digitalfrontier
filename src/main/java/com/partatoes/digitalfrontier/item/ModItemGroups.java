@@ -46,6 +46,10 @@ public class ModItemGroups {
                         entries.add(ModBlocks.CRACKED_GRIDSTONE_STAIRS);
                         entries.add(ModBlocks.CRACKED_GRIDSTONE_SLAB);
                         entries.add(ModBlocks.CRACKED_GRIDSTONE_WALL);
+
+                        entries.add(ModBlocks.GRIDSTONE_BRICKS_STAIRS);
+                        entries.add(ModBlocks.GRIDSTONE_BRICKS_SLAB);
+                        entries.add(ModBlocks.GRIDSTONE_BRICKS_WALL);
                     })
                     .build());
 

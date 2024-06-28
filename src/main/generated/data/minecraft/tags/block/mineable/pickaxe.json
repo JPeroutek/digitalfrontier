@@ -16,6 +16,9 @@
     "digitalfrontier:cracked_gridstone_stairs",
     "digitalfrontier:cracked_gridstone_slab",
     "digitalfrontier:cracked_gridstone_wall",
+    "digitalfrontier:gridstone_bricks_stairs",
+    "digitalfrontier:gridstone_bricks_slab",
+    "digitalfrontier:gridstone_bricks_wall",
     "digitalfrontier:gridstone_pressure_plate"
   ]
 }

@@ -89,5 +89,15 @@ public class ModRecipeProvider extends FabricRecipeProvider {
                 .input('G', ModBlocks.CRACKED_GRIDSTONE_BLOCK)
                 .criterion(hasItem(ModBlocks.CRACKED_GRIDSTONE_BLOCK), conditionsFromItem(ModBlocks.CRACKED_GRIDSTONE_BLOCK))
                 .offerTo(exporter, Identifier.of(getRecipeName(ModBlocks.CRACKED_GRIDSTONE_STAIRS)));
+
+        offerSlabRecipe(exporter, RecipeCategory.BUILDING_BLOCKS, ModBlocks.GRIDSTONE_BRICKS_SLAB, ModBlocks.GRIDSTONE_BRICKS_BLOCK);
+        offerWallRecipe(exporter, RecipeCategory.BUILDING_BLOCKS, ModBlocks.GRIDSTONE_BRICKS_WALL, ModBlocks.GRIDSTONE_BRICKS_BLOCK);
+        ShapedRecipeJsonBuilder.create(RecipeCategory.BUILDING_BLOCKS, ModBlocks.CRACKED_GRIDSTONE_STAIRS, 4)
+                .pattern("G  ")
+                .pattern("GG ")
+                .pattern("GGG")
+                .input('G', ModBlocks.GRIDSTONE_BRICKS_BLOCK)
+                .criterion(hasItem(ModBlocks.GRIDSTONE_BRICKS_BLOCK), conditionsFromItem(ModBlocks.GRIDSTONE_BRICKS_BLOCK))
+                .offerTo(exporter, Identifier.of(getRecipeName(ModBlocks.GRIDSTONE_BRICKS_STAIRS)));
     }
 }

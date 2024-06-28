@@ -27,6 +27,14 @@
   "block.digitalfrontier.gridstone_wall": "Gridstone Wall",
   "block.digitalfrontier.gridstone_pressure_plate": "Gridstone Pressure Plate",
 
+  "block.digitalfrontier.cracked_gridstone_stairs": "Cracked Gridstone Stairs",
+  "block.digitalfrontier.cracked_gridstone_slab": "Cracked Gridstone Slab",
+  "block.digitalfrontier.cracked_gridstone_wall": "Cracked Gridstone Wall",
+
+  "block.digitalfrontier.gridstone_bricks_stairs": "Gridstone Brick Stairs",
+  "block.digitalfrontier.gridstone_bricks_slab": "Gridstone Brick Slab",
+  "block.digitalfrontier.gridstone_bricks_wall": "Gridstone Brick Wall",
+
   "itemgroup.digitalfrontier": "Digital Frontier Items",
 
   "tag.item.digitalfrontier.bit": "Bit",

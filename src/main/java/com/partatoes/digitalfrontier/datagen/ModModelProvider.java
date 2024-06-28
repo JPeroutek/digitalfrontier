@@ -22,8 +22,8 @@ public class ModModelProvider extends FabricModelProvider {
     public void generateBlockStateModels(BlockStateModelGenerator blockStateModelGenerator) {
         BlockStateModelGenerator.BlockTexturePool gridstonePool = blockStateModelGenerator.registerCubeAllModelTexturePool(ModBlocks.GRIDSTONE_BLOCK);
         BlockStateModelGenerator.BlockTexturePool crackedGridstonePool = blockStateModelGenerator.registerCubeAllModelTexturePool(ModBlocks.CRACKED_GRIDSTONE_BLOCK);
+        BlockStateModelGenerator.BlockTexturePool gridstoneBricksPool = blockStateModelGenerator.registerCubeAllModelTexturePool(ModBlocks.GRIDSTONE_BRICKS_BLOCK);
 
-        blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.GRIDSTONE_BRICKS_BLOCK);
         blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.LIME_GRIDSTONE_BLOCK);
         blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.BLUE_GRIDSTONE_BLOCK);
         blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.RED_GRIDSTONE_BLOCK);
@@ -41,6 +41,10 @@ public class ModModelProvider extends FabricModelProvider {
         crackedGridstonePool.wall(ModBlocks.CRACKED_GRIDSTONE_WALL);
         crackedGridstonePool.stairs(ModBlocks.CRACKED_GRIDSTONE_STAIRS);
         crackedGridstonePool.slab(ModBlocks.CRACKED_GRIDSTONE_SLAB);
+
+        gridstoneBricksPool.wall(ModBlocks.GRIDSTONE_BRICKS_WALL);
+        gridstoneBricksPool.stairs(ModBlocks.GRIDSTONE_BRICKS_STAIRS);
+        gridstoneBricksPool.slab(ModBlocks.GRIDSTONE_BRICKS_SLAB);
 
         // Horrifying mess to create blockstates and models for Lamp
         blockStateModelGenerator.blockStateCollector.accept(

@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/outer_stairs",
+  "textures": {
+    "bottom": "digitalfrontier:block/gridstone_bricks",
+    "side": "digitalfrontier:block/gridstone_bricks",
+    "top": "digitalfrontier:block/gridstone_bricks"
+  }
+}
