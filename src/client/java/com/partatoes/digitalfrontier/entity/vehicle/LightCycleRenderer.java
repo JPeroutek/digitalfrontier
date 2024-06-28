@@ -15,7 +15,7 @@ import net.minecraft.util.math.RotationAxis;
 
 public class LightCycleRenderer extends EntityRenderer<LightCycleEntity> {
     private final LightCycleModel<LightCycleEntity> MODEL;
-    private static final Identifier TEXTURE = new Identifier(DigitalFrontier.MOD_ID, "textures/entity/lightcycle_blue.png");
+    private static final Identifier TEXTURE = Identifier.of(DigitalFrontier.MOD_ID, "textures/entity/lightcycle_blue.png");
     public LightCycleRenderer(EntityRendererFactory.Context ctx) {
         super(ctx);
         this.MODEL = createModel(ctx);
@@ -39,7 +39,7 @@ public class LightCycleRenderer extends EntityRenderer<LightCycleEntity> {
         // Shift it back into position
         matrices.translate(0f, -1.5f, 0f);
         VertexConsumer vertexConsumer = vertexConsumers.getBuffer(this.MODEL.getLayer(TEXTURE));
-        this.MODEL.render(matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV, 1f, 1f, 1f, 1f);
+        this.MODEL.render(matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV);
 
         matrices.pop();
         super.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);

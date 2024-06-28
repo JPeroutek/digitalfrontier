@@ -35,7 +35,7 @@ public class ModConfiguredFeatures {
     }
 
     public static RegistryKey<ConfiguredFeature<?, ?>> registerKey(String name) {
-        return RegistryKey.of(RegistryKeys.CONFIGURED_FEATURE, new Identifier(DigitalFrontier.MOD_ID, name));
+        return RegistryKey.of(RegistryKeys.CONFIGURED_FEATURE, Identifier.of(DigitalFrontier.MOD_ID, name));
     }
 
     private static <FC extends FeatureConfig, F extends Feature<FC>> void register(Registerable<ConfiguredFeature<?, ?>> context,

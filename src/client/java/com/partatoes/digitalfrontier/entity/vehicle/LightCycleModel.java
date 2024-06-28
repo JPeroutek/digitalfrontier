@@ -48,8 +48,8 @@ public class LightCycleModel<T extends LightCycleEntity> extends SinglePartEntit
 	}
 
 	@Override
-	public void render(MatrixStack matrices, VertexConsumer vertexConsumer, int light, int overlay, float red, float green, float blue, float alpha) {
-		LightCycle.render(matrices, vertexConsumer, light, overlay, red, green, blue, alpha);
+	public void render(MatrixStack matrices, VertexConsumer vertices, int light, int overlay, int color) {
+		LightCycle.render(matrices, vertices, light, overlay, color);
 	}
 
 	@Override

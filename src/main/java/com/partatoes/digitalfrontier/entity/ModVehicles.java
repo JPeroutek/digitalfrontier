@@ -9,7 +9,7 @@ import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
 
 public class ModVehicles {
-    public static final Identifier LIGHTCYCLE_ID = new Identifier(DigitalFrontier.MOD_ID, "lightcycle");
+    public static final Identifier LIGHTCYCLE_ID = Identifier.of(DigitalFrontier.MOD_ID, "lightcycle");
 
     public static final EntityType<LightCycleEntity> LIGHTCYCLE = Registry.register(
             Registries.ENTITY_TYPE,

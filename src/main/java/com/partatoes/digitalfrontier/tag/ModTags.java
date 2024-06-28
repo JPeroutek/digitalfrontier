@@ -12,7 +12,7 @@ public class ModTags {
         public static final TagKey<Block> GRID_BLOCK = createTag("grid_block");
 
         private static TagKey<Block> createTag(String name) {
-            return TagKey.of(RegistryKeys.BLOCK, new Identifier(DigitalFrontier.MOD_ID, name));
+            return TagKey.of(RegistryKeys.BLOCK, Identifier.of(DigitalFrontier.MOD_ID, name));
         }
 
     }
@@ -20,7 +20,7 @@ public class ModTags {
     public static class Items {
         public static final TagKey<Item> BIT = createTag("bit");
         private static TagKey<Item> createTag(String name) {
-            return TagKey.of(RegistryKeys.ITEM, new Identifier(DigitalFrontier.MOD_ID, name));
+            return TagKey.of(RegistryKeys.ITEM, Identifier.of(DigitalFrontier.MOD_ID, name));
         }
 
     }

@@ -28,7 +28,7 @@ public class ModItems {
     public static final Item LIGHTCYCLE_BATON = registerItem("lightcycle_baton", new LightCycleBaton(new Item.Settings().maxCount(1)));
 
     private static Item registerItem(String name, Item item) {
-        return Registry.register(Registries.ITEM, new Identifier(DigitalFrontier.MOD_ID, name), item);
+        return Registry.register(Registries.ITEM, Identifier.of(DigitalFrontier.MOD_ID, name), item);
     }
 
     public static void registerModItems() {

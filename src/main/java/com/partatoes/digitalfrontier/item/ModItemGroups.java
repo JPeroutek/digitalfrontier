@@ -11,7 +11,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 public class ModItemGroups {
-    public static final ItemGroup DIGITAL_FRONTIER_GROUP = Registry.register(Registries.ITEM_GROUP, new Identifier(DigitalFrontier.MOD_ID, "digitalfrontier"),
+    public static final ItemGroup DIGITAL_FRONTIER_GROUP = Registry.register(Registries.ITEM_GROUP, Identifier.of(DigitalFrontier.MOD_ID, "digitalfrontier"),
             FabricItemGroup.builder()
                     .displayName(Text.translatable("itemgroup.digitalfrontier"))
                     .icon(() -> new ItemStack(ModItems.BINARY_1))

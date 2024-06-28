@@ -9,7 +9,7 @@ import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
 
 public class ModEntities {
-    public static final Identifier PROGRAM_ID = new Identifier(DigitalFrontier.MOD_ID, "program");
+    public static final Identifier PROGRAM_ID = Identifier.of(DigitalFrontier.MOD_ID, "program");
 
     public static final EntityType<ProgramEntity> PROGRAM = Registry.register(
             Registries.ENTITY_TYPE,

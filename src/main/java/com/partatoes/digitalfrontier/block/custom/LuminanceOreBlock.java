@@ -19,6 +19,7 @@ import net.minecraft.util.ItemActionResult;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.intprovider.UniformIntProvider;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
 
@@ -61,9 +62,8 @@ public class LuminanceOreBlock extends Block {
     @Override
     public void onStacksDropped(BlockState state, ServerWorld world, BlockPos pos, ItemStack tool, boolean dropExperience) {
         super.onStacksDropped(state, world, pos, tool, dropExperience);
-        if (dropExperience && EnchantmentHelper.getLevel(Enchantments.SILK_TOUCH, tool) == 0) {
-            int i = 1 + world.random.nextInt(5);
-            this.dropExperience(world, pos, i);
+        if (dropExperience) {
+            this.dropExperienceWhenMined(world, pos, tool, UniformIntProvider.create(1, 5));
         }
     }
 

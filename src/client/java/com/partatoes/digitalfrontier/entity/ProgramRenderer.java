@@ -9,7 +9,7 @@ import net.minecraft.client.render.entity.model.EntityModelLayer;
 import net.minecraft.util.Identifier;
 
 public class ProgramRenderer extends BipedEntityRenderer<ProgramEntity, ProgramModel<ProgramEntity>> {
-    private static final Identifier TEXTURE = new Identifier(DigitalFrontier.MOD_ID, "textures/entity/quorra64.png");
+    private static final Identifier TEXTURE = Identifier.of(DigitalFrontier.MOD_ID, "textures/entity/quorra64.png");
 
     public ProgramRenderer(EntityRendererFactory.Context ctx) {
         super(ctx, createModel(ctx), 0.5f);

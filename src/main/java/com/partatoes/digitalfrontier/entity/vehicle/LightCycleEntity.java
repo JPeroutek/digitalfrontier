@@ -182,7 +182,7 @@ public class LightCycleEntity extends Entity implements VariantHolder<LightCycle
         return true;
     }
 
-    protected Vec3d positionInPortal(Direction.Axis portalAxis, BlockLocating.Rectangle portalRect) {
+    public Vec3d positionInPortal(Direction.Axis portalAxis, BlockLocating.Rectangle portalRect) {
         return LivingEntity.positionInPortal(super.positionInPortal(portalAxis, portalRect));
     }
 

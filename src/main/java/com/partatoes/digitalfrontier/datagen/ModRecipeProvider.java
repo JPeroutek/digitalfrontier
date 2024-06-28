@@ -71,7 +71,7 @@ public class ModRecipeProvider extends FabricRecipeProvider {
                 .pattern("GGG")
                 .input('G', ModBlocks.GRIDSTONE_BLOCK)
                 .criterion(hasItem(ModBlocks.GRIDSTONE_BLOCK), conditionsFromItem(ModBlocks.GRIDSTONE_BLOCK))
-                .offerTo(exporter, new Identifier(getRecipeName(ModBlocks.GRIDSTONE_STAIRS)));
+                .offerTo(exporter, Identifier.of(getRecipeName(ModBlocks.GRIDSTONE_STAIRS)));
 
         ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, ModItems.LIGHTCYCLE_BATON, 1)
                 .pattern("B")
