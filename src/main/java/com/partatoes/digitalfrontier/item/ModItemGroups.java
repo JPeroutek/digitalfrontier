@@ -42,6 +42,10 @@ public class ModItemGroups {
                         entries.add(ModBlocks.GRIDSTONE_SLAB);
                         entries.add(ModBlocks.GRIDSTONE_WALL);
                         entries.add(ModBlocks.GRIDSTONE_PRESSURE_PLATE);
+
+                        entries.add(ModBlocks.CRACKED_GRIDSTONE_STAIRS);
+                        entries.add(ModBlocks.CRACKED_GRIDSTONE_SLAB);
+                        entries.add(ModBlocks.CRACKED_GRIDSTONE_WALL);
                     })
                     .build());
 

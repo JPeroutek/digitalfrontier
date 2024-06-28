@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "G": {
+      "item": "digitalfrontier:cracked_gridstone"
+    }
+  },
+  "pattern": [
+    "G  ",
+    "GG ",
+    "GGG"
+  ],
+  "result": {
+    "count": 4,
+    "id": "digitalfrontier:cracked_gridstone_stairs"
+  }
+}

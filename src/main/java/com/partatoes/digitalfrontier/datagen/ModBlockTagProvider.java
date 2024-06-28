@@ -31,6 +31,9 @@ public class ModBlockTagProvider extends FabricTagProvider.BlockTagProvider {
                 .add(ModBlocks.GRIDSTONE_STAIRS)
                 .add(ModBlocks.GRIDSTONE_SLAB)
                 .add(ModBlocks.GRIDSTONE_WALL)
+                .add(ModBlocks.CRACKED_GRIDSTONE_STAIRS)
+                .add(ModBlocks.CRACKED_GRIDSTONE_SLAB)
+                .add(ModBlocks.CRACKED_GRIDSTONE_WALL)
                 .add(ModBlocks.GRIDSTONE_PRESSURE_PLATE)
                 .add(ModBlocks.LUMINANCE_ORE)
                 .add(ModBlocks.GRIDSTONE_WALL);
@@ -49,12 +52,16 @@ public class ModBlockTagProvider extends FabricTagProvider.BlockTagProvider {
                 .add(ModBlocks.GRIDSTONE_STAIRS)
                 .add(ModBlocks.GRIDSTONE_SLAB)
                 .add(ModBlocks.GRIDSTONE_WALL)
+                .add(ModBlocks.CRACKED_GRIDSTONE_STAIRS)
+                .add(ModBlocks.CRACKED_GRIDSTONE_SLAB)
+                .add(ModBlocks.CRACKED_GRIDSTONE_WALL)
                 .add(ModBlocks.GRIDSTONE_PRESSURE_PLATE);
 
         getOrCreateTagBuilder(BlockTags.NEEDS_IRON_TOOL)
                 .add(ModBlocks.LUMINANCE_ORE);
 
         getOrCreateTagBuilder(BlockTags.WALLS)
-                .add(ModBlocks.GRIDSTONE_WALL);
+                .add(ModBlocks.GRIDSTONE_WALL)
+                .add(ModBlocks.CRACKED_GRIDSTONE_WALL);
     }
 }

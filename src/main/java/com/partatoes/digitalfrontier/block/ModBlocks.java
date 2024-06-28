@@ -44,6 +44,12 @@ public class ModBlocks {
             new SlabBlock(AbstractBlock.Settings.copy(Blocks.DEEPSLATE)));
     public static final Block GRIDSTONE_WALL = registerBlock("gridstone_wall",
             new WallBlock(AbstractBlock.Settings.copy(Blocks.DEEPSLATE)));
+    public static final Block CRACKED_GRIDSTONE_STAIRS = registerBlock("cracked_gridstone_stairs",
+            new StairsBlock(ModBlocks.GRIDSTONE_BLOCK.getDefaultState(), AbstractBlock.Settings.copy(Blocks.DEEPSLATE)));
+    public static final Block CRACKED_GRIDSTONE_SLAB = registerBlock("cracked_gridstone_slab",
+            new SlabBlock(AbstractBlock.Settings.copy(Blocks.DEEPSLATE)));
+    public static final Block CRACKED_GRIDSTONE_WALL = registerBlock("cracked_gridstone_wall",
+            new WallBlock(AbstractBlock.Settings.copy(Blocks.DEEPSLATE)));
     public static final Block GRIDSTONE_PRESSURE_PLATE = registerBlock("gridstone_pressure_plate",
             new PressurePlateBlock(BlockSetType.STONE, AbstractBlock.Settings.copy(Blocks.DEEPSLATE)));
     public static final Block KEYBOARD_BLOCK = registerBlock("keyboard",

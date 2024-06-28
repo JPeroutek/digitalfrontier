@@ -29,6 +29,8 @@
 
   "itemgroup.digitalfrontier": "Digital Frontier Items",
 
+  "tag.item.digitalfrontier.bit": "Bit",
+
   "entity.digitalfrontier.lightcycle": "Light Cycle",
   "entity.digitalfrontier.program": "Program"
 }
