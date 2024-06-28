@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "redstone",
+  "ingredients": [
+    {
+      "item": "digitalfrontier:binary_1"
+    },
+    {
+      "item": "digitalfrontier:luminessence"
+    }
+  ],
+  "result": {
+    "count": 1,
+    "id": "digitalfrontier:pixel_dust"
+  }
+}

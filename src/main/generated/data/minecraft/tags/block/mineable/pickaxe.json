@@ -1,0 +1,18 @@
+{
+  "values": [
+    "digitalfrontier:gridstone",
+    "digitalfrontier:cracked_gridstone",
+    "digitalfrontier:gridstone_bricks",
+    "digitalfrontier:lime_gridstone",
+    "digitalfrontier:blue_gridstone",
+    "digitalfrontier:red_gridstone",
+    "digitalfrontier:white_gridstone",
+    "digitalfrontier:orange_gridstone",
+    "digitalfrontier:luminance_ore",
+    "digitalfrontier:booster",
+    "digitalfrontier:gridstone_stairs",
+    "digitalfrontier:gridstone_slab",
+    "digitalfrontier:gridstone_wall",
+    "digitalfrontier:gridstone_pressure_plate"
+  ]
+}
