@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "digitalfrontier:cracked_gridstone"
+  },
+  "result": {
+    "count": 1,
+    "id": "digitalfrontier:cracked_gridstone_stairs"
+  }
+}

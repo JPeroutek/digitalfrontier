@@ -99,5 +99,20 @@ public class ModRecipeProvider extends FabricRecipeProvider {
                 .input('G', ModBlocks.GRIDSTONE_BRICKS_BLOCK)
                 .criterion(hasItem(ModBlocks.GRIDSTONE_BRICKS_BLOCK), conditionsFromItem(ModBlocks.GRIDSTONE_BRICKS_BLOCK))
                 .offerTo(exporter, Identifier.of(getRecipeName(ModBlocks.GRIDSTONE_BRICKS_STAIRS)));
+
+        offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS, ModBlocks.GRIDSTONE_BRICKS_BLOCK, ModBlocks.GRIDSTONE_BLOCK);
+
+        offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS, ModBlocks.GRIDSTONE_STAIRS, ModBlocks.GRIDSTONE_BLOCK);
+        offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS, ModBlocks.GRIDSTONE_WALL, ModBlocks.GRIDSTONE_BLOCK);
+        offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS, ModBlocks.GRIDSTONE_SLAB, ModBlocks.GRIDSTONE_BLOCK, 2);
+        offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS, ModBlocks.GRIDSTONE_BRICKS_SLAB, ModBlocks.GRIDSTONE_BLOCK, 2);
+
+        offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS, ModBlocks.GRIDSTONE_BRICKS_STAIRS, ModBlocks.GRIDSTONE_BRICKS_BLOCK);
+        offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS, ModBlocks.GRIDSTONE_BRICKS_WALL, ModBlocks.GRIDSTONE_BRICKS_BLOCK);
+        offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS, ModBlocks.GRIDSTONE_BRICKS_SLAB, ModBlocks.GRIDSTONE_BRICKS_BLOCK, 2);
+
+        offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS, ModBlocks.CRACKED_GRIDSTONE_STAIRS, ModBlocks.CRACKED_GRIDSTONE_BLOCK);
+        offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS, ModBlocks.CRACKED_GRIDSTONE_WALL, ModBlocks.CRACKED_GRIDSTONE_BLOCK);
+        offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS, ModBlocks.CRACKED_GRIDSTONE_SLAB, ModBlocks.CRACKED_GRIDSTONE_BLOCK, 2);
     }
 }
