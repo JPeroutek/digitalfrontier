@@ -512,6 +512,13 @@
 			}
 		}
 	],
+	"display": {
+		"gui": {
+			"rotation": [90, -180, 0],
+			"translation": [-0.5, 4.75, 0],
+			"scale": [1.25, 1.25, 1.25]
+		}
+	},
 	"groups": [
 		{
 			"name": "Keyboard",
