@@ -6,6 +6,8 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Identifier;
 
 public class ModVehicles {
@@ -16,7 +18,7 @@ public class ModVehicles {
             LIGHTCYCLE_ID,
             EntityType.Builder.create(LightCycleEntity::new, SpawnGroup.MISC)
                     .dimensions(1f, 1f)
-                    .build());
+                    .build(RegistryKey.of(RegistryKeys.ENTITY_TYPE, LIGHTCYCLE_ID)));
 
     public static void registerModVehicles() {
         DigitalFrontier.LOGGER.info("Registering ModVehicles for " + DigitalFrontier.MOD_ID);

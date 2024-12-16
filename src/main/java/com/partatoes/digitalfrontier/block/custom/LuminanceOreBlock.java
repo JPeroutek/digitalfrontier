@@ -3,8 +3,6 @@ package com.partatoes.digitalfrontier.block.custom;
 import com.partatoes.digitalfrontier.particle.LuminanceDustParticleEffect;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
@@ -14,8 +12,8 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.state.property.Properties;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.ItemActionResult;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -49,14 +47,14 @@ public class LuminanceOreBlock extends Block {
         super.onSteppedOn(world, pos, state, entity);
     }
     @Override
-    protected ItemActionResult onUseWithItem(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+    protected ActionResult onUseWithItem(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         if (world.isClient) {
             LuminanceOreBlock.spawnParticles(world, pos);
         } else {
             LuminanceOreBlock.light(state, world, pos);
         }
 
-        return stack.getItem() instanceof BlockItem && (new ItemPlacementContext(player, hand, stack, hit)).canPlace() ? ItemActionResult.SKIP_DEFAULT_BLOCK_INTERACTION : ItemActionResult.SUCCESS;
+        return stack.getItem() instanceof BlockItem && (new ItemPlacementContext(player, hand, stack, hit)).canPlace() ? ActionResult.PASS : ActionResult.SUCCESS;
     }
 
     @Override
@@ -98,7 +96,7 @@ public class LuminanceOreBlock extends Block {
         Random random = world.random;
         for (Direction direction : Direction.values()) {
             BlockPos blockPos = pos.offset(direction);
-            if (world.getBlockState(blockPos).isOpaqueFullCube(world, blockPos)) continue;
+            if (world.getBlockState(blockPos).isOpaqueFullCube()) continue;
             Direction.Axis axis = direction.getAxis();
             double e = axis == Direction.Axis.X ? 0.5 + d * (double)direction.getOffsetX() : (double)random.nextFloat();
             double f = axis == Direction.Axis.Y ? 0.5 + d * (double)direction.getOffsetY() : (double)random.nextFloat();

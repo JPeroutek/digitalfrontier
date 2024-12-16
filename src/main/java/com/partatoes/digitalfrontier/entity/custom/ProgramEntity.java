@@ -24,7 +24,7 @@ public class ProgramEntity extends MobEntity {
 
     public static DefaultAttributeContainer.Builder createProgramAttributes() {
         return MobEntity.createMobAttributes()
-                .add(EntityAttributes.GENERIC_MAX_HEALTH, 20)
-                .add(EntityAttributes.GENERIC_MOVEMENT_SPEED, 2);
+                .add(EntityAttributes.MAX_HEALTH, 20)
+                .add(EntityAttributes.MOVEMENT_SPEED, 2);
     }
 }
