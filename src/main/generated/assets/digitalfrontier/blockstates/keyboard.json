@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "digitalfrontier:block/keyboard",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "digitalfrontier:block/keyboard"
+    },
+    "facing=south": {
+      "model": "digitalfrontier:block/keyboard",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "digitalfrontier:block/keyboard",
+      "y": 270
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "digitalfrontier:item/lightcycle_baton"
+  }
+}
