@@ -138,7 +138,9 @@ public class ModBlocks {
     private static void registerBlockItem(Identifier name, Block block) {
         Registry.register(Registries.ITEM,
             name,
-            new BlockItem(block, new Item.Settings().registryKey(RegistryKey.of(RegistryKeys.ITEM, name))));
+            new BlockItem(block, new Item.Settings()
+                    .useBlockPrefixedTranslationKey()
+                    .registryKey(RegistryKey.of(RegistryKeys.ITEM, name))));
     }
 
     public static void registerModBlocks() {

@@ -1,0 +1,22 @@
+{
+  "block.digitalfrontier.booster": "Boost Block",
+  "block.digitalfrontier.cracked_gridstone": "Cracked Gridstone",
+  "block.digitalfrontier.gridstone": "Gridstone",
+  "block.digitalfrontier.gridstone_bricks": "Gridstone Bricks",
+  "block.digitalfrontier.luminance_ore": "Luminance Ore",
+  "block.digitalfrontier.pixel_block": "Pixel",
+  "block.digitalfrontier.pixel_lamp": "Pixel Lamp",
+  "entity.digitalfrontier.lightcycle": "Light Cycle",
+  "entity.digitalfrontier.program": "Program",
+  "item.digitalfrontier.binary_0": "Binary 0",
+  "item.digitalfrontier.binary_1": "Binary 1",
+  "item.digitalfrontier.byte": "Byte",
+  "item.digitalfrontier.coal_dust": "Coal Dust",
+  "item.digitalfrontier.lightcycle_baton": "Lightcycle Baton",
+  "item.digitalfrontier.luminance_detector": "Luminessence Detector",
+  "item.digitalfrontier.luminance_detector.tooltip": "Right click a block to detect luminance ore below it.",
+  "item.digitalfrontier.luminessence": "Luminessence",
+  "item.digitalfrontier.pixel_dust": "Pixel Dust",
+  "itemgroup.digitalfrontier": "Digital Frontier items",
+  "tag.item.digitalfrontier.bit": "Bit"
+}
