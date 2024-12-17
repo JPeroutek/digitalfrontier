@@ -2,9 +2,7 @@
   "type": "minecraft:crafting_shaped",
   "category": "building",
   "key": {
-    "#": {
-      "item": "digitalfrontier:cracked_gridstone"
-    }
+    "#": "digitalfrontier:cracked_gridstone"
   },
   "pattern": [
     "###"

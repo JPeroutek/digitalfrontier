@@ -2,12 +2,8 @@
   "type": "minecraft:crafting_shapeless",
   "category": "redstone",
   "ingredients": [
-    {
-      "item": "minecraft:redstone"
-    },
-    {
-      "item": "digitalfrontier:luminessence"
-    }
+    "minecraft:redstone",
+    "digitalfrontier:luminessence"
   ],
   "result": {
     "count": 2,

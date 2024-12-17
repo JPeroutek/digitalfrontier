@@ -6,6 +6,8 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Identifier;
 
 public class ModEntities {
@@ -14,7 +16,7 @@ public class ModEntities {
     public static final EntityType<ProgramEntity> PROGRAM = Registry.register(
             Registries.ENTITY_TYPE,
             PROGRAM_ID,
-            EntityType.Builder.create(ProgramEntity::new, SpawnGroup.MISC).build());
+            EntityType.Builder.create(ProgramEntity::new, SpawnGroup.MISC).build(RegistryKey.of(RegistryKeys.ENTITY_TYPE, PROGRAM_ID)));
 
     public static void registerModEntities() {
         DigitalFrontier.LOGGER.info("Registering ModEntities for " + DigitalFrontier.MOD_ID);

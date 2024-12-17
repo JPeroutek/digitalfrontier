@@ -2,9 +2,7 @@
   "type": "minecraft:crafting_shaped",
   "category": "building",
   "key": {
-    "G": {
-      "item": "digitalfrontier:gridstone_bricks"
-    }
+    "G": "digitalfrontier:gridstone_bricks"
   },
   "pattern": [
     "G  ",

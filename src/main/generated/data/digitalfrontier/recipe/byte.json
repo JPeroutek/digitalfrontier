@@ -2,30 +2,14 @@
   "type": "minecraft:crafting_shapeless",
   "category": "misc",
   "ingredients": [
-    {
-      "tag": "digitalfrontier:bit"
-    },
-    {
-      "tag": "digitalfrontier:bit"
-    },
-    {
-      "tag": "digitalfrontier:bit"
-    },
-    {
-      "tag": "digitalfrontier:bit"
-    },
-    {
-      "tag": "digitalfrontier:bit"
-    },
-    {
-      "tag": "digitalfrontier:bit"
-    },
-    {
-      "tag": "digitalfrontier:bit"
-    },
-    {
-      "tag": "digitalfrontier:bit"
-    }
+    "#digitalfrontier:bit",
+    "#digitalfrontier:bit",
+    "#digitalfrontier:bit",
+    "#digitalfrontier:bit",
+    "#digitalfrontier:bit",
+    "#digitalfrontier:bit",
+    "#digitalfrontier:bit",
+    "#digitalfrontier:bit"
   ],
   "result": {
     "count": 1,

@@ -1,8 +1,6 @@
 {
   "type": "minecraft:stonecutting",
-  "ingredient": {
-    "item": "digitalfrontier:gridstone_bricks"
-  },
+  "ingredient": "digitalfrontier:gridstone_bricks",
   "result": {
     "count": 1,
     "id": "digitalfrontier:gridstone_bricks_wall"

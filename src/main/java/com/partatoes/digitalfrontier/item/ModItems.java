@@ -9,26 +9,43 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroups;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Identifier;
 
 public class ModItems {
+    public static final Identifier BINARY_0_ID = Identifier.of(DigitalFrontier.MOD_ID, "binary_0");
+    public static final Item BINARY_0 = registerItem(BINARY_0_ID, new Item(new Item.Settings()
+            .registryKey(RegistryKey.of(RegistryKeys.ITEM, BINARY_0_ID))));
+    public static final Identifier BINARY_1_ID = Identifier.of(DigitalFrontier.MOD_ID, "binary_1");
+    public static final Item BINARY_1 = registerItem(BINARY_1_ID, new Item(new Item.Settings()
+            .registryKey(RegistryKey.of(RegistryKeys.ITEM, BINARY_1_ID))));
+    public static final Identifier PIXEL_DUST_ID = Identifier.of(DigitalFrontier.MOD_ID, "pixel_dust");
+    public static final Item PIXEL_DUST = registerItem(PIXEL_DUST_ID, new Item(new Item.Settings()
+            .registryKey(RegistryKey.of(RegistryKeys.ITEM, PIXEL_DUST_ID))));
+    public static final Identifier LUMINANCE_ORE_DETECTOR_ID = Identifier.of(DigitalFrontier.MOD_ID, "luminance_detector");
+    public static final Item LUMINANCE_ORE_DETECTOR = registerItem(LUMINANCE_ORE_DETECTOR_ID,
+            new LuminanceOreDetector(new Item.Settings()
+                    .maxDamage(128)
+                    .registryKey(RegistryKey.of(RegistryKeys.ITEM, LUMINANCE_ORE_DETECTOR_ID))));
+    public static final Identifier LUMINESSENCE_ID = Identifier.of(DigitalFrontier.MOD_ID, "luminessence");
+    public static final Item LUMINESSENCE = registerItem(LUMINESSENCE_ID, new Item(new Item.Settings()
+            .registryKey(RegistryKey.of(RegistryKeys.ITEM, LUMINESSENCE_ID))));
+    public static final Identifier BYTE_ID = Identifier.of(DigitalFrontier.MOD_ID, "byte");
+    public static final Item BYTE = registerItem(BYTE_ID,
+            new Item(new Item.Settings()
+                    .food(ModFoodComponents.BYTE)
+                    .registryKey(RegistryKey.of(RegistryKeys.ITEM, BYTE_ID))));
+    public static final Identifier COAL_DUST_ID = Identifier.of(DigitalFrontier.MOD_ID, "coal_dust");
+    public static final Item COAL_DUST = registerItem(COAL_DUST_ID, new Item(new Item.Settings()
+            .registryKey(RegistryKey.of(RegistryKeys.ITEM, COAL_DUST_ID))));
+    public static final Identifier LIGHTCYCLE_BATON_ID = Identifier.of(DigitalFrontier.MOD_ID, "lightcycle_baton");
+    public static final Item LIGHTCYCLE_BATON = registerItem(LIGHTCYCLE_BATON_ID, new LightCycleBaton(new Item.Settings()
+            .maxCount(1)
+            .registryKey(RegistryKey.of(RegistryKeys.ITEM, LIGHTCYCLE_BATON_ID))));
 
-    public static final Item BINARY_0 = registerItem("binary_0", new Item(new Item.Settings()));
-    public static final Item BINARY_1 = registerItem("binary_1", new Item(new Item.Settings()));
-    public static final Item PIXEL_DUST = registerItem("pixel_dust", new Item(new Item.Settings()));
-    public static final Item LUMINANCE_ORE_DETECTOR = registerItem("luminance_detector",
-            new LuminanceOreDetector(new Item.Settings().maxDamage(128)));
-    public static final Item LUMINESSENCE = registerItem("luminessence", new Item(new Item.Settings()));
-
-    public static final Item BYTE = registerItem("byte",
-            new Item(new Item.Settings().food(ModFoodComponents.BYTE)));
-
-    public static final Item COAL_DUST = registerItem("coal_dust", new Item(new Item.Settings()));
-
-    public static final Item LIGHTCYCLE_BATON = registerItem("lightcycle_baton", new LightCycleBaton(new Item.Settings().maxCount(1)));
-
-    private static Item registerItem(String name, Item item) {
-        return Registry.register(Registries.ITEM, Identifier.of(DigitalFrontier.MOD_ID, name), item);
+    private static Item registerItem(Identifier id, Item item) {
+        return Registry.register(Registries.ITEM, id, item);
     }
 
     public static void registerModItems() {

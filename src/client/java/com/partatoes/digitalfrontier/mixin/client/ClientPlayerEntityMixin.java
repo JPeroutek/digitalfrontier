@@ -13,14 +13,14 @@ public class ClientPlayerEntityMixin {
     public void addVehicleRidingCode(CallbackInfo ci) {
         ClientPlayerEntity clientPlayerEntity = (ClientPlayerEntity)(Object) this;
         if (clientPlayerEntity.getControllingVehicle() instanceof LightCycleEntity vehicle) {
-            vehicle.setInputs(clientPlayerEntity.input.pressingLeft,
-                    clientPlayerEntity.input.pressingRight,
-                    clientPlayerEntity.input.pressingForward,
-                    clientPlayerEntity.input.pressingBack);
-            clientPlayerEntity.riding |= clientPlayerEntity.input.pressingLeft||
-                    clientPlayerEntity.input.pressingRight||
-                    clientPlayerEntity.input.pressingForward||
-                    clientPlayerEntity.input.pressingBack;
+            vehicle.setInputs(clientPlayerEntity.input.playerInput.left(),
+                    clientPlayerEntity.input.playerInput.right(),
+                    clientPlayerEntity.input.playerInput.forward(),
+                    clientPlayerEntity.input.playerInput.backward());
+            clientPlayerEntity.riding |= clientPlayerEntity.input.playerInput.left() ||
+                    clientPlayerEntity.input.playerInput.right() ||
+                    clientPlayerEntity.input.playerInput.forward() ||
+                    clientPlayerEntity.input.playerInput.backward();
         }
     }
 }

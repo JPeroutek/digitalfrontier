@@ -5,17 +5,16 @@
 package com.partatoes.digitalfrontier.entity.vehicle;
 
 import net.minecraft.client.model.*;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.entity.model.SinglePartEntityModel;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.vehicle.VehicleEntity;
+import net.minecraft.client.render.entity.model.EntityModel;
+import net.minecraft.client.render.entity.state.EntityRenderState;
 
-public class LightCycleModel<T extends LightCycleEntity> extends SinglePartEntityModel<T> {
+public class LightCycleModel<T extends EntityRenderState> extends EntityModel<T> {
 	private final ModelPart LightCycle;
 	private final ModelPart FrontTire;
 	private final ModelPart MainBody;
 	private final ModelPart RearTire;
 	public LightCycleModel(ModelPart root) {
+		super(root.getChild("LightCycle"));
 		this.LightCycle = root.getChild("LightCycle");
 		this.FrontTire = root.getChild("LightCycle").getChild("FrontTire");
 		this.MainBody = root.getChild("LightCycle").getChild("MainBody");
@@ -47,18 +46,18 @@ public class LightCycleModel<T extends LightCycleEntity> extends SinglePartEntit
 		return TexturedModelData.of(modelData, 128, 128);
 	}
 
-	@Override
-	public void render(MatrixStack matrices, VertexConsumer vertices, int light, int overlay, int color) {
-		LightCycle.render(matrices, vertices, light, overlay, color);
-	}
+//	@Override
+//	public void render(MatrixStack matrices, VertexConsumer vertices, int light, int overlay, int color) {
+//		LightCycle.render(matrices, vertices, light, overlay, color);
+//	}
 
-	@Override
-	public ModelPart getPart() {
-		return this.LightCycle;
-	}
-
-	@Override
-	public void setAngles(T entity, float limbAngle, float limbDistance, float animationProgress, float headYaw, float headPitch) {
-		
-	}
+//	@Override
+//	public ModelPart getPart() {
+//		return this.LightCycle;
+//	}
+//
+//	@Override
+//	public void setAngles(T entity, float limbAngle, float limbDistance, float animationProgress, float headYaw, float headPitch) {
+//
+//	}
 }
