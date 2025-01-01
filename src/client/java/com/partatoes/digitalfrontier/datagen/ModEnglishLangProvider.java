@@ -3,7 +3,6 @@ package com.partatoes.digitalfrontier.datagen;
 import com.partatoes.digitalfrontier.block.ModBlocks;
 import com.partatoes.digitalfrontier.entity.ModEntities;
 import com.partatoes.digitalfrontier.entity.ModVehicles;
-import com.partatoes.digitalfrontier.item.ModItemGroups;
 import com.partatoes.digitalfrontier.item.ModItems;
 import com.partatoes.digitalfrontier.tag.ModTags;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
@@ -44,6 +43,14 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
 
         translationBuilder.add("itemgroup.digitalfrontier", "Digital Frontier items");
 
+        // Funky business for the colored gridstone variants
+        ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS
+                .forEach((patternName, dyeBlockMap) -> {
+                    dyeBlockMap.forEach((color, block) -> {
+                        translationBuilder.add(block, String.format("%s %s Patterned Gridstone", toTitle(color.asString()), toTitle(patternName)));
+                    });
+                });
+
 //        "block.digitalfrontier.lime_gridstone": "Lime Gridstone",
 //        "block.digitalfrontier.blue_gridstone": "Blue Gridstone",
 //        "block.digitalfrontier.red_gridstone": "Red Gridstone",
@@ -68,5 +75,9 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
 //
 //        "entity.digitalfrontier.lightcycle": "Light Cycle",
 //        "entity.digitalfrontier.program": "Program",
+    }
+
+    private String toTitle(String name) {
+        return name.replaceFirst(".", name.substring(0, 1).toUpperCase());
     }
 }

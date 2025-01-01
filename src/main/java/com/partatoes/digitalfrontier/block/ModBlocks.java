@@ -11,7 +11,12 @@ import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
+import net.minecraft.util.DyeColor;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ModBlocks {
     public static final Identifier PIXEL_BLOCK_ID = Identifier.of(DigitalFrontier.MOD_ID, "pixel_block");
@@ -129,6 +134,49 @@ public class ModBlocks {
             new KeyboardBlock(AbstractBlock.Settings
                     .copy(Blocks.COMPARATOR)
                     .registryKey(RegistryKey.of(RegistryKeys.BLOCK, KEYBOARD_BLOCK_ID))));
+
+    // More patterns TBD.  Spiral, 90 deg left, straight (all with varying thicknesses and entry/exits
+    public static final String[] GRIDSTONE_PATTERNS = new String[] {
+            "full",
+//            "border_1",
+//            "border_1_inverted",
+//            "border_2",
+//            "border_2_inverted",
+//            "border_3",
+//            "border_3_inverted",
+//            "border_4",
+//            "border_4_inverted",
+//            "border_5",
+//            "border_5_inverted",
+//            "border_6",
+//            "border_6_inverted",
+//            "border_7",
+//            "border_7_inverted",
+//            "checker",                // 2x2
+//            "checker_inverted",       // 2x2
+//            "checker_small",          // 4x4
+//            "checker_small_inverted", // 4x4
+//            "checker_tiny",           // 8x8
+//            "checker_tiny_inverted",  // 8x8
+//            "vintage", // The old pattern from the original mod
+    };
+
+    public static final Map<String, Map<DyeColor, Block>> GRIDSTONE_PATTERNS_AND_COLORS = Arrays
+            .stream(GRIDSTONE_PATTERNS)
+            .collect(Collectors.toMap(
+                    patternName -> patternName,
+                    patternName -> {
+                        return Arrays.stream(DyeColor.values())
+                                .collect(Collectors.toMap(
+                                        color -> color,
+                                        color -> {
+                                            Identifier id = Identifier.of(DigitalFrontier.MOD_ID, String.format("gridstone_pattern_%s_%s", patternName, color.asString().toLowerCase()));
+                                            return registerBlock(id, new Block(
+                                                    AbstractBlock.Settings.copy(ModBlocks.GRIDSTONE_BLOCK)
+                                                            .registryKey(RegistryKey.of(RegistryKeys.BLOCK, id))));
+                                        }
+                                ));
+                    }));
 
     private static Block registerBlock(Identifier name, Block block) {
         registerBlockItem(name, block);

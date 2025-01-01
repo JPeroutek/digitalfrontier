@@ -51,6 +51,9 @@ public class ModItemGroups {
                         entries.add(ModBlocks.GRIDSTONE_BRICKS_STAIRS);
                         entries.add(ModBlocks.GRIDSTONE_BRICKS_SLAB);
                         entries.add(ModBlocks.GRIDSTONE_BRICKS_WALL);
+
+                        ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.values()
+                                .forEach(colorMapping -> colorMapping.values().forEach(entries::add));
                     })
                     .build());
 

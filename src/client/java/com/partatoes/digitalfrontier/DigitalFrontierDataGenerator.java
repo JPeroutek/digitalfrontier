@@ -20,6 +20,7 @@ public class DigitalFrontierDataGenerator implements DataGeneratorEntrypoint {
 		pack.addProvider(ModRecipeProvider::new);
 		pack.addProvider(ModWorldGenerator::new);
 		pack.addProvider(ModEnglishLangProvider::new);
+		pack.addProvider(ModTextureProvider::new);
 	}
 
 	@Override
