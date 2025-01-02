@@ -18,11 +18,6 @@ public class ModModelProvider extends FabricModelProvider {
         BlockStateModelGenerator.BlockTexturePool crackedGridstonePool = blockStateModelGenerator.registerCubeAllModelTexturePool(ModBlocks.CRACKED_GRIDSTONE_BLOCK);
         BlockStateModelGenerator.BlockTexturePool gridstoneBricksPool = blockStateModelGenerator.registerCubeAllModelTexturePool(ModBlocks.GRIDSTONE_BRICKS_BLOCK);
 
-        blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.LIME_GRIDSTONE_BLOCK);
-        blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.BLUE_GRIDSTONE_BLOCK);
-        blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.RED_GRIDSTONE_BLOCK);
-        blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.WHITE_GRIDSTONE_BLOCK);
-        blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.ORANGE_GRIDSTONE_BLOCK);
         blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.PIXEL_BLOCK);
         blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.LUMINANCE_ORE);
         blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.BOOSTER_BLOCK);

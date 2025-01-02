@@ -45,31 +45,6 @@ public class ModBlocks {
             new Block(AbstractBlock.Settings
                     .copy(Blocks.DEEPSLATE_BRICKS)
                     .registryKey(RegistryKey.of(RegistryKeys.BLOCK, GRIDSTONE_BRICKS_BLOCK_ID))));
-    public static final Identifier LIME_GRIDSTONE_BLOCK_ID = Identifier.of(DigitalFrontier.MOD_ID, "lime_gridstone");
-    public static final Block LIME_GRIDSTONE_BLOCK = registerBlock(LIME_GRIDSTONE_BLOCK_ID,
-            new Block(AbstractBlock.Settings
-                    .copy(Blocks.COBBLED_DEEPSLATE)
-                    .registryKey(RegistryKey.of(RegistryKeys.BLOCK, LIME_GRIDSTONE_BLOCK_ID))));
-    public static final Identifier BLUE_GRIDSTONE_BLOCK_ID = Identifier.of(DigitalFrontier.MOD_ID, "blue_gridstone");
-    public static final Block BLUE_GRIDSTONE_BLOCK = registerBlock(BLUE_GRIDSTONE_BLOCK_ID,
-            new Block(AbstractBlock.Settings
-                    .copy(Blocks.COBBLED_DEEPSLATE)
-                    .registryKey(RegistryKey.of(RegistryKeys.BLOCK, BLUE_GRIDSTONE_BLOCK_ID))));
-    public static final Identifier RED_GRIDSTONE_BLOCK_ID = Identifier.of(DigitalFrontier.MOD_ID, "red_gridstone");
-    public static final Block RED_GRIDSTONE_BLOCK = registerBlock(RED_GRIDSTONE_BLOCK_ID,
-            new Block(AbstractBlock.Settings
-                    .copy(Blocks.COBBLED_DEEPSLATE)
-                    .registryKey(RegistryKey.of(RegistryKeys.BLOCK, RED_GRIDSTONE_BLOCK_ID))));
-    public static final Identifier WHITE_GRIDSTONE_BLOCK_ID = Identifier.of(DigitalFrontier.MOD_ID, "white_gridstone");
-    public static final Block WHITE_GRIDSTONE_BLOCK = registerBlock(WHITE_GRIDSTONE_BLOCK_ID,
-            new Block(AbstractBlock.Settings
-                    .copy(Blocks.COBBLED_DEEPSLATE)
-                    .registryKey(RegistryKey.of(RegistryKeys.BLOCK, WHITE_GRIDSTONE_BLOCK_ID))));
-    public static final Identifier ORANGE_GRIDSTONE_BLOCK_ID = Identifier.of(DigitalFrontier.MOD_ID, "orange_gridstone");
-    public static final Block ORANGE_GRIDSTONE_BLOCK = registerBlock(ORANGE_GRIDSTONE_BLOCK_ID,
-            new Block(AbstractBlock.Settings
-                    .copy(Blocks.COBBLED_DEEPSLATE)
-                    .registryKey(RegistryKey.of(RegistryKeys.BLOCK, ORANGE_GRIDSTONE_BLOCK_ID))));
     public static final Identifier LUMINANCE_ORE_ID = Identifier.of(DigitalFrontier.MOD_ID, "luminance_ore");
     public static final Block LUMINANCE_ORE = registerBlock(LUMINANCE_ORE_ID,
             new LuminanceOreBlock(AbstractBlock.Settings

@@ -30,11 +30,6 @@ public class ModItemGroups {
                         entries.add(ModBlocks.GRIDSTONE_BLOCK);
                         entries.add(ModBlocks.CRACKED_GRIDSTONE_BLOCK);
                         entries.add(ModBlocks.GRIDSTONE_BRICKS_BLOCK);
-                        entries.add(ModBlocks.LIME_GRIDSTONE_BLOCK);
-                        entries.add(ModBlocks.BLUE_GRIDSTONE_BLOCK);
-                        entries.add(ModBlocks.RED_GRIDSTONE_BLOCK);
-                        entries.add(ModBlocks.WHITE_GRIDSTONE_BLOCK);
-                        entries.add(ModBlocks.ORANGE_GRIDSTONE_BLOCK);
                         entries.add(ModBlocks.LUMINANCE_ORE);
                         entries.add(ModBlocks.BOOSTER_BLOCK);
                         entries.add(ModBlocks.KEYBOARD_BLOCK);
