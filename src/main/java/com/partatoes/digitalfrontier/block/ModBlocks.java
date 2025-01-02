@@ -134,6 +134,27 @@ public class ModBlocks {
             "checker_4x4",
             "checker_8x8",
             "vintage_circles", // The old pattern from the original mod
+            "center_stripe",
+            "center_stripe_thin",
+            "cross",
+            "sharp_t",
+            "sharp_corner",
+            "curved_t",
+            "curved_corner",
+            "curved_corner_thin",
+            "thick_ring",
+            "thin_ring",
+            "thick_target",
+            "thin_target",
+            "yang",
+            "even_split_left_right",
+            "even_split_left_straight",
+            "even_split_right_straight",
+            "partial_split_left_straight",
+            "partial_split_right_straight",
+            "shrink_4_to_2",
+            "exchanger",
+            "single_entry_circle",
     };
 
     public static final Map<String, Map<DyeColor, Block>> GRIDSTONE_PATTERNS_AND_COLORS = Arrays
