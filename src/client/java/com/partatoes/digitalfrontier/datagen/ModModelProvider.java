@@ -50,6 +50,15 @@ public class ModModelProvider extends FabricModelProvider {
         );
 
         blockStateModelGenerator.registerNorthDefaultHorizontalRotation(ModBlocks.KEYBOARD_BLOCK);
+
+        // This will need to be replaced later to support directionality and stuff
+        ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS
+                .forEach((patternName, dyeBlockMap) -> {
+                    dyeBlockMap.forEach((color, block) -> {
+//                        translationBuilder.add(block, String.format("%s %s Patterned Gridstone", toTitle(color.asString()), toTitle(patternName)));
+                        blockStateModelGenerator.registerSimpleCubeAll(block);
+                    });
+                });
     }
 
     @Override

@@ -138,6 +138,9 @@ public class ModBlocks {
     // More patterns TBD.  Spiral, 90 deg left, straight (all with varying thicknesses and entry/exits
     public static final String[] GRIDSTONE_PATTERNS = new String[] {
             "full",
+            "half",
+            "quarter",
+            "3quarter",
 //            "border_1",
 //            "border_1_inverted",
 //            "border_2",
