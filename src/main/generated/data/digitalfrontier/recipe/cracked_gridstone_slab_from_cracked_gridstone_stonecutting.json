@@ -1,8 +1,0 @@
-{
-  "type": "minecraft:stonecutting",
-  "ingredient": "digitalfrontier:cracked_gridstone",
-  "result": {
-    "count": 2,
-    "id": "digitalfrontier:cracked_gridstone_slab"
-  }
-}

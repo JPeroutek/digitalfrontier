@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:block/cube_all",
-  "textures": {
-    "all": "digitalfrontier:block/gridstone_pattern_3quarter_magenta"
-  }
-}

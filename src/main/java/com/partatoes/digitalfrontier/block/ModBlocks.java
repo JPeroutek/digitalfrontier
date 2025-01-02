@@ -141,27 +141,24 @@ public class ModBlocks {
             "half",
             "quarter",
             "3quarter",
-//            "border_1",
-//            "border_1_inverted",
-//            "border_2",
-//            "border_2_inverted",
-//            "border_3",
-//            "border_3_inverted",
-//            "border_4",
-//            "border_4_inverted",
-//            "border_5",
-//            "border_5_inverted",
-//            "border_6",
-//            "border_6_inverted",
-//            "border_7",
-//            "border_7_inverted",
-//            "checker",                // 2x2
-//            "checker_inverted",       // 2x2
-//            "checker_small",          // 4x4
-//            "checker_small_inverted", // 4x4
-//            "checker_tiny",           // 8x8
-//            "checker_tiny_inverted",  // 8x8
-//            "vintage", // The old pattern from the original mod
+            "border_1",
+            "border_1_inverted",
+            "border_2",
+            "border_2_inverted",
+            "border_3",
+            "border_3_inverted",
+            "border_4",
+            "border_4_inverted",
+            "border_5",
+            "border_5_inverted",
+            "border_6",
+            "border_6_inverted",
+            "border_7",
+            "border_7_inverted",
+            "checker_2x2",
+            "checker_4x4",
+            "checker_8x8",
+            "vintage_circles", // The old pattern from the original mod
     };
 
     public static final Map<String, Map<DyeColor, Block>> GRIDSTONE_PATTERNS_AND_COLORS = Arrays
