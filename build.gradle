@@ -24,6 +24,10 @@ repositories {
 		name = "Terraformers"
 		url = "https://maven.terraformersmc.com/"
 	}
+	maven {
+		name = "Enginehub"
+		url = "https://maven.enginehub.org/repo/"
+	}
 }
 
 loom {
@@ -57,7 +61,8 @@ dependencies {
 
 	// For testing purposes...
 	modLocalRuntime "curse.maven:continuity-531351:6027976"
-	
+	modLocalRuntime "com.sk89q.worldedit:worldedit-fabric-mc1.21.4:7.4.0-SNAPSHOT"
+
 }
 
 processResources {
