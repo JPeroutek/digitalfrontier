@@ -1,0 +1,23 @@
+{
+	"credit": "Made with Blockbench",
+	"parent": "block/block",
+	"textures": {
+		"0": "digitalfrontier:block/light_barrier_emitter",
+		"particle": "digitalfrontier:block/light_barrier_emitter"
+	},
+	"elements": [
+		{
+			"from": [0, 0, 5],
+			"to": [16, 2, 10],
+			"rotation": {"angle": 0, "axis": "y", "origin": [0, 0, -0.35]},
+			"faces": {
+				"north": {"uv": [0, 10, 16, 12], "texture": "#0"},
+				"east": {"uv": [0, 14, 5, 16], "texture": "#0"},
+				"south": {"uv": [0, 12, 16, 14], "texture": "#0"},
+				"west": {"uv": [5, 14, 10, 16], "texture": "#0"},
+				"up": {"uv": [16, 5, 0, 0], "texture": "#0"},
+				"down": {"uv": [16, 5, 0, 10], "texture": "#0"}
+			}
+		}
+	]
+}

@@ -1,9 +1,7 @@
 package com.partatoes.digitalfrontier.block;
 
 import com.partatoes.digitalfrontier.DigitalFrontier;
-import com.partatoes.digitalfrontier.block.custom.BoosterBlock;
-import com.partatoes.digitalfrontier.block.custom.KeyboardBlock;
-import com.partatoes.digitalfrontier.block.custom.LuminanceOreBlock;
+import com.partatoes.digitalfrontier.block.custom.*;
 import net.minecraft.block.*;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
@@ -173,6 +171,29 @@ public class ModBlocks {
                                         }
                                 ));
                     }));
+
+    public static final Identifier LIGHT_BARRIER_ID = Identifier.of(DigitalFrontier.MOD_ID, "light_barrier");
+    public static final Block LIGHT_BARRIER = registerBlock(LIGHT_BARRIER_ID,
+            new LightBarrierBlock(AbstractBlock.Settings
+                    .create()
+                    .registryKey(RegistryKey.of(RegistryKeys.BLOCK, LIGHT_BARRIER_ID))
+                    .strength(-1f, 3600000f) // Hardness -1, unbreakable, same explosive resistance as bedrock
+                    .nonOpaque()
+                    .luminance((state) -> 4)
+                    .emissiveLighting((state, world, pos) -> true) // Should always create light, regardless of state.  This may not be needed?
+    ));
+
+    public static final Identifier LIGHT_BARRIER_EMITTER_ID = Identifier.of(DigitalFrontier.MOD_ID, "light_barrier_emitter");
+    public static final Block LIGHT_BARRIER_EMITTER = registerBlock(LIGHT_BARRIER_EMITTER_ID,
+            new LightBarrierEmitterBlock(AbstractBlock.Settings
+                    .create()
+                    .registryKey(RegistryKey.of(RegistryKeys.BLOCK, LIGHT_BARRIER_EMITTER_ID))
+                    .strength(1.5f)
+//                    .nonOpaque()
+                    .luminance((state) -> state.get(LightBarrierEmitterBlock.POWERED) ? 4 : 0)
+                    .emissiveLighting((state, world, pos) -> state.get(LightBarrierEmitterBlock.POWERED)) // Should always create light, regardless of state.  This may not be needed?
+            ));
+
 
     private static Block registerBlock(Identifier name, Block block) {
         registerBlockItem(name, block);
