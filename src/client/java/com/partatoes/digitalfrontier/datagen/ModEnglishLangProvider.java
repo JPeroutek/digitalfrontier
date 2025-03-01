@@ -3,10 +3,13 @@ package com.partatoes.digitalfrontier.datagen;
 import com.partatoes.digitalfrontier.block.ModBlocks;
 import com.partatoes.digitalfrontier.entity.ModEntities;
 import com.partatoes.digitalfrontier.entity.ModVehicles;
+import com.partatoes.digitalfrontier.item.ModItemGroups;
 import com.partatoes.digitalfrontier.item.ModItems;
 import com.partatoes.digitalfrontier.tag.ModTags;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricLanguageProvider;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.RegistryWrapper;
 
 import java.util.concurrent.CompletableFuture;
@@ -35,13 +38,16 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add(ModBlocks.GRIDSTONE_BRICKS_BLOCK, "Gridstone Bricks");
         translationBuilder.add(ModBlocks.LUMINANCE_ORE, "Luminance Ore");
         translationBuilder.add(ModBlocks.BOOSTER_BLOCK, "Boost Block");
+        translationBuilder.add(ModBlocks.LIGHT_BARRIER, "Light Barrier");
+        translationBuilder.add(ModBlocks.LIGHT_BARRIER_EMITTER, "Light Barrier Emitter");
+
+        translationBuilder.add(RegistryKey.of(RegistryKeys.ITEM_GROUP, ModItemGroups.DIGITAL_FRONTIER_GROUP_ID), "Digital Frontier");
+
 
         translationBuilder.add(ModTags.Items.BIT, "Bit");
 
         translationBuilder.add(ModEntities.PROGRAM, "Program");
         translationBuilder.add(ModVehicles.LIGHTCYCLE, "Light Cycle");
-
-        translationBuilder.add("itemgroup.digitalfrontier", "Digital Frontier items");
 
         // Funky business for the colored gridstone variants
         ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS
@@ -70,11 +76,6 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
 //        "block.digitalfrontier.gridstone_bricks_stairs": "Gridstone Brick Stairs",
 //        "block.digitalfrontier.gridstone_bricks_slab": "Gridstone Brick Slab",
 //        "block.digitalfrontier.gridstone_bricks_wall": "Gridstone Brick Wall",
-//
-//        "itemgroup.digitalfrontier": "Digital Frontier Items",
-//
-//        "entity.digitalfrontier.lightcycle": "Light Cycle",
-//        "entity.digitalfrontier.program": "Program",
     }
 
     private String toTitle(String name) {

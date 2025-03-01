@@ -60,16 +60,7 @@ public class ModModelProvider extends FabricModelProvider {
                     });
                 });
 
-        // This shortcut may not work forever, check with every update
-//        blockStateModelGenerator.blockStateCollector.accept(
-//                BlockStateModelGenerator.createButtonBlockState(ModBlocks.LIGHT_BARRIER_EMITTER, ModBlocks.LIGHT_BARRIER_EMITTER_ID, Identifier.of(DigitalFrontier.MOD_ID, "light_barrier_emitter_powered")));
-//        blockStateModelGenerator.blockStateCollector.accept(
-//                BlockStateModelGenerator.createButtonBlockState(ModBlocks.LIGHT_BARRIER, ModBlocks.LIGHT_BARRIER_ID, ModBlocks.LIGHT_BARRIER_ID));
-
-//        blockStateModelGenerator.blockStateCollector.accept(
-//                BlockStateModelGenerator.createButtonBlockState(ModBlocks.LIGHT_BARRIER_EMITTER, ModelIds.getBlockModelId(ModBlocks.LIGHT_BARRIER_EMITTER), ModelIds.getBlockSubModelId(ModBlocks.LIGHT_BARRIER_EMITTER, "_powered")));
-//        blockStateModelGenerator.blockStateCollector.accept(
-//                BlockStateModelGenerator.createButtonBlockState(ModBlocks.LIGHT_BARRIER, ModBlocks.LIGHT_BARRIER_ID, ModBlocks.LIGHT_BARRIER_ID));
+        
         blockStateModelGenerator.blockStateCollector.accept(
                 createFacingFacePoweredBlockStates(ModBlocks.LIGHT_BARRIER_EMITTER, ModelIds.getBlockModelId(ModBlocks.LIGHT_BARRIER_EMITTER), ModelIds.getBlockSubModelId(ModBlocks.LIGHT_BARRIER_EMITTER, "_powered"))
         );
