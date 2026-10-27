@@ -200,5 +200,8 @@ public class ModModelProvider extends FabricModelProvider {
         itemModelGenerator.register(ModItems.LUMINESSENCE, Models.GENERATED);
         itemModelGenerator.register(ModItems.LIGHTCYCLE_BATON, Models.GENERATED);
 
+        // Placeholder: borrow the vanilla snowball model until it has its own art
+        itemModelGenerator.output.accept(ModItems.DIMENSION_TELEPORTER, ItemModels.basic(Identifier.ofVanilla("item/snowball")));
+
     }
 }

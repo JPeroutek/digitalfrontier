@@ -25,13 +25,16 @@ repositories {
 		url = "https://maven.terraformersmc.com/"
 	}
 	maven {
-		name = "Enginehub"
-		url = "https://maven.enginehub.org/repo/"
+		name = "Modrinth"
+		url = "https://api.modrinth.com/maven"
+		content {
+			includeGroup "maven.modrinth"
+		}
 	}
 }
 
 loom {
-	accessWidenerPath = file("src/client/resources/digitalfrontier.accesswidener")
+	accessWidenerPath = file("src/main/resources/digitalfrontier.accesswidener")
     splitEnvironmentSourceSets()
 
 	mods {
@@ -61,7 +64,8 @@ dependencies {
 
 	// For testing purposes...
 	modLocalRuntime "curse.maven:continuity-531351:6027976"
-	modLocalRuntime "com.sk89q.worldedit:worldedit-fabric-mc1.21.4:7.4.0-SNAPSHOT"
+	// Release jar from Modrinth bundles worldedit-core; the EngineHub SNAPSHOTs drift out of sync with each other
+	modLocalRuntime "maven.modrinth:worldedit:7.3.11"
 
 }
 

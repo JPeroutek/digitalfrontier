@@ -1,6 +1,7 @@
 package com.partatoes.digitalfrontier.item;
 
 import com.partatoes.digitalfrontier.DigitalFrontier;
+import com.partatoes.digitalfrontier.item.custom.DimensionTeleporterItem;
 import com.partatoes.digitalfrontier.item.custom.LightCycleBaton;
 import com.partatoes.digitalfrontier.item.custom.LuminanceOreDetector;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroupEntries;
@@ -43,6 +44,10 @@ public class ModItems {
     public static final Item LIGHTCYCLE_BATON = registerItem(LIGHTCYCLE_BATON_ID, new LightCycleBaton(new Item.Settings()
             .maxCount(1)
             .registryKey(RegistryKey.of(RegistryKeys.ITEM, LIGHTCYCLE_BATON_ID))));
+    public static final Identifier DIMENSION_TELEPORTER_ID = Identifier.of(DigitalFrontier.MOD_ID, "dimension_teleporter");
+    public static final Item DIMENSION_TELEPORTER = registerItem(DIMENSION_TELEPORTER_ID, new DimensionTeleporterItem(new Item.Settings()
+            .maxCount(1)
+            .registryKey(RegistryKey.of(RegistryKeys.ITEM, DIMENSION_TELEPORTER_ID))));
 
     private static Item registerItem(Identifier id, Item item) {
         return Registry.register(Registries.ITEM, id, item);

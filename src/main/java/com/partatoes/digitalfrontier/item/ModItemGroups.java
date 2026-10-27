@@ -25,6 +25,7 @@ public class ModItemGroups {
                         entries.add(ModItems.LUMINANCE_ORE_DETECTOR);
                         entries.add(ModItems.BYTE);
                         entries.add(ModItems.LIGHTCYCLE_BATON);
+                        entries.add(ModItems.DIMENSION_TELEPORTER);
 
                         entries.add(ModBlocks.PIXEL_BLOCK);
                         entries.add(ModBlocks.PIXEL_LAMP);

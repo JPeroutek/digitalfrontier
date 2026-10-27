@@ -70,7 +70,7 @@ public class ModBlocks {
                     .registryKey(RegistryKey.of(RegistryKeys.BLOCK, GRIDSTONE_WALL_ID))));
     public static final Identifier CRACKED_GRIDSTONE_STAIRS_ID = Identifier.of(DigitalFrontier.MOD_ID, "cracked_gridstone_stairs");
     public static final Block CRACKED_GRIDSTONE_STAIRS = registerBlock(CRACKED_GRIDSTONE_STAIRS_ID,
-            new StairsBlock(ModBlocks.GRIDSTONE_BLOCK.getDefaultState(),
+            new StairsBlock(ModBlocks.CRACKED_GRIDSTONE_BLOCK.getDefaultState(),
                     AbstractBlock.Settings.copy(Blocks.DEEPSLATE)
                             .registryKey(RegistryKey.of(RegistryKeys.BLOCK, CRACKED_GRIDSTONE_STAIRS_ID))));
     public static final Identifier CRACKED_GRIDSTONE_SLAB_ID = Identifier.of(DigitalFrontier.MOD_ID, "cracked_gridstone_slab");
@@ -84,7 +84,7 @@ public class ModBlocks {
                     .registryKey(RegistryKey.of(RegistryKeys.BLOCK, CRACKED_GRIDSTONE_WALL_ID))));
     public static final Identifier GRIDSTONE_BRICKS_STAIRS_ID = Identifier.of(DigitalFrontier.MOD_ID, "gridstone_bricks_stairs");
     public static final Block GRIDSTONE_BRICKS_STAIRS = registerBlock(GRIDSTONE_BRICKS_STAIRS_ID,
-            new StairsBlock(ModBlocks.GRIDSTONE_BLOCK.getDefaultState(),
+            new StairsBlock(ModBlocks.GRIDSTONE_BRICKS_BLOCK.getDefaultState(),
                     AbstractBlock.Settings.copy(Blocks.DEEPSLATE)
                             .registryKey(RegistryKey.of(RegistryKeys.BLOCK, GRIDSTONE_BRICKS_STAIRS_ID))));
     public static final Identifier GRIDSTONE_BRICKS_SLAB_ID = Identifier.of(DigitalFrontier.MOD_ID, "gridstone_bricks_slab");
