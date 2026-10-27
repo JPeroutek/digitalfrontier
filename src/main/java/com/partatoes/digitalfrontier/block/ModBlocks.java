@@ -218,6 +218,24 @@ public class ModBlocks {
                     .copy(Blocks.NETHERITE_BLOCK)
                     .luminance(state -> 10)
                     .registryKey(RegistryKey.of(RegistryKeys.BLOCK, GRID_TUNING_LASER_ID))));
+    // Corruption-only blocks: generated where a grid is corrupted, and they don't drop anything
+    public static final Identifier STATIC_BLOCK_ID = Identifier.of(DigitalFrontier.MOD_ID, "static_block");
+    public static final Block STATIC_BLOCK = registerBlock(STATIC_BLOCK_ID,
+            new Block(AbstractBlock.Settings
+                    .copy(ModBlocks.GRIDSTONE_BLOCK)
+                    .luminance(state -> 4)
+                    .dropsNothing()
+                    .registryKey(RegistryKey.of(RegistryKeys.BLOCK, STATIC_BLOCK_ID))));
+    public static final Map<DyeColor, Block> GLITCHED_GRIDSTONE = Arrays.stream(DyeColor.values())
+            .collect(Collectors.toMap(color -> color, color -> {
+                Identifier id = Identifier.of(DigitalFrontier.MOD_ID, "glitched_gridstone_" + color.asString());
+                return registerBlock(id, new Block(AbstractBlock.Settings
+                        .copy(ModBlocks.GRIDSTONE_BLOCK)
+                        .luminance(state -> PATTERN_LUMINANCE)
+                        .dropsNothing()
+                        .registryKey(RegistryKey.of(RegistryKeys.BLOCK, id))));
+            }, (a, b) -> a, () -> new EnumMap<>(DyeColor.class)));
+
     // The way out of a grid; only generated at Portal sites, so it can't be broken or crafted
     public static final Identifier GRID_PORTAL_ID = Identifier.of(DigitalFrontier.MOD_ID, "grid_portal");
     public static final Block GRID_PORTAL = registerBlock(GRID_PORTAL_ID,

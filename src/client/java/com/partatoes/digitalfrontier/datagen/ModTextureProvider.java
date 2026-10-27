@@ -2,6 +2,7 @@ package com.partatoes.digitalfrontier.datagen;
 
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingOutputStream;
+import com.google.gson.JsonObject;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.block.ModBlocks;
 
@@ -19,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import javax.imageio.ImageIO;
 
@@ -46,8 +48,89 @@ public class ModTextureProvider implements DataProvider {
                     });
                 });
 
+        // Corruption blocks: animated, so each texture is a vertical strip of frames plus an .mcmeta
+        futures.add(CompletableFuture.runAsync(() -> createStatic(writer)));
+        ModBlocks.GLITCHED_GRIDSTONE.keySet().forEach(color ->
+                futures.add(CompletableFuture.runAsync(() -> createGlitched(writer, color))));
+
         // Combine all futures into a single future that completes when all variants are done
         return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+    }
+
+    private static final int STATIC_FRAMES = 8;
+    private static final int GLITCH_FRAMES = 4;
+    private static final String GLITCH_TEMPLATE = "gridstone_pattern_thick_ring";
+
+    // TV static: gray noise with brighter scan lines; the brightest specks also go in the glow layer
+    private void createStatic(DataWriter writer) {
+        Random random = new Random(0x57A71CL);
+        BufferedImage image = new BufferedImage(16, 16 * STATIC_FRAMES, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage glow = new BufferedImage(16, 16 * STATIC_FRAMES, BufferedImage.TYPE_INT_ARGB);
+        for (int frame = 0; frame < STATIC_FRAMES; frame++) {
+            int scanLine = random.nextInt(16);
+            for (int y = 0; y < 16; y++) {
+                for (int x = 0; x < 16; x++) {
+                    int gray = 0x18 + random.nextInt(0xB0) + (y == scanLine ? 0x30 : 0);
+                    gray = Math.min(gray, 0xFF);
+                    int pixel = 0xFF000000 | gray << 16 | gray << 8 | gray;
+                    image.setRGB(x, frame * 16 + y, pixel);
+                    glow.setRGB(x, frame * 16 + y, gray > 0xB8 ? pixel : 0);
+                }
+            }
+        }
+        writeAnimated(writer, image, "static_block", 1);
+        writeAnimated(writer, glow, "static_block_glow", 1);
+    }
+
+    // A pattern whose rows jump sideways from frame to frame, in the given color
+    private void createGlitched(DataWriter writer, DyeColor color) {
+        BufferedImage template = readTemplate(GLITCH_TEMPLATE);
+        if (template == null) {
+            return;
+        }
+        Random random = new Random(0x611C7L);
+        BufferedImage image = new BufferedImage(16, 16 * GLITCH_FRAMES, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage glow = new BufferedImage(16, 16 * GLITCH_FRAMES, BufferedImage.TYPE_INT_ARGB);
+        for (int frame = 0; frame < GLITCH_FRAMES; frame++) {
+            for (int y = 0; y < 16; y++) {
+                int shift = random.nextFloat() < 0.4f ? random.nextInt(9) - 4 : 0;
+                int sourceY = random.nextFloat() < 0.15f ? random.nextInt(16) : y;
+                for (int x = 0; x < 16; x++) {
+                    int pixel = template.getRGB(Math.floorMod(x - shift, 16), sourceY);
+                    boolean line = pixel == -1;
+                    int base = line ? applyAlpha(color.getSignColor(), 0xFF) : applyAlpha(pixel, 0xFF);
+                    image.setRGB(x, frame * 16 + y, base);
+                    glow.setRGB(x, frame * 16 + y, line ? base : 0);
+                }
+            }
+        }
+        String name = "glitched_gridstone_" + color.asString();
+        writeAnimated(writer, image, name, 3);
+        writeAnimated(writer, glow, name + "_glow", 3);
+    }
+
+    private void writeAnimated(DataWriter writer, BufferedImage image, String assetName, int frameTime) {
+        writeBufferedImageToPath(writer, image, assetName);
+        JsonObject animation = new JsonObject();
+        animation.addProperty("frametime", frameTime);
+        JsonObject meta = new JsonObject();
+        meta.add("animation", animation);
+        DataOutput.PathResolver resolver = dataOutput.getResolver(OutputType.RESOURCE_PACK, "textures/block");
+        DataProvider.writeToPath(writer, meta, resolver.resolve(Identifier.of(DigitalFrontier.MOD_ID, assetName), "png.mcmeta")).join();
+    }
+
+    private BufferedImage readTemplate(String templateName) {
+        String resourcePath = String.format("assets/%s/textures/block/%s.png", DigitalFrontier.MOD_ID, templateName);
+        try (var resourceStream = ModTextureProvider.class.getClassLoader().getResourceAsStream(resourcePath)) {
+            if (resourceStream == null) {
+                LOGGER.error("Could not find resource at {}", resourcePath);
+                return null;
+            }
+            return ImageIO.read(resourceStream);
+        } catch (IOException e) {
+            LOGGER.error("Failed to load image from {}", resourcePath, e);
+            return null;
+        }
     }
 
     private void createVariant(DataWriter writer, String templateName, DyeColor color) {

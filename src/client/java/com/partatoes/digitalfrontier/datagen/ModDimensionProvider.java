@@ -43,7 +43,10 @@ public class ModDimensionProvider implements DataProvider {
                     biomes.getOrThrow(ModBiomes.GRID_CITY),
                     biomes.getOrThrow(ModBiomes.OUTSKIRTS),
                     biomes.getOrThrow(ModBiomes.OUTLANDS),
-                    biomes.getOrThrow(ModBiomes.UNALLOCATED_SPACE));
+                    biomes.getOrThrow(ModBiomes.UNALLOCATED_SPACE),
+                    biomes.getOrThrow(ModBiomes.CORRUPTED_CITY),
+                    biomes.getOrThrow(ModBiomes.CORRUPTED_OUTLANDS),
+                    biomes.getOrThrow(ModBiomes.CORRUPTED_UNALLOCATED));
 
             DimensionOptions dimension = new DimensionOptions(
                     ops.getEntryLookup(RegistryKeys.DIMENSION_TYPE).orElseThrow().getOrThrow(ModDimensions.DIGITAL_FRONTIER_TYPE_KEY),

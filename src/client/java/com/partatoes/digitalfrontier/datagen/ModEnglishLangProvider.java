@@ -52,6 +52,21 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add("message.digitalfrontier.memory_paged", "Memory paged back in at %s");
         translationBuilder.add(ModItems.CORE_DUMP, "Core Dump");
 
+        // Corruption
+        translationBuilder.add(ModBlocks.STATIC_BLOCK, "Static");
+        ModBlocks.GLITCHED_GRIDSTONE.forEach((color, block) ->
+                translationBuilder.add(block, String.format("%s Glitched Gridstone", toTitle(color.asString()))));
+
+        // Biomes
+        translationBuilder.add("biome.digitalfrontier.grid_city_core", "City Core");
+        translationBuilder.add("biome.digitalfrontier.grid_city", "City");
+        translationBuilder.add("biome.digitalfrontier.outskirts", "Outskirts");
+        translationBuilder.add("biome.digitalfrontier.outlands", "Outlands");
+        translationBuilder.add("biome.digitalfrontier.unallocated_space", "Unallocated Space");
+        translationBuilder.add("biome.digitalfrontier.corrupted_city", "Corrupted City");
+        translationBuilder.add("biome.digitalfrontier.corrupted_outlands", "Corrupted Outlands");
+        translationBuilder.add("biome.digitalfrontier.corrupted_unallocated", "Corrupted Void");
+
         // Tuned grids
         translationBuilder.add(ModBlocks.GRID_TUNING_LASER, "Grid Tuning Laser");
         translationBuilder.add("gamerule.digitalfrontierMaxTunedGrids", "Digital Frontier: maximum tuned grids");

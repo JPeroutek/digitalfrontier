@@ -126,6 +126,11 @@ public final class GridLayout {
         return Zone.UNALLOCATED;
     }
 
+    /** Corruption intensity of a chunk, in [0, 1]; the same value its plan carries. */
+    public float corruptionAt(int chunkX, int chunkZ) {
+        return corruption.intensityAt(chunkX, chunkZ);
+    }
+
     public ChunkPlan planAt(int chunkX, int chunkZ) {
         Zone zone = zoneAt(chunkX, chunkZ);
         float intensity = corruption.intensityAt(chunkX, chunkZ);

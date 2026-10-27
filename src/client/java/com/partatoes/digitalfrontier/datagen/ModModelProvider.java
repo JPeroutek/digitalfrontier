@@ -70,6 +70,8 @@ public class ModModelProvider extends FabricModelProvider {
         Block padPattern = ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("thick_target").get(DyeColor.CYAN);
         registerEmissiveCubeAll(blockStateModelGenerator, ModBlocks.ARRIVAL_PAD, padPattern);
         registerEmissiveCubeAll(blockStateModelGenerator, ModBlocks.GRID_PORTAL, ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("full").get(DyeColor.WHITE));
+        registerEmissiveCubeAll(blockStateModelGenerator, ModBlocks.STATIC_BLOCK);
+        ModBlocks.GLITCHED_GRIDSTONE.values().forEach(block -> registerEmissiveCubeAll(blockStateModelGenerator, block));
         Identifier laserModel = Models.CUBE_BOTTOM_TOP.upload(ModBlocks.DIGITIZING_LASER, new TextureMap()
                 .put(TextureKey.TOP, TextureMap.getId(ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("thick_ring").get(DyeColor.CYAN)))
                 .put(TextureKey.SIDE, TextureMap.getId(ModBlocks.GRIDSTONE_BRICKS_BLOCK))

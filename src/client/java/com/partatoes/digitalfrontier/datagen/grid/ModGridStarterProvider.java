@@ -45,6 +45,10 @@ public class ModGridStarterProvider implements DataProvider {
     private static final BlockState TARGET = pattern("thick_target");
     private static final BlockState PAD = ModBlocks.ARRIVAL_PAD.getDefaultState();
     private static final BlockState PORTAL = ModBlocks.GRID_PORTAL.getDefaultState();
+    private static final BlockState DARK_GLASS = Blocks.BLACK_STAINED_GLASS.getDefaultState();
+    private static final BlockState RED_LIGHT = pattern("full", DyeColor.RED);
+    private static final BlockState RED_STRIPE = pattern("center_stripe", DyeColor.RED);
+    private static final BlockState RED_TARGET = pattern("thick_target", DyeColor.RED);
 
     private final DataOutput.PathResolver structures;
     private final DataOutput.PathResolver buildings;
@@ -134,6 +138,24 @@ public class ModGridStarterProvider implements DataProvider {
                 .box(6, 1, 6, 9, 47, 9, PORTAL)
                 .box(5, 1, 5, 5, 2, 5, WALL).box(10, 1, 5, 10, 2, 5, WALL)
                 .box(5, 1, 10, 5, 2, 10, WALL).box(10, 1, 10, 10, 2, 10, WALL));
+        // Stronghold: a dark keep lit red; red isn't recolored by district, so it stays the regime's color
+        parts.put("grid/starter/stronghold/base", new StarterPart(16, 8)
+                .ring(0, 6, 0, BRICKS)
+                .openings(0, 3, 0, 4, AIR)
+                .ring(4, 4, 0, RED_LIGHT)
+                .plate(7, 0, BRICKS)
+                .box(6, 0, 6, 9, 0, 9, RED_TARGET));
+        parts.put("grid/starter/stronghold/floor", new StarterPart(16, 6)
+                .ring(0, 4, 1, BRICKS)
+                .openings(1, 3, 1, 2, DARK_GLASS)
+                .ring(2, 2, 1, RED_STRIPE)
+                .plate(5, 1, BRICKS));
+        parts.put("grid/starter/stronghold/roof", new StarterPart(16, 6)
+                .ring(0, 0, 1, RED_LIGHT)
+                .box(1, 1, 1, 1, 2, 1, BRICKS).box(14, 1, 1, 14, 2, 1, BRICKS)
+                .box(1, 1, 14, 1, 2, 14, BRICKS).box(14, 1, 14, 14, 2, 14, BRICKS)
+                .box(6, 0, 6, 9, 3, 9, BRICKS)
+                .box(7, 4, 7, 8, 5, 8, RED_LIGHT));
         parts.put("grid/starter/street/lights", new StarterPart(16, 4)
                 .box(3, 0, 0, 3, 2, 0, WALL).box(3, 3, 0, 3, 3, 0, LIGHT)
                 .box(11, 0, 0, 11, 2, 0, WALL).box(11, 3, 0, 11, 3, 0, LIGHT)
@@ -168,7 +190,12 @@ public class ModGridStarterProvider implements DataProvider {
         defs.put("starter_terminal", new GridBuildingDef(GridBuildingDef.Kind.TERMINAL,
                 List.of(Zone.OUTSKIRTS, Zone.WAYPOINT), 10, 1,
                 Optional.of(id("grid/starter/terminal/platform")), List.of(), Optional.empty(), 0, 0));
-        defs.put("starter_portal", new GridBuildingDef(GridBuildingDef.Kind.PORTAL,
+        defs.put("starter_stronghold", new GridBuildingDef(GridBuildingDef.Kind.STRONGHOLD,
+                List.of(Zone.OUTSKIRTS, Zone.OUTLANDS, Zone.UNALLOCATED), 10, 1,
+                Optional.of(id("grid/starter/stronghold/base")),
+                List.of(id("grid/starter/stronghold/floor")),
+                Optional.of(id("grid/starter/stronghold/roof")), 3, 5));
+        defs.put("starter_portal",new GridBuildingDef(GridBuildingDef.Kind.PORTAL,
                 List.of(Zone.OUTSKIRTS, Zone.OUTLANDS, Zone.UNALLOCATED), 10, 1,
                 Optional.of(id("grid/starter/portal/beam")), List.of(), Optional.empty(), 0, 0));
         return defs;
@@ -188,7 +215,11 @@ public class ModGridStarterProvider implements DataProvider {
     }
 
     private static BlockState pattern(String name) {
-        return ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get(name).get(DyeColor.WHITE).getDefaultState();
+        return pattern(name, DyeColor.WHITE);
+    }
+
+    private static BlockState pattern(String name, DyeColor color) {
+        return ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get(name).get(color).getDefaultState();
     }
 
     private static Identifier id(String path) {

@@ -57,7 +57,9 @@ public record GridBuildingDef(
         /** The building at an arrival terminal or waypoint; contains the Arrival Pad players arrive on. */
         TERMINAL("terminal"),
         /** The building at a Portal site; contains the Portal blocks players leave the grid through. */
-        PORTAL("portal");
+        PORTAL("portal"),
+        /** The building at a stronghold site, deep in corrupted territory. */
+        STRONGHOLD("stronghold");
 
         public static final Codec<Kind> CODEC = StringIdentifiable.createCodec(Kind::values);
 

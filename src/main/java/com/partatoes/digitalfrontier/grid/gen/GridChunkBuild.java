@@ -45,6 +45,8 @@ final class GridChunkBuild {
     private final BlockRotation rotation;
     // Ground columns, worked out on first use: a height lookup only needs one of them
     private final GridTerrain.Column[] columns = new GridTerrain.Column[256];
+    @Nullable
+    private float[] corruptionGrid;
 
     private record Layer(GridPart part, int bottomY) {
         boolean contains(int y) {
@@ -106,8 +108,7 @@ final class GridChunkBuild {
         return switch (site.type()) {
             case ARRIVAL_TERMINAL, WAYPOINT -> GridBuildingDef.Kind.TERMINAL;
             case PORTAL -> GridBuildingDef.Kind.PORTAL;
-            // Strongholds get their buildings with corruption (phase 6)
-            case STRONGHOLD -> null;
+            case STRONGHOLD -> GridBuildingDef.Kind.STRONGHOLD;
         };
     }
 
@@ -162,6 +163,11 @@ final class GridChunkBuild {
 
     /** Highest Y any block of this chunk can occupy. */
     int maxY() {
+        // Corruption can push columns up a few blocks past the top
+        return Math.min(MAX_Y, uncorruptedMaxY() + GridCorruption.MAX_SHIFT);
+    }
+
+    private int uncorruptedMaxY() {
         if (layers.isEmpty()) {
             return FLOOR_Y + Math.max(plan.floors() * GridLayout.FLOOR_HEIGHT, GridTerrain.MAX_GROUND_RISE);
         }
@@ -223,6 +229,53 @@ final class GridChunkBuild {
     }
 
     BlockState blockAt(int localX, int y, int localZ) {
+        if (!corrupted()) {
+            return uncorruptedBlockAt(localX, y, localZ);
+        }
+        return GridCorruption.apply(layout.settings().gridSeed(), corruptionAt(localX, localZ), plan.type() != PlanType.SITE,
+                uncorruptedMaxY(), chunkX * 16 + localX, y, chunkZ * 16 + localZ, sourceY -> uncorruptedBlockAt(localX, sourceY, localZ));
+    }
+
+    // Corruption intensity of the 3×3 chunks around this one, so it can be blended smoothly across chunk borders
+    private float[] corruptionGrid() {
+        if (corruptionGrid == null) {
+            float[] grid = new float[9];
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dz = -1; dz <= 1; dz++) {
+                    grid[(dz + 1) * 3 + dx + 1] = layout.corruptionAt(chunkX + dx, chunkZ + dz);
+                }
+            }
+            corruptionGrid = grid;
+        }
+        return corruptionGrid;
+    }
+
+    private boolean corrupted() {
+        for (float intensity : corruptionGrid()) {
+            if (intensity >= GridCorruption.MIN_INTENSITY) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Bilinear between the centers of the four nearest chunks
+    private float corruptionAt(int localX, int localZ) {
+        float[] grid = corruptionGrid();
+        float gx = (localX + 0.5f) / 16 - 0.5f;
+        float gz = (localZ + 0.5f) / 16 - 0.5f;
+        int x0 = gx < 0 ? -1 : 0;
+        int z0 = gz < 0 ? -1 : 0;
+        float tx = gx - x0;
+        float tz = gz - z0;
+        float a = grid[(z0 + 1) * 3 + x0 + 1];
+        float b = grid[(z0 + 1) * 3 + x0 + 2];
+        float c = grid[(z0 + 2) * 3 + x0 + 1];
+        float d = grid[(z0 + 2) * 3 + x0 + 2];
+        return (a + (b - a) * tx) * (1 - tz) + (c + (d - c) * tx) * tz;
+    }
+
+    private BlockState uncorruptedBlockAt(int localX, int y, int localZ) {
         if (layers.isEmpty() || y <= FLOOR_Y) {
             return GridTerrain.blockAt(plan, column(localX, localZ), localX, y, localZ);
         }

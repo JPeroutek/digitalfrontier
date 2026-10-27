@@ -2,6 +2,7 @@ package com.partatoes.digitalfrontier.grid.gen;
 
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.partatoes.digitalfrontier.grid.layout.CorruptionTier;
 import com.partatoes.digitalfrontier.grid.layout.GridLayout;
 import com.partatoes.digitalfrontier.grid.layout.GridLayoutSettings;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -53,6 +54,10 @@ public class GridBiomeSource extends BiomeSource {
 
     @Override
     public RegistryEntry<Biome> getBiome(int biomeX, int biomeY, int biomeZ, MultiNoiseUtil.MultiNoiseSampler noise) {
-        return biomes.forZone(layout.zoneAt(BiomeCoords.toChunk(biomeX), BiomeCoords.toChunk(biomeZ)));
+        int chunkX = BiomeCoords.toChunk(biomeX);
+        int chunkZ = BiomeCoords.toChunk(biomeZ);
+        // Only strong corruption changes the biome; lighter corruption just changes blocks
+        boolean corrupted = CorruptionTier.fromIntensity(layout.corruptionAt(chunkX, chunkZ)).compareTo(CorruptionTier.CORRUPTED) >= 0;
+        return biomes.forZone(layout.zoneAt(chunkX, chunkZ), corrupted);
     }
 }

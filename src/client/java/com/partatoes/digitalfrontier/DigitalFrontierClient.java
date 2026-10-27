@@ -31,7 +31,8 @@ public class DigitalFrontierClient implements ClientModInitializer {
 		// Pattern blocks draw a transparent glow overlay over their base texture, which needs cutout rendering
 		ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.values().forEach(colorMapping ->
 				BlockRenderLayerMap.INSTANCE.putBlocks(RenderLayer.getCutout(), colorMapping.values().toArray(Block[]::new)));
-		BlockRenderLayerMap.INSTANCE.putBlocks(RenderLayer.getCutout(), ModBlocks.ARRIVAL_PAD, ModBlocks.GRID_PORTAL);
+		BlockRenderLayerMap.INSTANCE.putBlocks(RenderLayer.getCutout(), ModBlocks.ARRIVAL_PAD, ModBlocks.GRID_PORTAL, ModBlocks.STATIC_BLOCK);
+		BlockRenderLayerMap.INSTANCE.putBlocks(RenderLayer.getCutout(), ModBlocks.GLITCHED_GRIDSTONE.values().toArray(Block[]::new));
 
 		// Grid Tuning Laser screen, opened by the server with the laser's current grid code
 		ClientPlayNetworking.registerGlobalReceiver(GridTuningNetworking.OpenScreenPayload.ID, (payload, context) ->

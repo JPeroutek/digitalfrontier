@@ -130,7 +130,7 @@ id (`digitalfrontier:<name>`), which F3 shows when you stand on it.
 
 | Field | Required | Meaning |
 |---|---|---|
-| `kind` | yes | `building`, `landmark`, `plaza`, `street`, `terminal` or `portal` (see below). |
+| `kind` | yes | `building`, `landmark`, `plaza`, `street`, `terminal`, `portal` or `stronghold` (see below). |
 | `zones` | yes | Where it can appear: `city_core`, `city`, `outskirts`, `waypoint`, `outlands`, `unallocated`. Buildings only generate where the layout places buildings: city zones, a few in the outskirts, and the low buildings around each waypoint (1–3 floors). Plazas appear in the city and at waypoints; street furniture on city and waypoint streets. |
 | `weight` | no (10) | Relative chance against other matching definitions. |
 | `footprint` | no (1) | `1` for 16×16 parts, `2` for 32×32 parts. |
@@ -164,6 +164,23 @@ the world (Y 319).
   only. Any **Portal** block (`digitalfrontier:grid_portal`) in it sends a player who walks into it back to
   their respawn point in the real world. Portal blocks have no collision, so make sure players can walk into
   at least one at ground level. Make it tall and bright: players have to find it from a distance.
+- **`stronghold`**: the building at a stronghold site, at the heart of the grid's most corrupted territory
+  (usually zone `outlands`). Single chunk only; use `min_floors` to set its height, since the site asks for none.
+  Colors other than white aren't recolored, so the regime's red stays red.
+
+## Corruption
+
+Corruption is applied to your parts after they're placed and recolored, so you never build corrupted versions.
+Where a grid is corrupted (shown on F3 as `Grid corruption`), the same template comes out:
+
+| Tier | What happens to your blocks |
+|---|---|
+| LOW | Pattern lines show the wrong color; gridstone and gridstone bricks crack. |
+| UNSTABLE | Holes through walls and floors; 4×4 columns of the building slide up or down; pattern lines glitch. |
+| CORRUPTED, SEVERE | Blocks turn to static; some buildings break off partway up and float apart in fragments. |
+
+Site buildings (terminals, the Portal, strongholds) keep their shape: only their materials corrupt. Arrival Pads
+and Portal blocks are never changed.
 
 ## Testing your structures
 
@@ -201,6 +218,7 @@ The mod ships a small generated placeholder set under `grid/starter/` (made in c
 | `starter_plaza` | plaza | `grid/starter/plaza/square` |
 | `starter_street_lights` | street | `grid/starter/street/lights` |
 | `starter_terminal` | terminal | `grid/starter/terminal/platform` (pad at 7, 0, 7) |
+| `starter_stronghold` | stronghold | `grid/starter/stronghold/base`, `floor`, `roof` (3–5 floors) |
 | `starter_portal` | portal | `grid/starter/portal/beam` (a 4×4 column of Portal blocks, 47 tall) |
 
 Use them as references, or load one with `/place template digitalfrontier:grid/starter/tower/floor_glass ~ ~ ~`

@@ -60,6 +60,9 @@ public class ModItemGroups {
 
                         ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.values()
                                 .forEach(colorMapping -> colorMapping.values().forEach(entries::add));
+
+                        entries.add(ModBlocks.STATIC_BLOCK);
+                        ModBlocks.GLITCHED_GRIDSTONE.values().forEach(entries::add);
                     })
                     .build());
 
