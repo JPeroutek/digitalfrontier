@@ -44,6 +44,7 @@ public class ModGridStarterProvider implements DataProvider {
     private static final BlockState STRIPE = pattern("center_stripe");
     private static final BlockState TARGET = pattern("thick_target");
     private static final BlockState PAD = ModBlocks.ARRIVAL_PAD.getDefaultState();
+    private static final BlockState PORTAL = ModBlocks.GRID_PORTAL.getDefaultState();
 
     private final DataOutput.PathResolver structures;
     private final DataOutput.PathResolver buildings;
@@ -125,7 +126,15 @@ public class ModGridStarterProvider implements DataProvider {
                 .box(3, 1, 12, 3, 6, 12, BRICKS).box(12, 1, 12, 12, 6, 12, BRICKS)
                 .plate(7, 3, GLASS)
                 .ring(7, 7, 3, LIGHT));
-        parts.put("grid/starter/street/lights",new StarterPart(16, 4)
+        // Portal: a tall column of light on a lit dais, visible from far across the outlands
+        parts.put("grid/starter/portal/beam", new StarterPart(16, 48)
+                .plate(0, 2, BRICKS)
+                .ring(0, 0, 2, LIGHT)
+                .ring(0, 0, 4, STRIPE)
+                .box(6, 1, 6, 9, 47, 9, PORTAL)
+                .box(5, 1, 5, 5, 2, 5, WALL).box(10, 1, 5, 10, 2, 5, WALL)
+                .box(5, 1, 10, 5, 2, 10, WALL).box(10, 1, 10, 10, 2, 10, WALL));
+        parts.put("grid/starter/street/lights", new StarterPart(16, 4)
                 .box(3, 0, 0, 3, 2, 0, WALL).box(3, 3, 0, 3, 3, 0, LIGHT)
                 .box(11, 0, 0, 11, 2, 0, WALL).box(11, 3, 0, 11, 3, 0, LIGHT)
                 .box(3, 0, 15, 3, 2, 15, WALL).box(3, 3, 15, 3, 3, 15, LIGHT)
@@ -159,6 +168,9 @@ public class ModGridStarterProvider implements DataProvider {
         defs.put("starter_terminal", new GridBuildingDef(GridBuildingDef.Kind.TERMINAL,
                 List.of(Zone.OUTSKIRTS, Zone.WAYPOINT), 10, 1,
                 Optional.of(id("grid/starter/terminal/platform")), List.of(), Optional.empty(), 0, 0));
+        defs.put("starter_portal", new GridBuildingDef(GridBuildingDef.Kind.PORTAL,
+                List.of(Zone.OUTSKIRTS, Zone.OUTLANDS, Zone.UNALLOCATED), 10, 1,
+                Optional.of(id("grid/starter/portal/beam")), List.of(), Optional.empty(), 0, 0));
         return defs;
     }
 

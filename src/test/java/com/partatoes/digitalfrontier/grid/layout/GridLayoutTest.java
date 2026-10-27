@@ -103,6 +103,18 @@ class GridLayoutTest {
     }
 
     @Test
+    void portalSitsInTheOutlandsOppositeTheStronghold() {
+        for (long seed = 0; seed < 16; seed++) {
+            GridLayout layout = new GridLayout(withSeed(seed));
+            Site portal = layout.sites().stream().filter(site -> site.type() == Site.Type.PORTAL).findFirst().orElseThrow();
+            Site stronghold = layout.sites().stream().filter(site -> site.type() == Site.Type.STRONGHOLD).findFirst().orElseThrow();
+            assertEquals(Zone.OUTLANDS, layout.zoneAt(portal.chunkX(), portal.chunkZ()), "seed " + seed);
+            assertEquals(PlanType.SITE, layout.planAt(portal.chunkX(), portal.chunkZ()).type(), "seed " + seed);
+            assertTrue(portal.distanceTo(stronghold.chunkX(), stronghold.chunkZ()) > DEFAULT.outlandsRadius(), "seed " + seed);
+        }
+    }
+
+    @Test
     void multiChunkBuildingsAreConsistentTwoByTwoGroups() {
         GridLayout layout = new GridLayout(DEFAULT);
         int groups = 0;

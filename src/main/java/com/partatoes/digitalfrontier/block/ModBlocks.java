@@ -211,6 +211,19 @@ public class ModBlocks {
                     .copy(Blocks.IRON_BLOCK)
                     .luminance(state -> 7)
                     .registryKey(RegistryKey.of(RegistryKeys.BLOCK, DIGITIZING_LASER_ID))));
+    // The way out of a grid; only generated at Portal sites, so it can't be broken or crafted
+    public static final Identifier GRID_PORTAL_ID = Identifier.of(DigitalFrontier.MOD_ID, "grid_portal");
+    public static final Block GRID_PORTAL = registerBlock(GRID_PORTAL_ID,
+            new GridPortalBlock(AbstractBlock.Settings
+                    .create()
+                    .noCollision()
+                    .nonOpaque()
+                    .strength(-1f, 3600000f)
+                    .dropsNothing()
+                    .luminance(state -> 15)
+                    .suffocates(Blocks::never)
+                    .blockVision(Blocks::never)
+                    .registryKey(RegistryKey.of(RegistryKeys.BLOCK, GRID_PORTAL_ID))));
 
 
     private static Block registerBlock(Identifier name, Block block) {

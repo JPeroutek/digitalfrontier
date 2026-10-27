@@ -64,25 +64,32 @@ public final class GridArrival {
      * isn't loaded or no longer has that terminal.
      */
     public static boolean teleport(ServerPlayerEntity player, TerminalRef ref) {
-        Optional<ServerWorld> world = gridWorld(player.getServer(), ref.grid());
-        if (world.isEmpty()) {
+        Optional<TeleportTarget> target = arrivalTarget(player.getServer(), ref, player.getYaw(), player.getPitch());
+        if (target.isEmpty()) {
             return false;
         }
-        GridChunkGenerator generator = generator(world.get());
-        Optional<Site> terminal = generator.layout().terminal(ref.terminal());
-        if (terminal.isEmpty()) {
-            return false;
-        }
-
-        Vec3d target = generator.arrivalPos(terminal.get()).toBottomCenterPos();
-        player.teleportTo(new TeleportTarget(world.get(), target, Vec3d.ZERO, player.getYaw(), player.getPitch(), TeleportTarget.NO_OP));
+        player.teleportTo(target.get());
         player.onLanding();
-        world.get().playSound(null, target.x, target.y, target.z, SoundEvents.BLOCK_BEACON_ACTIVATE, SoundCategory.PLAYERS, 1.0f, 1.5f);
+        recordArrival(player, ref, Text.translatable("message.digitalfrontier.arrived", terminalName(ref.terminal())));
+        return true;
+    }
 
+    /** Where arriving at a terminal puts a player, if the grid is loaded and still has that terminal. */
+    public static Optional<TeleportTarget> arrivalTarget(MinecraftServer server, TerminalRef ref, float yaw, float pitch) {
+        return gridWorld(server, ref.grid()).flatMap(world -> {
+            GridChunkGenerator generator = generator(world);
+            return generator.layout().terminal(ref.terminal()).map(terminal -> new TeleportTarget(world,
+                    generator.arrivalPos(terminal).toBottomCenterPos(), Vec3d.ZERO, yaw, pitch, TeleportTarget.NO_OP));
+        });
+    }
+
+    /** Everything that happens once a player is standing at a terminal: sound, message and their memory of it. */
+    public static void recordArrival(ServerPlayerEntity player, TerminalRef ref, Text message) {
+        player.getServerWorld().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BLOCK_BEACON_ACTIVATE,
+                SoundCategory.PLAYERS, 1.0f, 1.5f);
         GridMemory memory = player.getAttachedOrCreate(GridMemory.TYPE);
         player.setAttached(GridMemory.TYPE, memory.withArrival(ref));
-        player.sendMessage(Text.translatable("message.digitalfrontier.arrived", terminalName(ref.terminal())), true);
-        return true;
+        player.sendMessage(message, true);
     }
 
     public static Text terminalName(String terminalId) {

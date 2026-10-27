@@ -31,6 +31,13 @@ repositories {
 			includeGroup "maven.modrinth"
 		}
 	}
+	maven {
+		name = "Wisp Forest"
+		url = "https://maven.wispforest.io/releases"
+		content {
+			includeGroup "io.wispforest"
+		}
+	}
 }
 
 loom {
@@ -61,6 +68,11 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 	modImplementation("com.terraformersmc:modmenu:${project.modmenu_version}")
+
+	// Optional integrations: compiled against, never required at runtime (see compat/ModCompat)
+	modCompileOnly("io.wispforest:accessories-fabric:${project.accessories_version}") {
+		transitive = false
+	}
 
 	// For testing purposes...
 	// Release jar from Modrinth bundles worldedit-core; the EngineHub SNAPSHOTs drift out of sync with each other

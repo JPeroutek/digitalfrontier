@@ -44,6 +44,14 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add(ModBlocks.ARRIVAL_PAD, "Arrival Pad");
         translationBuilder.add(ModBlocks.DIGITIZING_LASER, "Digitizing Laser");
         translationBuilder.add(ModItems.LASER_TUNER, "Laser Tuner");
+        translationBuilder.add(ModBlocks.GRID_PORTAL, "Portal");
+        translationBuilder.add(ModItems.ESCAPE_KEY, "Escape Key");
+        translationBuilder.add(ModItems.MEMORY_PAGING, "Memory Paging");
+        translationBuilder.add("message.digitalfrontier.exited_grid", "Left the grid");
+        translationBuilder.add("message.digitalfrontier.escape_key_outside_grid", "The Escape Key only works inside the grid");
+        translationBuilder.add("message.digitalfrontier.memory_paged", "Memory paged back in at %s");
+        translationBuilder.add(ModItems.CORE_DUMP, "Core Dump");
+        translationBuilder.add("message.digitalfrontier.core_dumped", "Core dump restored at %s, inventory intact");
 
         // Grid terminals and arrival messages
         translationBuilder.add("terminal.digitalfrontier.city_main", "City Terminal");

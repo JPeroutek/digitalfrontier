@@ -69,6 +69,7 @@ public class ModModelProvider extends FabricModelProvider {
         // Placeholder art borrowed from the pattern blocks until these get their own textures
         Block padPattern = ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("thick_target").get(DyeColor.CYAN);
         registerEmissiveCubeAll(blockStateModelGenerator, ModBlocks.ARRIVAL_PAD, padPattern);
+        registerEmissiveCubeAll(blockStateModelGenerator, ModBlocks.GRID_PORTAL, ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("full").get(DyeColor.WHITE));
         Identifier laserModel = Models.CUBE_BOTTOM_TOP.upload(ModBlocks.DIGITIZING_LASER, new TextureMap()
                 .put(TextureKey.TOP, TextureMap.getId(ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("thick_ring").get(DyeColor.CYAN)))
                 .put(TextureKey.SIDE, TextureMap.getId(ModBlocks.GRIDSTONE_BRICKS_BLOCK))
@@ -231,6 +232,9 @@ public class ModModelProvider extends FabricModelProvider {
         itemModelGenerator.output.accept(ModItems.DIMENSION_TELEPORTER, ItemModels.basic(Identifier.ofVanilla("item/snowball")));
         // Placeholder: the vanilla compass until the tuner has its own art
         itemModelGenerator.output.accept(ModItems.LASER_TUNER, ItemModels.basic(Identifier.ofVanilla("item/compass_16")));
+        itemModelGenerator.output.accept(ModItems.ESCAPE_KEY, ItemModels.basic(Identifier.ofVanilla("item/trial_key")));
+        itemModelGenerator.output.accept(ModItems.MEMORY_PAGING, ItemModels.basic(Identifier.ofVanilla("item/recovery_compass_16")));
+        itemModelGenerator.output.accept(ModItems.CORE_DUMP, ItemModels.basic(Identifier.ofVanilla("item/heart_of_the_sea")));
 
     }
 }

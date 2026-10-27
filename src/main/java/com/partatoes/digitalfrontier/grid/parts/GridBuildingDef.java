@@ -55,7 +55,9 @@ public record GridBuildingDef(
         /** Decorations placed on straight street chunks; authored for a street running along the X axis. */
         STREET("street"),
         /** The building at an arrival terminal or waypoint; contains the Arrival Pad players arrive on. */
-        TERMINAL("terminal");
+        TERMINAL("terminal"),
+        /** The building at a Portal site; contains the Portal blocks players leave the grid through. */
+        PORTAL("portal");
 
         public static final Codec<Kind> CODEC = StringIdentifiable.createCodec(Kind::values);
 

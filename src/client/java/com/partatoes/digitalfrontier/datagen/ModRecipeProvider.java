@@ -105,7 +105,40 @@ public class ModRecipeProvider extends FabricRecipeProvider {
                         .criterion(hasItem(ModBlocks.DIGITIZING_LASER), conditionsFromItem(ModBlocks.DIGITIZING_LASER))
                         .offerTo(exporter);
 
-                offerSlabRecipe(RecipeCategory.BUILDING_BLOCKS, ModBlocks.CRACKED_GRIDSTONE_SLAB,ModBlocks.CRACKED_GRIDSTONE_BLOCK);
+                // Rare by design: built around an echo shard (ancient cities) and a totem of undying (raids, mansions)
+                createShaped(RecipeCategory.TOOLS, ModItems.ESCAPE_KEY, 1)
+                        .pattern("PDP")
+                        .pattern("DSD")
+                        .pattern("PDP")
+                        .input('P', Items.ENDER_PEARL)
+                        .input('D', Items.DIAMOND)
+                        .input('S', Items.ECHO_SHARD)
+                        .criterion(hasItem(Items.ECHO_SHARD), conditionsFromItem(Items.ECHO_SHARD))
+                        .offerTo(exporter);
+
+                createShaped(RecipeCategory.TOOLS, ModItems.MEMORY_PAGING, 1)
+                        .pattern("BLB")
+                        .pattern("LTL")
+                        .pattern("BLB")
+                        .input('B', ModItems.BYTE)
+                        .input('L', ModItems.LUMINESSENCE)
+                        .input('T', Items.TOTEM_OF_UNDYING)
+                        .criterion(hasItem(Items.TOTEM_OF_UNDYING), conditionsFromItem(Items.TOTEM_OF_UNDYING))
+                        .offerTo(exporter);
+
+                // Memory Paging that keeps the inventory: a step further into the late game
+                createShaped(RecipeCategory.TOOLS, ModItems.CORE_DUMP, 1)
+                        .pattern("ENE")
+                        .pattern("LML")
+                        .pattern("ENE")
+                        .input('E', Items.ECHO_SHARD)
+                        .input('N', Items.NETHERITE_INGOT)
+                        .input('L', ModItems.LUMINESSENCE)
+                        .input('M', ModItems.MEMORY_PAGING)
+                        .criterion(hasItem(ModItems.MEMORY_PAGING), conditionsFromItem(ModItems.MEMORY_PAGING))
+                        .offerTo(exporter);
+
+                offerSlabRecipe(RecipeCategory.BUILDING_BLOCKS, ModBlocks.CRACKED_GRIDSTONE_SLAB, ModBlocks.CRACKED_GRIDSTONE_BLOCK);
                 offerWallRecipe(RecipeCategory.BUILDING_BLOCKS, ModBlocks.CRACKED_GRIDSTONE_WALL, ModBlocks.CRACKED_GRIDSTONE_BLOCK);
                 createShaped(RecipeCategory.BUILDING_BLOCKS, ModBlocks.CRACKED_GRIDSTONE_STAIRS, 4)
                         .pattern("G  ")

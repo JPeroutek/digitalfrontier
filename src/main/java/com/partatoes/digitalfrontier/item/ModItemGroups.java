@@ -29,6 +29,10 @@ public class ModItemGroups {
                         entries.add(ModItems.LASER_TUNER);
                         entries.add(ModBlocks.DIGITIZING_LASER);
                         entries.add(ModBlocks.ARRIVAL_PAD);
+                        entries.add(ModItems.ESCAPE_KEY);
+                        entries.add(ModItems.MEMORY_PAGING);
+                        entries.add(ModItems.CORE_DUMP);
+                        entries.add(ModBlocks.GRID_PORTAL);
 
                         entries.add(ModBlocks.PIXEL_BLOCK);
                         entries.add(ModBlocks.PIXEL_LAMP);

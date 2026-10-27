@@ -2,6 +2,7 @@ package com.partatoes.digitalfrontier.item;
 
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.item.custom.DimensionTeleporterItem;
+import com.partatoes.digitalfrontier.item.custom.EscapeKeyItem;
 import com.partatoes.digitalfrontier.item.custom.LightCycleBaton;
 import com.partatoes.digitalfrontier.item.custom.LuminanceOreDetector;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroupEntries;
@@ -13,6 +14,7 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Rarity;
 
 public class ModItems {
     public static final Identifier BINARY_0_ID = Identifier.of(DigitalFrontier.MOD_ID, "binary_0");
@@ -52,6 +54,22 @@ public class ModItems {
     public static final Item LASER_TUNER = registerItem(LASER_TUNER_ID, new Item(new Item.Settings()
             .maxCount(1)
             .registryKey(RegistryKey.of(RegistryKeys.ITEM, LASER_TUNER_ID))));
+    public static final Identifier ESCAPE_KEY_ID = Identifier.of(DigitalFrontier.MOD_ID, "escape_key");
+    public static final Item ESCAPE_KEY = registerItem(ESCAPE_KEY_ID, new EscapeKeyItem(new Item.Settings()
+            .maxCount(16)
+            .rarity(Rarity.RARE)
+            .registryKey(RegistryKey.of(RegistryKeys.ITEM, ESCAPE_KEY_ID))));
+    public static final Identifier MEMORY_PAGING_ID = Identifier.of(DigitalFrontier.MOD_ID, "memory_paging");
+    public static final Item MEMORY_PAGING = registerItem(MEMORY_PAGING_ID, new Item(new Item.Settings()
+            .maxCount(16)
+            .rarity(Rarity.RARE)
+            .registryKey(RegistryKey.of(RegistryKeys.ITEM, MEMORY_PAGING_ID))));
+    // Memory Paging that also keeps the player's inventory and experience
+    public static final Identifier CORE_DUMP_ID = Identifier.of(DigitalFrontier.MOD_ID, "core_dump");
+    public static final Item CORE_DUMP = registerItem(CORE_DUMP_ID, new Item(new Item.Settings()
+            .maxCount(16)
+            .rarity(Rarity.EPIC)
+            .registryKey(RegistryKey.of(RegistryKeys.ITEM, CORE_DUMP_ID))));
 
     private static Item registerItem(Identifier id, Item item) {
         return Registry.register(Registries.ITEM, id, item);

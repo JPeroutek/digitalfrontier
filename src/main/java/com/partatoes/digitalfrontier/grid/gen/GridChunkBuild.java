@@ -5,6 +5,7 @@ import com.partatoes.digitalfrontier.grid.layout.GridLayout;
 import com.partatoes.digitalfrontier.grid.layout.GridRandom;
 import com.partatoes.digitalfrontier.grid.layout.MultiChunk;
 import com.partatoes.digitalfrontier.grid.layout.PlanType;
+import com.partatoes.digitalfrontier.grid.layout.Site;
 import com.partatoes.digitalfrontier.grid.parts.DistrictPalette;
 import com.partatoes.digitalfrontier.grid.parts.GridAssets;
 import com.partatoes.digitalfrontier.grid.parts.GridBuildingDef;
@@ -83,7 +84,7 @@ final class GridChunkBuild {
             case PLAZA -> GridBuildingDef.Kind.PLAZA;
             case STREET -> plan.streetX() != plan.streetZ() && roll(seed, chunkX, chunkZ, 1) < STREET_FURNITURE_CHANCE
                     ? GridBuildingDef.Kind.STREET : null;
-            case SITE -> plan.site() != null && plan.site().hasTerminal() ? GridBuildingDef.Kind.TERMINAL : null;
+            case SITE -> siteKind(plan.site());
             case OPEN -> null;
         };
         GridAssets.Candidate candidate = kind == null ? null : assets.pick(kind, 1, plan.zone(), roll(seed, chunkX, chunkZ, 0));
@@ -91,6 +92,19 @@ final class GridChunkBuild {
             return new GridChunkBuild(plan, chunkX, chunkZ, null, List.of(), chunkX, chunkZ, 1, BlockRotation.NONE);
         }
         return stacked(plan, chunkX, chunkZ, assets, candidate, chunkX, chunkZ, 1, seed);
+    }
+
+    @Nullable
+    private static GridBuildingDef.Kind siteKind(@Nullable Site site) {
+        if (site == null) {
+            return null;
+        }
+        return switch (site.type()) {
+            case ARRIVAL_TERMINAL, WAYPOINT -> GridBuildingDef.Kind.TERMINAL;
+            case PORTAL -> GridBuildingDef.Kind.PORTAL;
+            // Strongholds get their buildings with corruption (phase 6)
+            case STRONGHOLD -> null;
+        };
     }
 
     private static GridChunkBuild stacked(ChunkPlan plan, int chunkX, int chunkZ, GridAssets assets, GridAssets.Candidate candidate,
