@@ -1,6 +1,7 @@
 package com.partatoes.digitalfrontier.grid.tuning;
 
 import com.partatoes.digitalfrontier.grid.layout.GridLayoutSettings;
+import com.partatoes.digitalfrontier.grid.layout.StreetAxis.StreetStyle;
 import net.minecraft.util.DyeColor;
 
 import java.nio.BufferUnderflowException;
@@ -16,14 +17,16 @@ import java.util.Optional;
  * from these, scaled from the default grid, so a tuning always makes a sensible grid. The default tuning makes
  * exactly {@link GridLayoutSettings#DEFAULT}.
  *
- * <p>A tuning can be shared as a short grid code ({@code DF1.} plus URL-safe base64), which decodes back to the
- * identical tuning and therefore the identical grid.
+ * <p>A tuning can be shared as a short grid code (a prefix plus URL-safe base64), which decodes back to the
+ * identical tuning and therefore the identical grid. Codes are {@code DF2.}; the older {@code DF1.} codes, from
+ * before street styles, still decode, as uniform streets.
  *
  * @param corruptionPercent 0 to 100
  * @param cityRadius        in chunks; the core, outskirts, waypoint ring and outlands scale with it
+ * @param blockSize         city block size in chunks; with varied streets, blocks range around it
  */
 public record GridTuning(long seed, int corruptionPercent, int cityRadius, int blockSize, int waypointCount,
-                         List<DyeColor> districtColors) {
+                         List<DyeColor> districtColors, StreetStyle streetStyle) {
     public static final int MIN_CITY_RADIUS = 16;
     public static final int MAX_CITY_RADIUS = 96;
     public static final int MIN_BLOCK_SIZE = 2;
@@ -32,10 +35,10 @@ public record GridTuning(long seed, int corruptionPercent, int cityRadius, int b
     public static final int MAX_DISTRICT_COLORS = 8;
 
     public static final GridTuning DEFAULT = new GridTuning(0L, 50, 40, 3, 4,
-            List.of(DyeColor.LIGHT_BLUE, DyeColor.CYAN, DyeColor.BLUE, DyeColor.ORANGE));
+            List.of(DyeColor.LIGHT_BLUE, DyeColor.CYAN, DyeColor.BLUE, DyeColor.ORANGE), StreetStyle.VARIED);
 
-    private static final String CODE_PREFIX = "DF1.";
-    private static final byte CODE_VERSION = 1;
+    private static final String V1_PREFIX = "DF1.";
+    private static final String V2_PREFIX = "DF2.";
 
     public GridTuning {
         districtColors = List.copyOf(districtColors);
@@ -60,19 +63,20 @@ public record GridTuning(long seed, int corruptionPercent, int cityRadius, int b
                 cityRadius * 2,
                 waypointCount,
                 Math.round(cityRadius * 3.2f),
-                districtColors);
+                districtColors,
+                streetStyle);
     }
 
     /** The tuning that makes these settings, if any does (settings written by hand may not fit the scaling). */
     public static Optional<GridTuning> fromSettings(GridLayoutSettings settings) {
         GridTuning tuning = new GridTuning(settings.gridSeed(), Math.round(settings.corruption() * 100), settings.cityRadius(),
-                settings.blockSize(), settings.waypointCount(), settings.districtColors());
+                settings.blockSize(), settings.waypointCount(), settings.districtColors(), settings.streetStyle());
         return tuning.isValid() && tuning.toSettings().equals(settings) ? Optional.of(tuning) : Optional.empty();
     }
 
     public String code() {
-        ByteBuffer buffer = ByteBuffer.allocate(14 + districtColors.size());
-        buffer.put(CODE_VERSION)
+        ByteBuffer buffer = ByteBuffer.allocate(15 + districtColors.size());
+        buffer.put((byte) 2)
                 .putLong(seed)
                 .put((byte) corruptionPercent)
                 .put((byte) cityRadius)
@@ -80,18 +84,24 @@ public record GridTuning(long seed, int corruptionPercent, int cityRadius, int b
                 .put((byte) waypointCount)
                 .put((byte) districtColors.size());
         districtColors.forEach(color -> buffer.put((byte) color.getId()));
-        return CODE_PREFIX + Base64.getUrlEncoder().withoutPadding().encodeToString(buffer.array());
+        buffer.put((byte) streetStyle.ordinal());
+        return V2_PREFIX + Base64.getUrlEncoder().withoutPadding().encodeToString(buffer.array());
     }
 
     /** Decodes a grid code; empty if it's malformed or out of bounds. */
     public static Optional<GridTuning> fromCode(String code) {
         String trimmed = code.trim();
-        if (!trimmed.startsWith(CODE_PREFIX)) {
+        int version;
+        if (trimmed.startsWith(V2_PREFIX)) {
+            version = 2;
+        } else if (trimmed.startsWith(V1_PREFIX)) {
+            version = 1;
+        } else {
             return Optional.empty();
         }
         try {
-            ByteBuffer buffer = ByteBuffer.wrap(Base64.getUrlDecoder().decode(trimmed.substring(CODE_PREFIX.length())));
-            if (buffer.get() != CODE_VERSION) {
+            ByteBuffer buffer = ByteBuffer.wrap(Base64.getUrlDecoder().decode(trimmed.substring(V2_PREFIX.length())));
+            if (buffer.get() != version) {
                 return Optional.empty();
             }
             long seed = buffer.getLong();
@@ -111,10 +121,19 @@ public record GridTuning(long seed, int corruptionPercent, int cityRadius, int b
                 }
                 colors.add(DyeColor.byId(id));
             }
+            // Version 1 codes predate street styles: their grids have uniform streets
+            StreetStyle style = StreetStyle.UNIFORM;
+            if (version == 2) {
+                int styleIndex = buffer.get();
+                if (styleIndex < 0 || styleIndex >= StreetStyle.values().length) {
+                    return Optional.empty();
+                }
+                style = StreetStyle.values()[styleIndex];
+            }
             if (buffer.hasRemaining()) {
                 return Optional.empty();
             }
-            GridTuning tuning = new GridTuning(seed, corruption, city, block, waypoints, colors);
+            GridTuning tuning = new GridTuning(seed, corruption, city, block, waypoints, colors, style);
             return tuning.isValid() ? Optional.of(tuning) : Optional.empty();
         } catch (IllegalArgumentException | BufferUnderflowException e) {
             return Optional.empty();
@@ -132,26 +151,30 @@ public record GridTuning(long seed, int corruptionPercent, int cityRadius, int b
     }
 
     public GridTuning withSeed(long seed) {
-        return new GridTuning(seed, corruptionPercent, cityRadius, blockSize, waypointCount, districtColors);
+        return new GridTuning(seed, corruptionPercent, cityRadius, blockSize, waypointCount, districtColors, streetStyle);
     }
 
     public GridTuning withCorruptionPercent(int corruptionPercent) {
-        return new GridTuning(seed, corruptionPercent, cityRadius, blockSize, waypointCount, districtColors);
+        return new GridTuning(seed, corruptionPercent, cityRadius, blockSize, waypointCount, districtColors, streetStyle);
     }
 
     public GridTuning withCityRadius(int cityRadius) {
-        return new GridTuning(seed, corruptionPercent, cityRadius, blockSize, waypointCount, districtColors);
+        return new GridTuning(seed, corruptionPercent, cityRadius, blockSize, waypointCount, districtColors, streetStyle);
     }
 
     public GridTuning withBlockSize(int blockSize) {
-        return new GridTuning(seed, corruptionPercent, cityRadius, blockSize, waypointCount, districtColors);
+        return new GridTuning(seed, corruptionPercent, cityRadius, blockSize, waypointCount, districtColors, streetStyle);
     }
 
     public GridTuning withWaypointCount(int waypointCount) {
-        return new GridTuning(seed, corruptionPercent, cityRadius, blockSize, waypointCount, districtColors);
+        return new GridTuning(seed, corruptionPercent, cityRadius, blockSize, waypointCount, districtColors, streetStyle);
     }
 
     public GridTuning withDistrictColors(List<DyeColor> districtColors) {
-        return new GridTuning(seed, corruptionPercent, cityRadius, blockSize, waypointCount, districtColors);
+        return new GridTuning(seed, corruptionPercent, cityRadius, blockSize, waypointCount, districtColors, streetStyle);
+    }
+
+    public GridTuning withStreetStyle(StreetStyle streetStyle) {
+        return new GridTuning(seed, corruptionPercent, cityRadius, blockSize, waypointCount, districtColors, streetStyle);
     }
 }

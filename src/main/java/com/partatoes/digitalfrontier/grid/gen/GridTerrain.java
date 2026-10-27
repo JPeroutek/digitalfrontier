@@ -8,7 +8,10 @@ import com.partatoes.digitalfrontier.grid.layout.GridLayoutSettings;
 import com.partatoes.digitalfrontier.grid.layout.GridRandom;
 import com.partatoes.digitalfrontier.grid.layout.PlanType;
 import com.partatoes.digitalfrontier.grid.layout.Site;
+import com.partatoes.digitalfrontier.grid.layout.StreetAxis.Road;
+import com.partatoes.digitalfrontier.grid.layout.StreetAxis.RoadClass;
 import com.partatoes.digitalfrontier.grid.layout.Zone;
+import org.jetbrains.annotations.Nullable;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.DyeColor;
@@ -35,6 +38,10 @@ final class GridTerrain {
     // Placeholder buildings leave a 1-block gap around the chunk edge so neighbours read as separate towers
     private static final int FOOTPRINT_MIN = 1;
     private static final int FOOTPRINT_MAX = 14;
+
+    // A lane's 6-block roadway, across the chunk; one block of sidewalk either side, then the wall strips
+    private static final int LANE_FIRST = 5;
+    private static final int LANE_LAST = 10;
 
     private static final int MESA_HEIGHT = 36;
     private static final int TERRACE_STEP = 3;
@@ -79,10 +86,13 @@ final class GridTerrain {
         return new Column(WORLD_BOTTOM, FLOOR_Y + rise, surface, ModBlocks.GRIDSTONE_BLOCK.getDefaultState());
     }
 
-    /** Highest Y with a block in this column, including placeholder buildings. */
+    /** Highest Y with a block in this column, including placeholder buildings and lane walls. */
     static int columnTop(ChunkPlan plan, Column column, int localX, int localZ) {
         if (plan.type() == PlanType.BUILDING && inFootprint(localX, localZ)) {
             return FLOOR_Y + plan.floors() * FLOOR_HEIGHT;
+        }
+        if (plan.type() == PlanType.STREET && isLaneWall(plan, localX, localZ)) {
+            return FLOOR_Y + 1;
         }
         return column.top();
     }
@@ -97,6 +107,11 @@ final class GridTerrain {
         if (y == column.top()) {
             return column.surface();
         }
+        if (plan.type() == PlanType.STREET) {
+            return y == FLOOR_Y + 1 && isLaneWall(plan, localX, localZ)
+                    ? ModBlocks.GRIDSTONE_BRICKS_WALL.getDefaultState()
+                    : Blocks.AIR.getDefaultState();
+        }
         if (y <= columnTop(plan, column, localX, localZ)) {
             // A lit band marks the top of every floor
             return (y - FLOOR_Y) % FLOOR_HEIGHT == 0
@@ -108,9 +123,14 @@ final class GridTerrain {
 
     private static BlockState surface(ChunkPlan plan, int localX, int localZ) {
         return switch (plan.type()) {
-            case STREET -> isStreetLight(plan, localX, localZ)
-                    ? pattern("full", plan.district())
-                    : ModBlocks.GRIDSTONE_BLOCK.getDefaultState();
+            case STREET -> {
+                if (isStreetLight(plan, localX, localZ)) {
+                    yield pattern("full", plan.district());
+                }
+                // Outside every road's pavement: a lane's walled strips
+                boolean paved = isPaved(plan.roadX(), localZ) || isPaved(plan.roadZ(), localX);
+                yield paved ? ModBlocks.GRIDSTONE_BLOCK.getDefaultState() : ModBlocks.GRIDSTONE_BRICKS_BLOCK.getDefaultState();
+            }
             case BUILDING -> ModBlocks.GRIDSTONE_BRICKS_BLOCK.getDefaultState();
             case PLAZA -> isCenter(localX, localZ, 1)
                     ? pattern("thin_target", plan.district())
@@ -203,16 +223,44 @@ final class GridTerrain {
         return Math.clamp((value - from) / (to - from), 0.0, 1.0);
     }
 
-    // Light lines along both edges of each street; avenues also get a double center line
+    // A road's light lines, by where a block sits across it (0-15); roads crossing at an intersection both draw theirs
     private static boolean isStreetLight(ChunkPlan plan, int localX, int localZ) {
-        if (plan.streetX() && isLightLine(localZ, plan.avenue())) {
-            return true;
-        }
-        return plan.streetZ() && isLightLine(localX, plan.avenue());
+        return isLightLine(plan.roadX(), localZ) || isLightLine(plan.roadZ(), localX);
     }
 
-    private static boolean isLightLine(int across, boolean avenue) {
-        return across == 1 || across == 14 || (avenue && (across == 7 || across == 8));
+    private static boolean isLightLine(@Nullable Road road, int across) {
+        if (road == null) {
+            return false;
+        }
+        return switch (road.roadClass()) {
+            // Both edges; the street through the city center also gets a double center line
+            case STREET -> across == 1 || across == 14 || (road.central() && (across == 7 || across == 8));
+            case LANE -> across == LANE_FIRST || across == LANE_LAST;
+            // The outer edge, and the median where the two halves meet
+            case BOULEVARD -> road.half() == 0 ? across == 1 || across == 15 : across == 0 || across == 14;
+        };
+    }
+
+    /**
+     * The placeholder walls of a lane chunk: 1-high planter walls along both outer strips, with a gap every 8 blocks
+     * so the buildings behind stay reachable. Where another road crosses, its pavement wins.
+     */
+    static boolean isLaneWall(ChunkPlan plan, int localX, int localZ) {
+        boolean wall = isLaneStrip(plan.roadX(), localZ, localX) || isLaneStrip(plan.roadZ(), localX, localZ);
+        return wall && !isPaved(plan.roadX(), localZ) && !isPaved(plan.roadZ(), localX);
+    }
+
+    private static boolean isLaneStrip(@Nullable Road road, int across, int along) {
+        return road != null && road.roadClass() == RoadClass.LANE
+                && (across < LANE_FIRST - 1 || across > LANE_LAST + 1) && along % 8 != 3 && along % 8 != 4;
+    }
+
+    // Lanes are paved from sidewalk to sidewalk; streets and boulevards all the way across
+    private static boolean isPaved(@Nullable Road road, int across) {
+        if (road == null) {
+            return false;
+        }
+        return road.roadClass() != RoadClass.LANE || (across >= LANE_FIRST - 1 && across <= LANE_LAST + 1);
     }
 
     private static boolean isCenter(int localX, int localZ, int halfWidth) {

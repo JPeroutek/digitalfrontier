@@ -25,28 +25,15 @@ Ideas and planned work for the grid world generator that aren't scheduled into a
 - **More trigger ideas.** Each trigger type is one record in `Triggers`; candidates: an advancement earned, the
   number of corrupted programs near the stronghold, a Grid Tuning Laser retuned to this grid.
 
-## Multiple street sizes
+## Streets
 
-Today every street is exactly one chunk (16 blocks) wide, because a chunk is either a street or part of a city
-block (`GridLayout.planAt`). Wanted: a hierarchy of street sizes, e.g.
+Varied streets (lanes, streets, boulevards, blocks of 2–5 chunks) are in; see `StreetAxis`. Possible follow-ups:
 
-- **Avenues / boulevards:** wide main roads, such as the two axis avenues and the roads out to waypoints.
-- **Streets:** the current 16-block road.
-- **Side streets / alleys:** narrow lanes (4–8 blocks) inside city blocks.
-
-Approaches to weigh:
-
-- **Wide streets as multiple chunk rows.** A boulevard is 2 (or 3) adjacent street rows that share one plan
-  (like `MultiChunk` does for buildings). Light lines go on the outer edges, plus a median down the middle.
-  Fits the "one chunk = one plan" model without changes.
-- **Narrow streets inside a chunk.** A chunk plan gets edge strips: e.g. "this building chunk has a 6-block
-  alley along its west edge". Building parts would then need smaller footprints (e.g. 10×16), or a mask that
-  clears the alley after placing the part.
-- **Variable block sizes.** Instead of one `blockSize` for the whole city, vary the street spacing per row and
-  column (still deterministic from `gridSeed`), so some blocks are 2×2 chunks and others 4×4.
-
-Open questions: should `GridLayoutSettings` expose the street hierarchy (for tuned grids), and how should
-street furniture be authored for each width (one `street` definition per width class, with a `width` field)?
+- **Boulevards out of town.** The central boulevards narrow to one-chunk highways at the city edge; wide
+  highways would need the highway and terminal-connector plans to know about two-chunk roads.
+- **Alleys inside a chunk.** Lanes are whole road chunks. Narrower alleys cut into building chunks would need
+  building parts with smaller footprints, or a mask that clears the alley after placing a part.
+- **Waypoint settlements** still use plain one-chunk streets; they could use the same street styles.
 
 ## Subway and elevated rail
 

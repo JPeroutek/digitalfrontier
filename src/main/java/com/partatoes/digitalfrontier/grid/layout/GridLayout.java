@@ -31,6 +31,8 @@ public final class GridLayout {
     private static final int SALT_MULTI_OFFSET_X = 7;
     private static final int SALT_MULTI_OFFSET_Z = 8;
     private static final int SALT_EXTRA_STRONGHOLDS = 9;
+    private static final int SALT_STREETS_X = 10;
+    private static final int SALT_STREETS_Z = 11;
 
     private final GridLayoutSettings settings;
     private final List<Site> sites;
@@ -39,6 +41,9 @@ public final class GridLayout {
     private final Map<Long, Site> sitesByChunk = new HashMap<>();
     private final CorruptionField corruption;
     private final double districtRotation;
+    // Streets along X are found on the Z axis (a row of chunks), streets along Z on the X axis
+    private final StreetAxis xAxis;
+    private final StreetAxis zAxis;
 
     public GridLayout(GridLayoutSettings settings) {
         this.settings = settings;
@@ -86,6 +91,9 @@ public final class GridLayout {
         }
         this.corruption = new CorruptionField(settings, List.copyOf(strongholds));
         this.districtRotation = GridRandom.unit(GridRandom.hash(seed, 0, 0, SALT_DISTRICTS)) * Math.PI * 2;
+        int extent = settings.cityRadius() + MultiChunk.SIZE + 2;
+        this.xAxis = new StreetAxis(settings.streetStyle(), seed, SALT_STREETS_X, settings.blockSize(), extent);
+        this.zAxis = new StreetAxis(settings.streetStyle(), seed, SALT_STREETS_Z, settings.blockSize(), extent);
     }
 
     /** One stronghold up to 64% corruption (the default grid has 50%), two up to 84%, three above that. */
@@ -181,12 +189,10 @@ public final class GridLayout {
         long roll = GridRandom.hash(settings.gridSeed(), chunkX, chunkZ, SALT_PLAN);
         return switch (zone) {
             case CITY_CORE, CITY -> {
-                int period = settings.blockSize() + 1;
-                boolean streetX = Math.floorMod(chunkZ, period) == 0;
-                boolean streetZ = Math.floorMod(chunkX, period) == 0;
-                if (streetX || streetZ) {
-                    boolean avenue = (streetX && chunkZ == 0) || (streetZ && chunkX == 0);
-                    yield plans.street(streetX, streetZ, avenue);
+                StreetAxis.Road roadX = zAxis.roadAt(chunkZ);
+                StreetAxis.Road roadZ = xAxis.roadAt(chunkX);
+                if (roadX != null || roadZ != null) {
+                    yield plans.street(roadX, roadZ);
                 }
                 MultiChunk multi = multiChunkAt(chunkX, chunkZ);
                 if (multi != null) {
@@ -295,23 +301,29 @@ public final class GridLayout {
     // What every plan of one chunk shares, so each kind of plan reads as one short call
     private record Plans(Zone zone, DyeColor district, float corruption, CorruptionTier tier) {
         ChunkPlan site(Site site) {
-            return new ChunkPlan(zone, PlanType.SITE, 0, district, false, false, false, site, null, null, corruption, tier);
+            return new ChunkPlan(zone, PlanType.SITE, 0, district, null, null, site, null, null, corruption, tier);
         }
 
-        ChunkPlan street(boolean streetX, boolean streetZ, boolean avenue) {
-            return new ChunkPlan(zone, PlanType.STREET, 0, district, streetX, streetZ, avenue, null, null, null, corruption, tier);
+        ChunkPlan street(@Nullable StreetAxis.Road roadX, @Nullable StreetAxis.Road roadZ) {
+            return new ChunkPlan(zone, PlanType.STREET, 0, district, roadX, roadZ, null, null, null, corruption, tier);
+        }
+
+        // An ordinary one-chunk street outside the city's street grid (highways, connectors, settlements)
+        ChunkPlan street(boolean alongX, boolean alongZ, boolean central) {
+            StreetAxis.Road road = new StreetAxis.Road(StreetAxis.RoadClass.STREET, 0, central);
+            return street(alongX ? road : null, alongZ ? road : null);
         }
 
         ChunkPlan building(int floors, DyeColor buildingDistrict, @Nullable MultiChunk multi) {
-            return new ChunkPlan(zone, PlanType.BUILDING, floors, buildingDistrict, false, false, false, null, multi, null, corruption, tier);
+            return new ChunkPlan(zone, PlanType.BUILDING, floors, buildingDistrict, null, null, null, multi, null, corruption, tier);
         }
 
         ChunkPlan plaza() {
-            return new ChunkPlan(zone, PlanType.PLAZA, 0, district, false, false, false, null, null, null, corruption, tier);
+            return new ChunkPlan(zone, PlanType.PLAZA, 0, district, null, null, null, null, null, corruption, tier);
         }
 
         ChunkPlan open(@Nullable DiagonalRoad diagonal) {
-            return new ChunkPlan(zone, PlanType.OPEN, 0, district, false, false, false, null, null, diagonal, corruption, tier);
+            return new ChunkPlan(zone, PlanType.OPEN, 0, district, null, null, null, null, diagonal, corruption, tier);
         }
     }
 
@@ -321,32 +333,30 @@ public final class GridLayout {
      */
     @Nullable
     private MultiChunk multiChunkAt(int chunkX, int chunkZ) {
-        int blockSize = settings.blockSize();
-        if (blockSize < MultiChunk.SIZE) {
+        StreetAxis.Block blockX = xAxis.blockAt(chunkX);
+        StreetAxis.Block blockZ = zAxis.blockAt(chunkZ);
+        if (blockX.size() < MultiChunk.SIZE || blockZ.size() < MultiChunk.SIZE) {
             return null;
         }
-        int period = blockSize + 1;
-        int blockX = Math.floorDiv(chunkX, period);
-        int blockZ = Math.floorDiv(chunkZ, period);
-        int firstX = blockX * period + 1;
-        int firstZ = blockZ * period + 1;
         long seed = settings.gridSeed();
 
-        boolean landmark = blockX == 0 && blockZ == 0;
+        // Block 0 on both axes starts at chunk (1, 1), just past the roads through the center
+        boolean landmark = blockX.index() == 0 && blockZ.index() == 0;
         int offsetX = 0;
         int offsetZ = 0;
         if (!landmark) {
-            double chance = zoneAt(firstX, firstZ) == Zone.CITY_CORE ? 0.5 : 0.25;
-            if (GridRandom.unit(GridRandom.hash(seed, blockX, blockZ, SALT_MULTI)) >= chance) {
+            double chance = zoneAt(blockX.start(), blockZ.start()) == Zone.CITY_CORE ? 0.5 : 0.25;
+            if (GridRandom.unit(GridRandom.hash(seed, blockX.index(), blockZ.index(), SALT_MULTI)) >= chance) {
                 return null;
             }
-            int slack = blockSize - MultiChunk.SIZE + 1;
-            offsetX = GridRandom.nextInt(GridRandom.hash(seed, blockX, blockZ, SALT_MULTI_OFFSET_X), slack);
-            offsetZ = GridRandom.nextInt(GridRandom.hash(seed, blockX, blockZ, SALT_MULTI_OFFSET_Z), slack);
+            offsetX = GridRandom.nextInt(GridRandom.hash(seed, blockX.index(), blockZ.index(), SALT_MULTI_OFFSET_X),
+                    blockX.size() - MultiChunk.SIZE + 1);
+            offsetZ = GridRandom.nextInt(GridRandom.hash(seed, blockX.index(), blockZ.index(), SALT_MULTI_OFFSET_Z),
+                    blockZ.size() - MultiChunk.SIZE + 1);
         }
 
-        int originX = firstX + offsetX;
-        int originZ = firstZ + offsetZ;
+        int originX = blockX.start() + offsetX;
+        int originZ = blockZ.start() + offsetZ;
         if (chunkX < originX || chunkX >= originX + MultiChunk.SIZE || chunkZ < originZ || chunkZ >= originZ + MultiChunk.SIZE) {
             return null;
         }

@@ -10,7 +10,7 @@ class GridKeyTest {
     private static GridLayoutSettings withSeed(long seed) {
         GridLayoutSettings d = GridLayoutSettings.DEFAULT;
         return new GridLayoutSettings(seed, d.corruption(), d.coreRadius(), d.cityRadius(), d.blockSize(),
-                d.outskirtsRadius(), d.waypointRingRadius(), d.waypointCount(), d.outlandsRadius(), d.districtColors());
+                d.outskirtsRadius(), d.waypointRingRadius(), d.waypointCount(), d.outlandsRadius(), d.districtColors(), d.streetStyle());
     }
 
     @Test

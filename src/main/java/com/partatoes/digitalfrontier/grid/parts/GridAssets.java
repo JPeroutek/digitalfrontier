@@ -1,5 +1,6 @@
 package com.partatoes.digitalfrontier.grid.parts;
 
+import com.partatoes.digitalfrontier.grid.layout.StreetAxis.RoadClass;
 import com.partatoes.digitalfrontier.grid.layout.Zone;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
@@ -29,7 +30,7 @@ public final class GridAssets {
         buildings.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(entry -> {
             GridBuildingDef def = entry.getValue();
             for (Zone zone : def.zones()) {
-                candidates.computeIfAbsent(new CandidateKey(def.kind(), def.footprint(), zone), key -> new ArrayList<>())
+                candidates.computeIfAbsent(new CandidateKey(def.kind(), def.footprint(), zone, def.roadOrNull()), key -> new ArrayList<>())
                         .add(new Candidate(entry.getKey(), def));
             }
         });
@@ -59,7 +60,18 @@ public final class GridAssets {
     /** Weighted pick among the definitions matching kind, footprint and zone; {@code roll} is uniform in [0, 1). */
     @Nullable
     public Candidate pick(GridBuildingDef.Kind kind, int footprint, Zone zone, double roll) {
-        List<Candidate> options = candidates.get(new CandidateKey(kind, footprint, zone));
+        return pick(new CandidateKey(kind, footprint, zone, null), roll);
+    }
+
+    /** Street furniture for one kind of road. */
+    @Nullable
+    public Candidate pickStreet(RoadClass road, Zone zone, double roll) {
+        return pick(new CandidateKey(GridBuildingDef.Kind.STREET, 1, zone, road), roll);
+    }
+
+    @Nullable
+    private Candidate pick(CandidateKey key, double roll) {
+        List<Candidate> options = candidates.get(key);
         if (options == null) {
             return null;
         }
@@ -77,6 +89,7 @@ public final class GridAssets {
     public record Candidate(Identifier id, GridBuildingDef def) {
     }
 
-    private record CandidateKey(GridBuildingDef.Kind kind, int footprint, Zone zone) {
+    // road is set only for street furniture
+    private record CandidateKey(GridBuildingDef.Kind kind, int footprint, Zone zone, @Nullable RoadClass road) {
     }
 }

@@ -2,6 +2,7 @@ package com.partatoes.digitalfrontier.screen;
 
 import com.partatoes.digitalfrontier.grid.GridKey;
 import com.partatoes.digitalfrontier.grid.layout.GridLayout;
+import com.partatoes.digitalfrontier.grid.layout.StreetAxis;
 import com.partatoes.digitalfrontier.grid.tuning.GridTuning;
 import com.partatoes.digitalfrontier.grid.tuning.GridTuningNetworking;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -79,16 +80,23 @@ public class GridTuningScreen extends Screen {
         for (int size = GridTuning.MIN_BLOCK_SIZE; size <= GridTuning.MAX_BLOCK_SIZE; size++) {
             blockSizes.add(size);
         }
+        int third = (WIDTH - 8) / 3;
         addDrawableChild(CyclingButtonWidget.<Integer>builder(value -> Text.literal(value + "×" + value))
                 .values(blockSizes)
                 .initially(tuning.blockSize())
-                .build(left, y, half, 20, Text.translatable("screen.digitalfrontier.grid_tuning.block_size"),
+                .build(left, y, third, 20, Text.translatable("screen.digitalfrontier.grid_tuning.block_size"),
                         (button, value) -> update(tuning.withBlockSize(value))));
         addDrawableChild(CyclingButtonWidget.<Integer>builder(value -> Text.literal(String.valueOf(value)))
                 .values(GridTuning.WAYPOINT_COUNTS)
                 .initially(tuning.waypointCount())
-                .build(left + half + 4, y, half, 20, Text.translatable("screen.digitalfrontier.grid_tuning.waypoints"),
+                .build(left + third + 4, y, third, 20, Text.translatable("screen.digitalfrontier.grid_tuning.waypoints"),
                         (button, value) -> update(tuning.withWaypointCount(value))));
+        addDrawableChild(CyclingButtonWidget.<StreetAxis.StreetStyle>builder(
+                        value -> Text.translatable("screen.digitalfrontier.grid_tuning.street_style." + value.asString()))
+                .values(StreetAxis.StreetStyle.values())
+                .initially(tuning.streetStyle())
+                .build(left + 2 * (third + 4), y, third, 20, Text.translatable("screen.digitalfrontier.grid_tuning.street_style"),
+                        (button, value) -> update(tuning.withStreetStyle(value))));
         y += ROW + 12;
 
         DyeColor[] colors = DyeColor.values();

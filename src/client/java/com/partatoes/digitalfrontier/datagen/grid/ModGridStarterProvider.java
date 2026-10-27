@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.mojang.serialization.JsonOps;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.block.ModBlocks;
+import com.partatoes.digitalfrontier.grid.layout.StreetAxis.RoadClass;
 import com.partatoes.digitalfrontier.grid.layout.Zone;
 import com.partatoes.digitalfrontier.grid.parts.GridBuildingDef;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
@@ -158,6 +159,21 @@ public class ModGridStarterProvider implements DataProvider {
                 .box(1, 1, 14, 1, 2, 14, BRICKS).box(14, 1, 14, 14, 2, 14, BRICKS)
                 .box(6, 0, 6, 9, 3, 9, BRICKS)
                 .box(7, 4, 7, 8, 5, 8, RED_LIGHT));
+        // One half of a boulevard: outer edge at Z = 0, the median at Z = 15 (the other half is the same, turned)
+        parts.put("grid/starter/street/boulevard_half", new StarterPart(16, 4)
+                .box(3, 0, 0, 3, 2, 0, WALL).box(3, 3, 0, 3, 3, 0, LIGHT)
+                .box(11, 0, 0, 11, 2, 0, WALL).box(11, 3, 0, 11, 3, 0, LIGHT)
+                .box(0, 0, 15, 15, 0, 15, WALL)
+                .box(0, 1, 15, 0, 1, 15, LIGHT).box(5, 1, 15, 5, 1, 15, LIGHT).box(10, 1, 15, 10, 1, 15, LIGHT)
+                .box(15, 1, 15, 15, 1, 15, LIGHT));
+        // A lane: planters fill the strips either side of the 6-block lane (Z = 5..10), with gaps to get through
+        parts.put("grid/starter/street/lane", new StarterPart(16, 4)
+                .box(0, 0, 0, 2, 0, 3, BRICKS).box(5, 0, 0, 10, 0, 3, BRICKS).box(13, 0, 0, 15, 0, 3, BRICKS)
+                .box(0, 0, 12, 2, 0, 15, BRICKS).box(5, 0, 12, 10, 0, 15, BRICKS).box(13, 0, 12, 15, 0, 15, BRICKS)
+                .box(1, 0, 1, 1, 0, 2, LIGHT).box(7, 0, 1, 8, 0, 2, LIGHT).box(14, 0, 1, 14, 0, 2, LIGHT)
+                .box(1, 0, 13, 1, 0, 14, LIGHT).box(7, 0, 13, 8, 0, 14, LIGHT).box(14, 0, 13, 14, 0, 14, LIGHT)
+                .box(8, 1, 3, 8, 2, 3, WALL).box(8, 3, 3, 8, 3, 3, LIGHT)
+                .box(8, 1, 12, 8, 2, 12, WALL).box(8, 3, 12, 8, 3, 12, LIGHT));
         parts.put("grid/starter/street/lights", new StarterPart(16, 4)
                 .box(3, 0, 0, 3, 2, 0, WALL).box(3, 3, 0, 3, 3, 0, LIGHT)
                 .box(11, 0, 0, 11, 2, 0, WALL).box(11, 3, 0, 11, 3, 0, LIGHT)
@@ -192,7 +208,15 @@ public class ModGridStarterProvider implements DataProvider {
         defs.put("starter_terminal", new GridBuildingDef(GridBuildingDef.Kind.TERMINAL,
                 List.of(Zone.OUTSKIRTS, Zone.WAYPOINT), 10, 1,
                 Optional.of(id("grid/starter/terminal/platform")), List.of(), Optional.empty(), 0, 0));
-        defs.put("starter_stronghold", new GridBuildingDef(GridBuildingDef.Kind.STRONGHOLD,
+        defs.put("starter_boulevard", new GridBuildingDef(GridBuildingDef.Kind.STREET,
+                List.of(Zone.CITY_CORE, Zone.CITY), 10, 1,
+                Optional.of(id("grid/starter/street/boulevard_half")), List.of(), Optional.empty(), 0, 0,
+                Optional.of(RoadClass.BOULEVARD)));
+        defs.put("starter_lane", new GridBuildingDef(GridBuildingDef.Kind.STREET,
+                List.of(Zone.CITY_CORE, Zone.CITY, Zone.WAYPOINT), 10, 1,
+                Optional.of(id("grid/starter/street/lane")), List.of(), Optional.empty(), 0, 0,
+                Optional.of(RoadClass.LANE)));
+        defs.put("starter_stronghold",new GridBuildingDef(GridBuildingDef.Kind.STRONGHOLD,
                 List.of(Zone.OUTSKIRTS, Zone.OUTLANDS, Zone.UNALLOCATED), 10, 1,
                 Optional.of(id("grid/starter/stronghold/base")),
                 List.of(id("grid/starter/stronghold/floor")),

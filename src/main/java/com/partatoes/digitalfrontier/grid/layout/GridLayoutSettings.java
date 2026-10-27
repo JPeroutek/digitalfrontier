@@ -3,6 +3,7 @@ package com.partatoes.digitalfrontier.grid.layout;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.partatoes.digitalfrontier.grid.layout.StreetAxis.StreetStyle;
 import net.minecraft.util.DyeColor;
 
 import java.util.List;
@@ -22,11 +23,12 @@ public record GridLayoutSettings(
         int waypointRingRadius,
         int waypointCount,
         int outlandsRadius,
-        List<DyeColor> districtColors) {
+        List<DyeColor> districtColors,
+        StreetStyle streetStyle) {
 
     public static final GridLayoutSettings DEFAULT = new GridLayoutSettings(
             0L, 0.5f, 10, 40, 3, 64, 80, 4, 128,
-            List.of(DyeColor.LIGHT_BLUE, DyeColor.CYAN, DyeColor.BLUE, DyeColor.ORANGE));
+            List.of(DyeColor.LIGHT_BLUE, DyeColor.CYAN, DyeColor.BLUE, DyeColor.ORANGE), StreetStyle.VARIED);
 
     public static final Codec<GridLayoutSettings> CODEC = RecordCodecBuilder.<GridLayoutSettings>create(instance -> instance.group(
             Codec.LONG.fieldOf("grid_seed").forGetter(GridLayoutSettings::gridSeed),
@@ -38,7 +40,9 @@ public record GridLayoutSettings(
             Codec.intRange(4, 512).fieldOf("waypoint_ring_radius").forGetter(GridLayoutSettings::waypointRingRadius),
             Codec.intRange(0, 8).fieldOf("waypoint_count").forGetter(GridLayoutSettings::waypointCount),
             Codec.intRange(5, 1024).fieldOf("outlands_radius").forGetter(GridLayoutSettings::outlandsRadius),
-            DyeColor.CODEC.listOf(1, 16).fieldOf("district_colors").forGetter(GridLayoutSettings::districtColors)
+            DyeColor.CODEC.listOf(1, 16).fieldOf("district_colors").forGetter(GridLayoutSettings::districtColors),
+            // Left out of the JSON when uniform, so grids from before varied streets keep their encoding (and GridKey)
+            StreetStyle.CODEC.optionalFieldOf("street_style", StreetStyle.UNIFORM).forGetter(GridLayoutSettings::streetStyle)
     ).apply(instance, GridLayoutSettings::new)).validate(GridLayoutSettings::validate);
 
     private static DataResult<GridLayoutSettings> validate(GridLayoutSettings settings) {

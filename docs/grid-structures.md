@@ -150,10 +150,28 @@ the world (Y 319).
   a high `min_floors`; the starter landmark uses 32–40.
 - **`plaza`**: open squares in the city, and the open areas at waypoints. Usually only a `base` (benches, light
   posts, a monument).
-- **`street`**: decorations placed on about a third of straight street chunks. **Author them for a street
-  running east–west (along X)**: the street's light lines run along Z = 1 and Z = 14, and the edges at
-  Z = 0 and Z = 15 meet the sidewalks. The generator turns them 90° for streets running north–south. Keep the
-  middle (Z = 2..13) clear so light cycles can drive through.
+- **`street`**: decorations for road chunks (never intersections). **Author them for a road running east–west
+  (along X)**; the generator turns them for roads running north–south. The optional `road` field says which kind
+  of road they're for (default `street`):
+  - `street` (one chunk): placed on about a third of straight street chunks. Light lines run along Z = 1 and
+    Z = 14; keep the middle (Z = 2..13) clear so light cycles can drive through.
+  - `boulevard` (two chunks): author **one half**, with its outer edge at Z = 0 and the median at Z = 15. The
+    other half gets the same part turned 180°, so the medians meet. Also placed on about a third of chunks.
+  - `lane` (one chunk): **always** placed on straight lane chunks when one exists, because the strips either
+    side of the lane are what make it narrow. The roadway is Z = 5..10 (lit at 5 and 10), with a sidewalk at
+    Z = 4 and 11; fill Z = 0..3 and 12..15 with walls, planters, kiosks and the like, leaving gaps to reach the
+    buildings behind. Without a lane part, the generator puts low walls there.
+
+## Street layout
+
+Grids have one of two street styles (`street_style` in the grid settings, or the Streets button on the Grid
+Tuning Laser):
+
+- **`varied`** (the default grid): lanes, streets and two-chunk boulevards, with city blocks of 2 to 5 chunks
+  (around the `block_size` setting) between them. A boulevard runs through the city center along both axes.
+- **`uniform`**: a one-chunk street every `block_size + 1` chunks, as grids made before street styles have.
+
+2×2 buildings fit in any block at least 2 chunks wide both ways.
 - **`terminal`**: the building on an arrival terminal's chunk: the main terminal just outside the city (zone
   `outskirts`) and the center of each waypoint (zone `waypoint`). Single chunk only. Place one
   **Arrival Pad** (`digitalfrontier:arrival_pad`) where players should appear: they arrive standing on top of
@@ -217,6 +235,8 @@ The mod ships a small generated placeholder set under `grid/starter/` (made in c
 | `starter_core_tower` | landmark, 32×32 | the block tower parts, 32–40 floors |
 | `starter_plaza` | plaza | `grid/starter/plaza/square` |
 | `starter_street_lights` | street | `grid/starter/street/lights` |
+| `starter_boulevard` | street (`road`: boulevard) | `grid/starter/street/boulevard_half` |
+| `starter_lane` | street (`road`: lane) | `grid/starter/street/lane` |
 | `starter_terminal` | terminal | `grid/starter/terminal/platform` (pad at 7, 0, 7) |
 | `starter_stronghold` | stronghold | `grid/starter/stronghold/base`, `floor`, `roof` (3–5 floors) |
 | `starter_portal` | portal | `grid/starter/portal/beam` (a 4×4 column of Portal blocks, 47 tall) |

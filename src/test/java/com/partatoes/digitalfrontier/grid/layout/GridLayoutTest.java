@@ -8,11 +8,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class GridLayoutTest {
     private static final GridLayoutSettings DEFAULT = GridLayoutSettings.DEFAULT;
+    private static final GridLayoutSettings UNIFORM = withStreetStyle(DEFAULT, StreetAxis.StreetStyle.UNIFORM);
+
+    private static GridLayoutSettings withStreetStyle(GridLayoutSettings d, StreetAxis.StreetStyle style) {
+        return new GridLayoutSettings(d.gridSeed(), d.corruption(), d.coreRadius(), d.cityRadius(), d.blockSize(),
+                d.outskirtsRadius(), d.waypointRingRadius(), d.waypointCount(), d.outlandsRadius(), d.districtColors(), style);
+    }
 
     private static GridLayoutSettings withSeed(long seed) {
         GridLayoutSettings d = DEFAULT;
         return new GridLayoutSettings(seed, d.corruption(), d.coreRadius(), d.cityRadius(), d.blockSize(),
-                d.outskirtsRadius(), d.waypointRingRadius(), d.waypointCount(), d.outlandsRadius(), d.districtColors());
+                d.outskirtsRadius(), d.waypointRingRadius(), d.waypointCount(), d.outlandsRadius(), d.districtColors(), d.streetStyle());
     }
 
     @Test
@@ -51,8 +57,8 @@ class GridLayoutTest {
     }
 
     @Test
-    void cityStreetsFollowTheBlockGrid() {
-        GridLayout layout = new GridLayout(DEFAULT);
+    void uniformStreetsFollowTheBlockGrid() {
+        GridLayout layout = new GridLayout(UNIFORM);
         int period = DEFAULT.blockSize() + 1;
         for (int x = -30; x <= 30; x++) {
             for (int z = -30; z <= 30; z++) {
@@ -175,10 +181,70 @@ class GridLayoutTest {
         assertTrue(layout.highwayDistance(stronghold.chunkX() * 16, stronghold.chunkZ() * 16) > 100);
     }
 
+    @Test
+    void variedCitiesSplitAroundACentralBoulevard() {
+        GridLayout layout = new GridLayout(DEFAULT);
+        // Along both axes, chunks -1 and 0 are the two halves of the central boulevard (except where they cross)
+        for (int along = 3; along < 30; along++) {
+            if (layout.planAt(along, -1).streetZ() || layout.planAt(along, 0).streetZ()) {
+                continue;
+            }
+            assertEquals(new StreetAxis.Road(StreetAxis.RoadClass.BOULEVARD, 0, true), layout.planAt(along, -1).roadX());
+            assertEquals(new StreetAxis.Road(StreetAxis.RoadClass.BOULEVARD, 1, true), layout.planAt(along, 0).roadX());
+        }
+        assertEquals(new StreetAxis.Road(StreetAxis.RoadClass.BOULEVARD, 0, true), layout.planAt(-1, 20).roadZ());
+        assertEquals(new StreetAxis.Road(StreetAxis.RoadClass.BOULEVARD, 1, true), layout.planAt(0, 20).roadZ());
+        assertFalse(layout.planAt(0, 20).avenue(), "the boulevard has a median, not an avenue center line");
+    }
+
+    @Test
+    void variedAxesAlternateBlocksAndRoadsOfEveryWidth() {
+        java.util.Set<StreetAxis.RoadClass> seen = java.util.EnumSet.noneOf(StreetAxis.RoadClass.class);
+        for (long seed = 0; seed < 8; seed++) {
+            StreetAxis axis = new StreetAxis(StreetAxis.StreetStyle.VARIED, seed, 10, 3, 60);
+            for (int c = -55; c <= 55; c++) {
+                StreetAxis.Road road = axis.roadAt(c);
+                String where = "seed " + seed + ", chunk " + c;
+                if (road == null) {
+                    StreetAxis.Block block = axis.blockAt(c);
+                    assertTrue(c >= block.start() && c < block.start() + block.size(), where);
+                    assertTrue(block.size() >= 2 && block.size() <= 5, where + ": block of " + block.size());
+                    // A block ends at a road (or runs off the computed range)
+                    assertNotNull(axis.roadAt(block.start() - 1), where);
+                    assertNotNull(axis.roadAt(block.start() + block.size()), where);
+                    continue;
+                }
+                seen.add(road.roadClass());
+                if (road.roadClass() == StreetAxis.RoadClass.BOULEVARD) {
+                    // Each half has its partner on the right side
+                    StreetAxis.Road partner = axis.roadAt(road.half() == 0 ? c + 1 : c - 1);
+                    assertNotNull(partner, where);
+                    assertEquals(StreetAxis.RoadClass.BOULEVARD, partner.roadClass(), where);
+                    assertEquals(1 - road.half(), partner.half(), where);
+                } else {
+                    assertNull(axis.roadAt(c - 1), where + ": one-chunk roads stand alone");
+                    assertNull(axis.roadAt(c + 1), where + ": one-chunk roads stand alone");
+                }
+            }
+        }
+        assertEquals(java.util.EnumSet.allOf(StreetAxis.RoadClass.class), seen);
+    }
+
+    @Test
+    void uniformAxesMatchTheOriginalModuloLayout() {
+        StreetAxis axis = new StreetAxis(StreetAxis.StreetStyle.UNIFORM, 0, 10, 3, 60);
+        for (int c = -50; c <= 50; c++) {
+            assertEquals(Math.floorMod(c, 4) == 0, axis.roadAt(c) != null, "chunk " + c);
+            if (axis.roadAt(c) == null) {
+                assertEquals(Math.floorDiv(c, 4) * 4 + 1, axis.blockAt(c).start(), "chunk " + c);
+            }
+        }
+    }
+
     private static GridLayoutSettings withSeedAndCorruption(long seed, float corruption) {
         GridLayoutSettings d = DEFAULT;
         return new GridLayoutSettings(seed, corruption, d.coreRadius(), d.cityRadius(), d.blockSize(),
-                d.outskirtsRadius(), d.waypointRingRadius(), d.waypointCount(), d.outlandsRadius(), d.districtColors());
+                d.outskirtsRadius(), d.waypointRingRadius(), d.waypointCount(), d.outlandsRadius(), d.districtColors(), d.streetStyle());
     }
 
     private static List<Site> sitesOfType(GridLayout layout, Site.Type type) {

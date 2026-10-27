@@ -6,6 +6,8 @@ import com.partatoes.digitalfrontier.grid.layout.GridRandom;
 import com.partatoes.digitalfrontier.grid.layout.MultiChunk;
 import com.partatoes.digitalfrontier.grid.layout.PlanType;
 import com.partatoes.digitalfrontier.grid.layout.Site;
+import com.partatoes.digitalfrontier.grid.layout.StreetAxis.Road;
+import com.partatoes.digitalfrontier.grid.layout.StreetAxis.RoadClass;
 import com.partatoes.digitalfrontier.grid.parts.DistrictPalette;
 import com.partatoes.digitalfrontier.grid.parts.GridAssets;
 import com.partatoes.digitalfrontier.grid.parts.GridBuildingDef;
@@ -85,19 +87,53 @@ final class GridChunkBuild {
             // No 2×2 buildings available: fall through and treat this quarter as an ordinary building chunk
         }
 
-        GridBuildingDef.Kind kind = switch (plan.type()) {
-            case BUILDING -> GridBuildingDef.Kind.BUILDING;
-            case PLAZA -> GridBuildingDef.Kind.PLAZA;
-            case STREET -> plan.streetX() != plan.streetZ() && roll(seed, chunkX, chunkZ, 1) < STREET_FURNITURE_CHANCE
-                    ? GridBuildingDef.Kind.STREET : null;
-            case SITE -> siteKind(plan.site());
-            case OPEN -> null;
-        };
-        GridAssets.Candidate candidate = kind == null ? null : assets.pick(kind, 1, plan.zone(), roll(seed, chunkX, chunkZ, 0));
+        GridAssets.Candidate candidate;
+        if (plan.type() == PlanType.STREET) {
+            candidate = streetFurniture(plan, assets, seed, chunkX, chunkZ);
+        } else {
+            GridBuildingDef.Kind kind = switch (plan.type()) {
+                case BUILDING -> GridBuildingDef.Kind.BUILDING;
+                case PLAZA -> GridBuildingDef.Kind.PLAZA;
+                case SITE -> siteKind(plan.site());
+                case STREET, OPEN -> null;
+            };
+            candidate = kind == null ? null : assets.pick(kind, 1, plan.zone(), roll(seed, chunkX, chunkZ, 0));
+        }
         if (candidate == null) {
             return new GridChunkBuild(layout, plan, chunkX, chunkZ, null, List.of(), chunkX, chunkZ, 1, BlockRotation.NONE);
         }
         return stacked(layout, plan, chunkX, chunkZ, assets, candidate, chunkX, chunkZ, 1, seed);
+    }
+
+    // Furniture goes on straight roads, never intersections. Lanes always get theirs (their walls and planters are
+    // what make them lanes); streets and boulevards only sometimes.
+    @Nullable
+    private static GridAssets.Candidate streetFurniture(ChunkPlan plan, GridAssets assets, long seed, int chunkX, int chunkZ) {
+        if (plan.streetX() == plan.streetZ()) {
+            return null;
+        }
+        Road road = plan.streetX() ? plan.roadX() : plan.roadZ();
+        double chance = road.roadClass() == RoadClass.LANE ? 1.0 : STREET_FURNITURE_CHANCE;
+        if (roll(seed, chunkX, chunkZ, 1) >= chance) {
+            return null;
+        }
+        return assets.pickStreet(road.roadClass(), plan.zone(), roll(seed, chunkX, chunkZ, 0));
+    }
+
+    /**
+     * Street furniture is authored for a road along X, with a boulevard's outer edge at Z = 0 and its median at
+     * Z = 15. Turn it for roads along Z, and so each boulevard half faces outward.
+     */
+    private static BlockRotation streetRotation(ChunkPlan plan) {
+        boolean alongX = plan.streetX();
+        Road road = alongX ? plan.roadX() : plan.roadZ();
+        if (road.roadClass() == RoadClass.BOULEVARD) {
+            if (alongX) {
+                return road.half() == 0 ? BlockRotation.NONE : BlockRotation.CLOCKWISE_180;
+            }
+            return road.half() == 0 ? BlockRotation.COUNTERCLOCKWISE_90 : BlockRotation.CLOCKWISE_90;
+        }
+        return alongX ? BlockRotation.NONE : BlockRotation.CLOCKWISE_90;
     }
 
     @Nullable
@@ -131,9 +167,8 @@ final class GridChunkBuild {
         }
         addLayer(layers, assets, def.roof().orElse(null), y);
 
-        // Street furniture is authored for streets running along X; turn it for streets along Z
         BlockRotation rotation = def.kind() == GridBuildingDef.Kind.STREET
-                ? (plan.streetX() ? BlockRotation.NONE : BlockRotation.CLOCKWISE_90)
+                ? streetRotation(plan)
                 : ROTATIONS[(int) (roll(seed, originX, originZ, 2) * ROTATIONS.length)];
         return new GridChunkBuild(layout, plan, chunkX, chunkZ, candidate.id(), List.copyOf(layers), originX, originZ, footprintChunks, rotation);
     }
