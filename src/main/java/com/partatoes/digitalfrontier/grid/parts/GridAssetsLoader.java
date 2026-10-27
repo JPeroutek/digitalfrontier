@@ -82,6 +82,9 @@ public class GridAssetsLoader implements SimpleSynchronousResourceReloadListener
         if (def.minFloors() > def.maxFloors()) {
             problems.add("min_floors is greater than max_floors");
         }
+        if (def.kind().isLevel() && (def.base().isEmpty() || def.footprint() != 1)) {
+            problems.add(def.kind().asString() + " is one of the city's levels: it needs a base part and a footprint of 1");
+        }
         int width = def.footprint() * 16;
         def.allParts().distinct().forEach(partId -> {
             GridPart part = parts.get(partId);

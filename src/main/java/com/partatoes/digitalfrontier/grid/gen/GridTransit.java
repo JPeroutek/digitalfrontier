@@ -8,7 +8,11 @@ import com.partatoes.digitalfrontier.grid.layout.StreetAxis;
 import com.partatoes.digitalfrontier.grid.layout.StreetAxis.RoadClass;
 import com.partatoes.digitalfrontier.grid.layout.TransitLayout;
 import com.partatoes.digitalfrontier.grid.layout.TransitLayout.Skyway;
+import com.partatoes.digitalfrontier.grid.layout.GridRandom;
 import com.partatoes.digitalfrontier.grid.parts.DistrictPalette;
+import com.partatoes.digitalfrontier.grid.parts.GridAssets;
+import com.partatoes.digitalfrontier.grid.parts.GridBuildingDef.Kind;
+import com.partatoes.digitalfrontier.grid.parts.GridPart;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.LadderBlock;
@@ -17,6 +21,8 @@ import net.minecraft.block.RailBlock;
 import net.minecraft.block.SlabBlock;
 import net.minecraft.block.enums.RailShape;
 import net.minecraft.block.enums.SlabType;
+import net.minecraft.util.BlockMirror;
+import net.minecraft.util.BlockRotation;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.Nullable;
@@ -53,9 +59,21 @@ final class GridTransit {
     record Door(int side, int standY) {
     }
 
-    /** What the levels put in one chunk, worked out once per chunk. */
+    /** A level template placed in this chunk: its part, where its Y = 0 goes, and how it's turned and flipped. */
+    record Placement(GridPart part, int bottomY, BlockRotation rotation, BlockMirror mirror) {
+        int topY() {
+            return bottomY + part.sizeY() - 1;
+        }
+    }
+
+    /**
+     * What the levels put in one chunk, worked out once per chunk. Pieces with a template are in
+     * {@code placements}; the {@code ...Templated} flags say which pieces those replace in the code-built geometry.
+     */
     record ChunkTransit(TransitLayout layout, ChunkPlan plan, int chunkX, int chunkZ, boolean elevatedRail, boolean subway,
-                       boolean railStation, boolean subwayStation, @Nullable Skyway skyway, List<Door> doors, boolean deckChunk) {
+                       boolean railStation, boolean subwayStation, @Nullable Skyway skyway, List<Door> doors, boolean deckChunk,
+                       List<Placement> placements, boolean deckTemplated, boolean rampTemplated, boolean railTemplated,
+                       boolean subwayTemplated, boolean skywayTemplated) {
         boolean any() {
             return elevatedRail || subway || skyway != null || !doors.isEmpty() || deckChunk;
         }
@@ -75,6 +93,9 @@ final class GridTransit {
             for (Door door : doors) {
                 max = Math.max(max, door.standY() + 2);
             }
+            for (Placement placement : placements) {
+                max = Math.max(max, placement.topY());
+            }
             return max;
         }
 
@@ -88,7 +109,8 @@ final class GridTransit {
         boolean fits(Skyway skyway, int roadChunkX, int roadChunkZ);
     }
 
-    static ChunkTransit forChunk(TransitLayout layout, ChunkPlan plan, int chunkX, int chunkZ, SkywayCheck check) {
+    static ChunkTransit forChunk(TransitLayout layout, GridAssets assets, long seed, ChunkPlan plan, int chunkX, int chunkZ,
+                                 SkywayCheck check) {
         boolean road = plan.type() == PlanType.STREET;
         Skyway skyway = null;
         List<Door> doors = new ArrayList<>();
@@ -109,9 +131,128 @@ final class GridTransit {
         boolean subway = road && layout.has(GridLevel.SUBWAY) && layout.subway(chunkX, chunkZ);
         boolean deckChunk = road && layout.has(GridLevel.SKYROADS)
                 && (isBoulevard(plan.roadX()) || isBoulevard(plan.roadZ()));
-        return new ChunkTransit(layout, plan, chunkX, chunkZ, elevatedRail, subway,
-                elevatedRail && layout.railStation(chunkX, chunkZ), subway && layout.subwayStation(chunkX, chunkZ),
-                skyway, List.copyOf(doors), deckChunk);
+        boolean railStation = elevatedRail && layout.railStation(chunkX, chunkZ);
+        boolean subwayStation = subway && layout.subwayStation(chunkX, chunkZ);
+
+        // Templates, where the loaded assets have one for a piece; earlier placements win where they overlap
+        Templates templates = new Templates(assets, seed, plan, chunkX, chunkZ);
+        boolean rampTemplated = false;
+        TransitLayout.RampPiece ramp = deckChunk ? layout.rampPiece(chunkX, chunkZ) : null;
+        if (ramp != null) {
+            rampTemplated = templates.add(ramp.upper() ? Kind.SKYROAD_RAMP_UPPER : Kind.SKYROAD_RAMP_LOWER,
+                    Kind.SKYROAD_RAMP_LOWER.baseY(), rampRotation(ramp), rampMirror(ramp));
+        }
+        boolean skywayTemplated = skyway != null && templates.add(Kind.SKYWAY, skyway.standY() - 1,
+                skyway.roadAlongX() ? BlockRotation.NONE : BlockRotation.CLOCKWISE_90, BlockMirror.NONE);
+        // Elevated rail only runs along Z
+        boolean intersection = plan.roadX() != null && plan.roadZ() != null;
+        boolean railTemplated = elevatedRail && templates.add(
+                railStation ? Kind.GUIDEWAY_STATION : intersection ? Kind.GUIDEWAY_CROSSING : Kind.GUIDEWAY,
+                Kind.GUIDEWAY.baseY(), BlockRotation.CLOCKWISE_90, BlockMirror.NONE);
+        // Subways only run along X
+        boolean subwayTemplated = subway && templates.add(subwayStation ? Kind.SUBWAY_STATION : Kind.SUBWAY,
+                Kind.SUBWAY.baseY(), BlockRotation.NONE, BlockMirror.NONE);
+        TransitLayout.DeckPiece deck = deckChunk ? layout.deckPiece(chunkX, chunkZ) : null;
+        boolean deckTemplated = deck != null && (deck.junction()
+                ? templates.add(Kind.SKYROAD_JUNCTION, Kind.SKYROAD_JUNCTION.baseY(), junctionRotation(deck), BlockMirror.NONE)
+                : templates.add(Kind.SKYROAD, Kind.SKYROAD.baseY(), deckRotation(deck), BlockMirror.NONE));
+
+        return new ChunkTransit(layout, plan, chunkX, chunkZ, elevatedRail, subway, railStation, subwayStation,
+                skyway, List.copyOf(doors), deckChunk, List.copyOf(templates.placements), deckTemplated, rampTemplated,
+                railTemplated, subwayTemplated, skywayTemplated);
+    }
+
+    // Picks a template for each piece, the same way buildings are picked
+    private static final class Templates {
+        private static final int SALT = 7000;
+
+        private final GridAssets assets;
+        private final long seed;
+        private final ChunkPlan plan;
+        private final int chunkX;
+        private final int chunkZ;
+        private final List<Placement> placements = new ArrayList<>();
+
+        Templates(GridAssets assets, long seed, ChunkPlan plan, int chunkX, int chunkZ) {
+            this.assets = assets;
+            this.seed = seed;
+            this.plan = plan;
+            this.chunkX = chunkX;
+            this.chunkZ = chunkZ;
+        }
+
+        boolean add(Kind kind, int bottomY, BlockRotation rotation, BlockMirror mirror) {
+            double roll = GridRandom.unit(GridRandom.hash(seed, chunkX, chunkZ, SALT + kind.ordinal()));
+            GridAssets.Candidate candidate = assets.pick(kind, 1, plan.zone(), roll);
+            GridPart part = candidate == null ? null : candidate.def().base().map(assets::part).orElse(null);
+            if (part == null) {
+                return false;
+            }
+            placements.add(new Placement(part, bottomY, rotation, mirror));
+            return true;
+        }
+    }
+
+    // Deck templates are authored for a boulevard half along X: median at Z = 15, like boulevard street furniture
+    private static BlockRotation deckRotation(TransitLayout.DeckPiece deck) {
+        if (deck.halfX() >= 0) {
+            return deck.halfX() == 0 ? BlockRotation.NONE : BlockRotation.CLOCKWISE_180;
+        }
+        return deck.halfZ() == 0 ? BlockRotation.COUNTERCLOCKWISE_90 : BlockRotation.CLOCKWISE_90;
+    }
+
+    // Junction quarters are authored with the medians meeting at X = 15, Z = 15 (half 0 of both boulevards)
+    private static BlockRotation junctionRotation(TransitLayout.DeckPiece deck) {
+        if (deck.halfX() == 0) {
+            return deck.halfZ() == 0 ? BlockRotation.NONE : BlockRotation.CLOCKWISE_90;
+        }
+        return deck.halfZ() == 0 ? BlockRotation.COUNTERCLOCKWISE_90 : BlockRotation.CLOCKWISE_180;
+    }
+
+    // Ramps are authored in half 0's lane of a boulevard along X, climbing toward +X; flips cover the other ways
+    private static BlockRotation rampRotation(TransitLayout.RampPiece ramp) {
+        if (ramp.alongX()) {
+            return ramp.half() == 1 && !ramp.risingPositive() ? BlockRotation.CLOCKWISE_180 : BlockRotation.NONE;
+        }
+        return ramp.half() == 0 ? BlockRotation.COUNTERCLOCKWISE_90 : BlockRotation.CLOCKWISE_90;
+    }
+
+    private static BlockMirror rampMirror(TransitLayout.RampPiece ramp) {
+        if (ramp.alongX()) {
+            if (ramp.half() == 0) {
+                return ramp.risingPositive() ? BlockMirror.NONE : BlockMirror.FRONT_BACK;
+            }
+            return ramp.risingPositive() ? BlockMirror.LEFT_RIGHT : BlockMirror.NONE;
+        }
+        // Turned onto Z, the climb runs toward -Z for half 0 and +Z for half 1 unless flipped
+        boolean flip = ramp.half() == 0 ? ramp.risingPositive() : !ramp.risingPositive();
+        return flip ? BlockMirror.FRONT_BACK : BlockMirror.NONE;
+    }
+
+    @Nullable
+    private static BlockState placed(ChunkTransit transit, int localX, int y, int localZ) {
+        for (Placement placement : transit.placements()) {
+            if (y < placement.bottomY() || y > placement.topY()) {
+                continue;
+            }
+            // Undo the rotation, then the mirror, to find the template position
+            int last = 15;
+            int mx;
+            int mz;
+            switch (placement.rotation()) {
+                case CLOCKWISE_90 -> { mx = localZ; mz = last - localX; }
+                case CLOCKWISE_180 -> { mx = last - localX; mz = last - localZ; }
+                case COUNTERCLOCKWISE_90 -> { mx = last - localZ; mz = localX; }
+                default -> { mx = localX; mz = localZ; }
+            }
+            int px = placement.mirror() == BlockMirror.FRONT_BACK ? last - mx : mx;
+            int pz = placement.mirror() == BlockMirror.LEFT_RIGHT ? last - mz : mz;
+            BlockState state = placement.part().get(px, y - placement.bottomY(), pz);
+            if (state != null) {
+                return DistrictPalette.remap(state, transit.district()).mirror(placement.mirror()).rotate(placement.rotation());
+            }
+        }
+        return null;
     }
 
     private static boolean isBoulevard(@Nullable StreetAxis.Road road) {
@@ -127,17 +268,17 @@ final class GridTransit {
 
     @Nullable
     static BlockState blockAt(ChunkTransit transit, int localX, int y, int localZ) {
-        BlockState state = null;
-        if (transit.skyway() != null) {
+        BlockState state = transit.placements().isEmpty() ? null : placed(transit, localX, y, localZ);
+        if (state == null && transit.skyway() != null && !transit.skywayTemplated()) {
             state = skyway(transit, transit.skyway(), localX, y, localZ);
         }
-        if (state == null && transit.elevatedRail()) {
+        if (state == null && transit.elevatedRail() && !transit.railTemplated()) {
             state = elevatedRail(transit, localX, y, localZ);
         }
-        if (state == null && transit.deckChunk()) {
+        if (state == null && transit.deckChunk() && !(transit.deckTemplated() && transit.rampTemplated())) {
             state = skyroad(transit, localX, y, localZ);
         }
-        if (state == null && transit.subway()) {
+        if (state == null && transit.subway() && !transit.subwayTemplated()) {
             state = subway(transit, localX, y, localZ);
         }
         if (state == null && !transit.doors().isEmpty()) {
@@ -153,8 +294,9 @@ final class GridTransit {
         TransitLayout layout = transit.layout();
         int blockX = transit.chunkX() * 16 + localX;
         int blockZ = transit.chunkZ() * 16 + localZ;
-        int deck = layout.deckLevel(blockX, blockZ);
-        int ramp = layout.rampLevel(blockX, blockZ);
+        // Only the parts without a template are built here
+        int deck = transit.deckTemplated() ? -1 : layout.deckLevel(blockX, blockZ);
+        int ramp = transit.rampTemplated() ? -1 : layout.rampLevel(blockX, blockZ);
         int level = Math.max(deck, ramp);
         if (level < 0) {
             return null;

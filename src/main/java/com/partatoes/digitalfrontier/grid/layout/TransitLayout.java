@@ -167,28 +167,116 @@ public final class TransitLayout {
         if (local < rampFirst(road.half()) || local > rampLast(road.half())) {
             return -1;
         }
-        int alongChunk = along >> 4;
-        if (alongAxis.roadAt(alongChunk) != null) {
+        Ramp ramp = rampAlong(acrossAxis, alongAxis, across >> 4, along >> 4, axisSalt);
+        if (ramp == null) {
             return -1;
         }
-        StreetAxis.Block block = alongAxis.blockAt(alongChunk);
-        if (block.size() < 2 || alongChunk > block.start() + 1) {
-            return -1;
-        }
-        int[] rows = boulevardRows(across >> 4, road);
-        int end = lineEnd(rows);
-        if (Math.abs(block.start()) > end - RAMP_END_CLEARANCE || Math.abs(block.start() + 1) > end - RAMP_END_CLEARANCE) {
-            return -1;
-        }
-        long hash = GridRandom.hash(seed, block.index(), rows[0], SALT_RAMP * 4 + axisSalt);
-        if (GridRandom.unit(hash) >= 0.5 || (int) (hash >>> 1 & 1) != road.half()) {
-            return -1;
-        }
-        int step = along - block.start() * 16;
-        if ((hash >>> 2 & 1) == 1) {
+        int step = along - ramp.startChunk() * 16;
+        if (!ramp.risingPositive()) {
             step = 31 - step;
         }
         return Math.min(DECK_LEVEL, step);
+    }
+
+    /**
+     * An on-ramp along one boulevard: which half's lane it climbs, which way, and the first of its two chunks. The
+     * same for every chunk of the ramp and every block across the boulevard.
+     */
+    private record Ramp(int half, boolean risingPositive, int startChunk) {
+    }
+
+    @Nullable
+    private Ramp rampAlong(StreetAxis acrossAxis, StreetAxis alongAxis, int acrossChunk, int alongChunk, int axisSalt) {
+        Road road = acrossAxis.roadAt(acrossChunk);
+        if (road == null || road.roadClass() != RoadClass.BOULEVARD || alongAxis.roadAt(alongChunk) != null) {
+            return null;
+        }
+        StreetAxis.Block block = alongAxis.blockAt(alongChunk);
+        if (block.size() < 2 || alongChunk > block.start() + 1) {
+            return null;
+        }
+        int[] rows = boulevardRows(acrossChunk, road);
+        int end = lineEnd(rows);
+        if (Math.abs(block.start()) > end - RAMP_END_CLEARANCE || Math.abs(block.start() + 1) > end - RAMP_END_CLEARANCE) {
+            return null;
+        }
+        long hash = GridRandom.hash(seed, block.index(), rows[0], SALT_RAMP * 4 + axisSalt);
+        if (GridRandom.unit(hash) >= 0.5 || (int) (hash >>> 1 & 1) != road.half()) {
+            return null;
+        }
+        return new Ramp(road.half(), (hash >>> 2 & 1) == 0, block.start());
+    }
+
+    // ---- Pieces, for templates ----
+
+    /**
+     * The skyroad deck piece a chunk holds, if it's a whole one: a straight half along X or Z, or a quarter of a
+     * junction. Null where there's no deck, or only part of one (the end ramps), which are built in code.
+     *
+     * @param halfX the half of the boulevard running along X through this chunk (-1 if none)
+     * @param halfZ the half of the boulevard running along Z through this chunk (-1 if none)
+     */
+    public record DeckPiece(int halfX, int halfZ) {
+        public boolean junction() {
+            return halfX >= 0 && halfZ >= 0;
+        }
+    }
+
+    @Nullable
+    public DeckPiece deckPiece(int chunkX, int chunkZ) {
+        if (!has(GridLevel.SKYROADS)) {
+            return null;
+        }
+        int halfX = fullDeckHalf(zAxis, chunkZ, chunkX);
+        int halfZ = fullDeckHalf(xAxis, chunkX, chunkZ);
+        Road roadX = zAxis.roadAt(chunkZ);
+        Road roadZ = xAxis.roadAt(chunkX);
+        boolean boulevardX = roadX != null && roadX.roadClass() == RoadClass.BOULEVARD;
+        boolean boulevardZ = roadZ != null && roadZ.roadClass() == RoadClass.BOULEVARD;
+        // Every boulevard through the chunk must have its whole deck here
+        if (!boulevardX && !boulevardZ || boulevardX && halfX < 0 || boulevardZ && halfZ < 0) {
+            return null;
+        }
+        return new DeckPiece(halfX, halfZ);
+    }
+
+    // The boulevard half, if this chunk is a full-height stretch of its deck; -1 otherwise
+    private int fullDeckHalf(StreetAxis acrossAxis, int acrossChunk, int alongChunk) {
+        Road road = acrossAxis.roadAt(acrossChunk);
+        if (road == null || road.roadClass() != RoadClass.BOULEVARD) {
+            return -1;
+        }
+        int end = lineEnd(boulevardRows(acrossChunk, road));
+        int first = alongChunk * 16;
+        int fromEnd = Math.min((end + 1) * 16 - 1 - (first + 15), first + end * 16);
+        return fromEnd >= DECK_LEVEL ? road.half() : -1;
+    }
+
+    /**
+     * The on-ramp piece a chunk holds: which line and half, which way it climbs, and whether this is the upper of
+     * its two chunks (the one that reaches the deck).
+     */
+    public record RampPiece(boolean alongX, int half, boolean risingPositive, boolean upper) {
+    }
+
+    @Nullable
+    public RampPiece rampPiece(int chunkX, int chunkZ) {
+        if (!has(GridLevel.SKYROADS)) {
+            return null;
+        }
+        Ramp ramp = rampAlong(zAxis, xAxis, chunkZ, chunkX, 0);
+        boolean alongX = true;
+        int alongChunk = chunkX;
+        if (ramp == null) {
+            ramp = rampAlong(xAxis, zAxis, chunkX, chunkZ, 1);
+            alongX = false;
+            alongChunk = chunkZ;
+        }
+        if (ramp == null) {
+            return null;
+        }
+        boolean second = alongChunk == ramp.startChunk() + 1;
+        return new RampPiece(alongX, ramp.half(), ramp.risingPositive(), second == ramp.risingPositive());
     }
 
     // The two chunk rows (or columns) of a boulevard, given one of them

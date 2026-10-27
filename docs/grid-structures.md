@@ -185,10 +185,34 @@ laser; the default grid has all four):
 | Subway | rails at Y 48 | under some one-chunk streets running east–west, with ladder-access stations at intersections |
 | Skyways | Y 101, 107 or 113 | bridges across a street between two towers, at their floor heights; the towers get doorways |
 
-They're built in code for now, and they're placed over (and carved into) whatever your parts put there, so
-**leave the space clear**: in tall buildings, keep floors at 6-block intervals from Y 65 (so the floor plates
-skyways land on are at Y 100, 106, 112) and expect a 4-wide doorway in the middle of an outer wall at those
-heights. Templates for the levels themselves are planned.
+The levels are placed over (and carved into) whatever building and street parts put there, so **leave the space
+clear**: in tall buildings, keep floors at 6-block intervals from Y 65 (so the floor plates skyways land on are at
+Y 100, 106, 112) and expect a 4-wide doorway in the middle of an outer wall at those heights.
+
+### Authoring level pieces
+
+Each level piece is a building definition of one of the kinds below, with only a `base` part (16×16, footprint 1).
+Unlike buildings, a piece isn't stacked from the street: its part Y = 0 goes at a fixed height. **Author every piece
+for a line running east–west (along X)**; the generator turns it for lines along Z, turns it 180° for the other half
+of a boulevard, and flips on-ramps to climb either way. Anything a template leaves as structure void keeps what's
+there; use air to carve (tunnels, headroom).
+
+| Kind | Part Y = 0 at | Author it as |
+|---|---|---|
+| `skyroad` | Y 65 | one deck half: median at Z = 15, outer edge at Z = 8, deck surface (the block you drive on) at part Y 14; pillars down to Y 0 |
+| `skyroad_junction` | Y 65 | a quarter of a junction: both medians meet at X = 15, Z = 15 |
+| `skyroad_ramp_lower` / `skyroad_ramp_upper` | Y 65 | the two chunks of an on-ramp in Z = 2..7, climbing half a block per block toward +X: from the street at the lower part's X = 0 to deck height (part Y 14) at the upper part's X = 14. Carve the deck railing (Z = 8, part Y 15) where the ramp joins it. |
+| `guideway` | Y 65 | tracks along X at Z = 6 and 9 on part Y 23 (Y 88), with supports |
+| `guideway_crossing` | Y 65 | the same, over an intersection: no supports in the crossing road |
+| `guideway_station` | Y 65 | a station over an intersection, with a way down to the street |
+| `subway` | Y 47 | the tunnel: floor at Y 0, tracks along X at Z = 6 and 9 on Y 1; carve it with air |
+| `subway_station` | Y 47 | a station under an intersection; part Y 17 is the street surface, where its way up comes out |
+| `skyway` | the bridge's floor | a bridge across a road along X, so it runs along Z (Z = 0..15); walk on part Y 1 |
+
+Rails and other directional blocks turn with the part. White blocks take the district color as usual. Powered rails
+need their redstone; the starter pieces power rails every 8 blocks (X = 0 and 8). Where a piece has no template, the
+generator builds the starter shape in code, and the end ramps (where a deck comes down at the city edge) are always
+built in code.
 - **`terminal`**: the building on an arrival terminal's chunk: the main terminal just outside the city (zone
   `outskirts`) and the center of each waypoint (zone `waypoint`). Single chunk only. Place one
   **Arrival Pad** (`digitalfrontier:arrival_pad`) where players should appear: they arrive standing on top of
@@ -254,6 +278,7 @@ The mod ships a small generated placeholder set under `grid/starter/` (made in c
 | `starter_street_lights` | street | `grid/starter/street/lights` |
 | `starter_boulevard` | street (`road`: boulevard) | `grid/starter/street/boulevard_half` |
 | `starter_lane` | street (`road`: lane) | `grid/starter/street/lane` |
+| `starter_skyroad`, `starter_skyroad_junction`, `starter_skyroad_ramp_lower`, `starter_skyroad_ramp_upper`, `starter_guideway`, `starter_guideway_crossing`, `starter_guideway_station`, `starter_subway`, `starter_subway_station`, `starter_skyway` | the level kinds | `grid/starter/level/<kind>` |
 | `starter_terminal` | terminal | `grid/starter/terminal/platform` (pad at 7, 0, 7) |
 | `starter_stronghold` | stronghold | `grid/starter/stronghold/base`, `floor`, `roof` (3–5 floors) |
 | `starter_portal` | portal | `grid/starter/portal/beam` (a 4×4 column of Portal blocks, 47 tall) |

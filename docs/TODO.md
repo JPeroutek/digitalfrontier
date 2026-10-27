@@ -37,12 +37,13 @@ Varied streets (lanes, streets, boulevards, blocks of 2–5 chunks) are in; see 
 
 ## The city's levels
 
-Skyroads, elevated rail, subway and skyways are in (`TransitLayout` decides where, `GridTransit` builds placeholder
-geometry in code). Next:
+Skyroads, elevated rail, subway and skyways are in, with template kinds for every piece (`TransitLayout` decides
+where, `GridTransit` places the templates and builds whatever has none in code). Next:
 
-- **Templates.** New building kinds for deck halves, on-ramps, junctions, guideways, stations, stairwells and
-  skyway bridges, authored along X like street furniture and rotated per line and half, replacing the code-built
-  placeholders; authoring notes in `grid-structures.md`.
+- **Real level art.** The starter pieces copy the code-built shapes; hand-built templates would make each line
+  and station distinct (several definitions per kind are picked at random already).
+- **Templated end ramps.** Where a deck comes down at the city edge, the height changes partway through a chunk,
+  so those stretches are still built in code.
 - **Out to the waypoints.** Rail and skyroads along the highways to the waypoints, with a station at each
   terminal, so the network doubles as fast travel. Diagonal highways need a rail answer (vanilla rails can't run
   diagonally).

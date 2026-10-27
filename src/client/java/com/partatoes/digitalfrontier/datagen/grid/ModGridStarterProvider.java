@@ -12,12 +12,19 @@ import com.partatoes.digitalfrontier.grid.parts.GridBuildingDef;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.LadderBlock;
+import net.minecraft.block.PoweredRailBlock;
+import net.minecraft.block.RailBlock;
+import net.minecraft.block.SlabBlock;
+import net.minecraft.block.enums.RailShape;
+import net.minecraft.block.enums.SlabType;
 import net.minecraft.data.DataOutput;
 import net.minecraft.data.DataProvider;
 import net.minecraft.data.DataWriter;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Direction;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -46,6 +53,7 @@ public class ModGridStarterProvider implements DataProvider {
     private static final BlockState TARGET = pattern("thick_target");
     private static final BlockState PAD = ModBlocks.ARRIVAL_PAD.getDefaultState();
     private static final BlockState PORTAL = ModBlocks.GRID_PORTAL.getDefaultState();
+    private static final BlockState SLAB = ModBlocks.GRIDSTONE_BRICKS_SLAB.getDefaultState().with(SlabBlock.TYPE, SlabType.BOTTOM);
     private static final BlockState DARK_GLASS = Blocks.BLACK_STAINED_GLASS.getDefaultState();
     private static final BlockState UPLINK = ModBlocks.STRONGHOLD_UPLINK.getDefaultState();
     private static final BlockState RED_LIGHT = pattern("full", DyeColor.RED);
@@ -179,7 +187,119 @@ public class ModGridStarterProvider implements DataProvider {
                 .box(11, 0, 0, 11, 2, 0, WALL).box(11, 3, 0, 11, 3, 0, LIGHT)
                 .box(3, 0, 15, 3, 2, 15, WALL).box(3, 3, 15, 3, 3, 15, LIGHT)
                 .box(11, 0, 15, 11, 2, 15, WALL).box(11, 3, 15, 11, 3, 15, LIGHT));
+        levelParts(parts);
         return parts;
+    }
+
+    /**
+     * The city's levels, authored along X: the same shapes the generator builds in code when there's no template.
+     * Y = 0 is Y 65 for skyroads and guideways, Y 47 (the tunnel floor) for subways, and a skyway's floor.
+     */
+    private static void levelParts(Map<String, StarterPart> parts) {
+        // A skyroad deck half: median at Z = 15, outer edge at Z = 8, driven on at Y 80 (part Y 15)
+        parts.put("grid/starter/level/skyroad", new StarterPart(16, 16)
+                .box(0, 14, 8, 15, 14, 15, BRICKS)
+                .box(0, 14, 8, 15, 14, 8, LIGHT).box(0, 14, 15, 15, 14, 15, LIGHT)
+                .box(0, 15, 8, 15, 15, 8, WALL)
+                .box(7, 0, 15, 8, 13, 15, BRICKS));
+        // A junction quarter: the deck covers all but the corner away from the medians
+        parts.put("grid/starter/level/skyroad_junction", new StarterPart(16, 16)
+                .box(0, 14, 8, 15, 14, 15, BRICKS).box(8, 14, 0, 15, 14, 7, BRICKS)
+                .box(0, 14, 15, 15, 14, 15, LIGHT).box(15, 14, 0, 15, 14, 15, LIGHT)
+                .box(0, 14, 8, 7, 14, 8, LIGHT).box(8, 14, 0, 8, 14, 7, LIGHT)
+                .box(0, 15, 8, 7, 15, 8, WALL).box(8, 15, 0, 8, 15, 7, WALL)
+                .box(7, 0, 15, 8, 13, 15, BRICKS).box(15, 0, 7, 15, 13, 8, BRICKS));
+        parts.put("grid/starter/level/skyroad_ramp_lower", ramp(false));
+        parts.put("grid/starter/level/skyroad_ramp_upper", ramp(true));
+
+        // Elevated rail: tracks along X at Z = 6 and 9, at Y 88 (part Y 23); powered every 8 blocks
+        parts.put("grid/starter/level/guideway", guideway(new StarterPart(16, 26), 4, 11)
+                .box(8, 0, 0, 8, 20, 0, BRICKS).box(8, 0, 15, 8, 20, 15, BRICKS)
+                .box(8, 21, 0, 8, 21, 15, BRICKS));
+        parts.put("grid/starter/level/guideway_crossing", guideway(new StarterPart(16, 26), 4, 11));
+        parts.put("grid/starter/level/guideway_station", guideway(new StarterPart(16, 26), 1, 14)
+                .box(0, 22, 1, 15, 22, 3, BRICKS).box(0, 22, 12, 15, 22, 14, BRICKS)
+                .box(1, 0, 0, 1, 22, 0, BRICKS).box(1, 0, 1, 1, 22, 1, ladder(Direction.SOUTH))
+                .box(14, 0, 15, 14, 22, 15, BRICKS).box(14, 0, 14, 14, 22, 14, ladder(Direction.NORTH))
+                .box(1, 23, 1, 1, 23, 1, AIR).box(14, 23, 14, 14, 23, 14, AIR));
+
+        // Subway: tracks along X at Z = 6 and 9, on the tunnel floor (Y 47, part Y 0)
+        parts.put("grid/starter/level/subway", subway(new StarterPart(16, 8), 3, 12));
+        parts.put("grid/starter/level/subway_station", subway(new StarterPart(16, 18), 0, 15)
+                .box(1, 1, 1, 1, 17, 1, ladder(Direction.SOUTH)).box(14, 1, 14, 14, 17, 14, ladder(Direction.NORTH))
+                .box(2, 17, 1, 2, 17, 1, LIGHT).box(13, 17, 14, 13, 17, 14, LIGHT));
+
+        // A skyway across a road along X, so the bridge runs along Z; part Y 0 is its floor
+        parts.put("grid/starter/level/skyway", new StarterPart(16, 5)
+                .box(5, 0, 0, 10, 0, 15, BRICKS).box(6, 0, 0, 6, 0, 15, LIGHT).box(9, 0, 0, 9, 0, 15, LIGHT)
+                .box(5, 1, 0, 5, 3, 15, GLASS).box(10, 1, 0, 10, 3, 15, GLASS)
+                .box(6, 1, 0, 9, 3, 15, AIR)
+                .box(5, 4, 0, 10, 4, 15, BRICKS));
+    }
+
+    // One chunk of an on-ramp in Z = 2..7, climbing half a block per block toward +X; the upper chunk meets the deck
+    private static StarterPart ramp(boolean upper) {
+        StarterPart part = new StarterPart(16, 18);
+        for (int x = 0; x < 16; x++) {
+            int level = upper ? Math.min(30, 16 + x) : x;
+            if (level == 0) {
+                continue;
+            }
+            boolean slab = level % 2 == 1;
+            int surfaceY = slab ? (level - 1) / 2 : level / 2 - 1;
+            if (surfaceY > 0) {
+                part.box(x, 0, 2, x, surfaceY - 1, 7, BRICKS);
+            }
+            part.box(x, surfaceY, 2, x, surfaceY, 7, slab ? SLAB : BRICKS)
+                    .box(x, surfaceY + 1, 3, x, surfaceY + 3, 7, AIR);
+            if (level >= 2) {
+                part.box(x, surfaceY + 1, 2, x, surfaceY + 1, 2, WALL);
+            }
+            if (upper && level >= 28) {
+                // Open the deck's railing where the ramp joins it
+                part.box(x, 15, 8, x, 15, 8, AIR);
+            }
+        }
+        return part;
+    }
+
+    private static StarterPart guideway(StarterPart part, int railingFirst, int railingLast) {
+        part.box(0, 22, 4, 15, 22, 11, BRICKS)
+                .box(0, 22, 4, 15, 22, 4, LIGHT).box(0, 22, 11, 15, 22, 11, LIGHT)
+                .box(0, 23, railingFirst + 1, 15, 25, railingLast - 1, AIR)
+                .box(0, 24, 4, 15, 25, 11, AIR)
+                .box(0, 23, railingFirst, 15, 23, railingFirst, WALL).box(0, 23, railingLast, 15, 23, railingLast, WALL);
+        tracks(part, 22, 23);
+        return part;
+    }
+
+    private static StarterPart subway(StarterPart part, int wallFirst, int wallLast) {
+        part.box(0, 0, wallFirst, 15, 0, wallLast, BRICKS)
+                .box(0, 1, wallFirst, 15, 6, wallFirst, BRICKS).box(0, 1, wallLast, 15, 6, wallLast, BRICKS)
+                .box(0, 1, wallFirst + 1, 15, 6, wallLast - 1, AIR)
+                .box(0, 7, wallFirst, 15, 7, wallLast, BRICKS);
+        for (int x = 0; x < 16; x += 4) {
+            part.box(x, 4, wallFirst, x, 4, wallFirst, LIGHT).box(x, 4, wallLast, x, 4, wallLast, LIGHT)
+                    .box(x + 2, 7, 7, x + 2, 7, 8, LIGHT);
+        }
+        tracks(part, 0, 1);
+        return part;
+    }
+
+    // Two tracks along X at Z = 6 and 9; powered rails on redstone at X = 0 and 8 (every 8 blocks in the world)
+    private static void tracks(StarterPart part, int bedY, int railY) {
+        for (int z : new int[]{6, 9}) {
+            part.box(0, railY, z, 15, railY, z, Blocks.RAIL.getDefaultState().with(RailBlock.SHAPE, RailShape.EAST_WEST));
+            for (int x : new int[]{0, 8}) {
+                part.box(x, bedY, z, x, bedY, z, Blocks.REDSTONE_BLOCK.getDefaultState())
+                        .box(x, railY, z, x, railY, z, Blocks.POWERED_RAIL.getDefaultState()
+                                .with(PoweredRailBlock.SHAPE, RailShape.EAST_WEST).with(PoweredRailBlock.POWERED, true));
+            }
+        }
+    }
+
+    private static BlockState ladder(Direction facing) {
+        return Blocks.LADDER.getDefaultState().with(LadderBlock.FACING, facing);
     }
 
     private static Map<String, GridBuildingDef> buildingDefs() {
@@ -224,7 +344,23 @@ public class ModGridStarterProvider implements DataProvider {
         defs.put("starter_portal",new GridBuildingDef(GridBuildingDef.Kind.PORTAL,
                 List.of(Zone.OUTSKIRTS, Zone.OUTLANDS, Zone.UNALLOCATED), 10, 1,
                 Optional.of(id("grid/starter/portal/beam")), List.of(), Optional.empty(), 0, 0));
+        level(defs, "skyroad", GridBuildingDef.Kind.SKYROAD);
+        level(defs, "skyroad_junction", GridBuildingDef.Kind.SKYROAD_JUNCTION);
+        level(defs, "skyroad_ramp_lower", GridBuildingDef.Kind.SKYROAD_RAMP_LOWER);
+        level(defs, "skyroad_ramp_upper", GridBuildingDef.Kind.SKYROAD_RAMP_UPPER);
+        level(defs, "guideway", GridBuildingDef.Kind.GUIDEWAY);
+        level(defs, "guideway_crossing", GridBuildingDef.Kind.GUIDEWAY_CROSSING);
+        level(defs, "guideway_station", GridBuildingDef.Kind.GUIDEWAY_STATION);
+        level(defs, "subway", GridBuildingDef.Kind.SUBWAY);
+        level(defs, "subway_station", GridBuildingDef.Kind.SUBWAY_STATION);
+        level(defs, "skyway", GridBuildingDef.Kind.SKYWAY);
         return defs;
+    }
+
+    // The levels only run inside the city
+    private static void level(Map<String, GridBuildingDef> defs, String name, GridBuildingDef.Kind kind) {
+        defs.put("starter_" + name, new GridBuildingDef(kind, List.of(Zone.CITY_CORE, Zone.CITY), 10, 1,
+                Optional.of(id("grid/starter/level/" + name)), List.of(), Optional.empty(), 0, 0));
     }
 
     private static CompletableFuture<?> writeNbt(DataWriter writer, Path path, StarterPart part) {

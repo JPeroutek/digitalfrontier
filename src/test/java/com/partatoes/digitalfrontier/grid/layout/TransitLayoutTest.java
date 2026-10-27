@@ -165,6 +165,49 @@ class TransitLayoutTest {
     }
 
     @Test
+    void templatePiecesAgreeWithTheBlockGeometry() {
+        int decks = 0;
+        int ramps = 0;
+        for (long seed = 0; seed < 4; seed++) {
+            TransitLayout transit = new GridLayout(with(seed, Set.of(GridLevel.SKYROADS))).transit();
+            for (int cx = -38; cx <= 38; cx++) {
+                for (int cz = -38; cz <= 38; cz++) {
+                    String where = "seed " + seed + " chunk " + cx + "," + cz;
+                    TransitLayout.DeckPiece deck = transit.deckPiece(cx, cz);
+                    if (deck != null) {
+                        decks++;
+                        // A whole piece: every deck block of the chunk is at full height
+                        for (int i = 0; i < 16; i++) {
+                            for (int j = 0; j < 16; j++) {
+                                int level = transit.deckLevel(cx * 16 + i, cz * 16 + j);
+                                assertTrue(level < 0 || level == TransitLayout.DECK_LEVEL, where);
+                            }
+                        }
+                        if (deck.halfX() >= 0) {
+                            int bandZ = cz * 16 + (deck.halfX() == 0 ? 15 : 0);
+                            assertEquals(TransitLayout.DECK_LEVEL, transit.deckLevel(cx * 16 + 3, bandZ), where);
+                        }
+                    }
+                    TransitLayout.RampPiece ramp = transit.rampPiece(cx, cz);
+                    if (ramp != null) {
+                        ramps++;
+                        // Ends of the chunk along the line, in the ramp's lane
+                        int lane = ramp.half() == 0 ? 4 : 11;
+                        int low = ramp.alongX()
+                                ? transit.rampLevel(cx * 16, cz * 16 + lane) : transit.rampLevel(cx * 16 + lane, cz * 16);
+                        int high = ramp.alongX()
+                                ? transit.rampLevel(cx * 16 + 15, cz * 16 + lane) : transit.rampLevel(cx * 16 + lane, cz * 16 + 15);
+                        assertTrue(low >= 0 && high >= 0, where);
+                        assertEquals(ramp.risingPositive(), high > low, where + ": climbing direction");
+                        assertEquals(ramp.upper(), Math.max(low, high) >= 16, where + ": upper chunk");
+                    }
+                }
+            }
+        }
+        assertTrue(decks > 0 && ramps > 0);
+    }
+
+    @Test
     void noLevelsMeansNothingAndOldGridsKeepTheirIds() {
         GridLayout layout = new GridLayout(with(0, Set.of()));
         for (int x = -400; x < 400; x += 7) {

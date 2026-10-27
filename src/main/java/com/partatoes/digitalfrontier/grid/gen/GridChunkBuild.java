@@ -223,7 +223,7 @@ final class GridChunkBuild {
 
     private GridTransit.ChunkTransit transit() {
         if (transit == null) {
-            transit = GridTransit.forChunk(layout.transit(), plan, chunkX, chunkZ, this::skywayFits);
+            transit = GridTransit.forChunk(layout.transit(), assets, layout.settings().gridSeed(), plan, chunkX, chunkZ, this::skywayFits);
         }
         return transit;
     }

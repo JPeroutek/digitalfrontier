@@ -2,6 +2,7 @@ package com.partatoes.digitalfrontier.grid.parts;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.partatoes.digitalfrontier.grid.layout.GridLayout;
 import com.partatoes.digitalfrontier.grid.layout.StreetAxis.RoadClass;
 import com.partatoes.digitalfrontier.grid.layout.Zone;
 import net.minecraft.util.Identifier;
@@ -76,14 +77,53 @@ public record GridBuildingDef(
         /** The building at a Portal site; contains the Portal blocks players leave the grid through. */
         PORTAL("portal"),
         /** The building at a stronghold site, deep in corrupted territory. */
-        STRONGHOLD("stronghold");
+        STRONGHOLD("stronghold"),
+
+        // The city's levels: one part (the base), authored for a line along X, placed with its Y = 0 at baseY.
+        /** One half of a skyroad deck: the median at Z = 15, the outer edge at Z = 8; pillars come down to Y 65. */
+        SKYROAD("skyroad", GridLayout.FLOOR_Y + 1),
+        /** A quarter of the junction where two skyroads cross: the medians meet at X = 15, Z = 15. */
+        SKYROAD_JUNCTION("skyroad_junction", GridLayout.FLOOR_Y + 1),
+        /** The first chunk of an on-ramp: Z = 2..7, rising from the street at X = 0 to half way at X = 15. */
+        SKYROAD_RAMP_LOWER("skyroad_ramp_lower", GridLayout.FLOOR_Y + 1),
+        /** The second chunk of an on-ramp, reaching the deck (Z = 8) at the far end. */
+        SKYROAD_RAMP_UPPER("skyroad_ramp_upper", GridLayout.FLOOR_Y + 1),
+        /** An elevated rail guideway with its supports, tracks along X. */
+        GUIDEWAY("guideway", GridLayout.FLOOR_Y + 1),
+        /** A guideway over an intersection: no supports in the crossing road. */
+        GUIDEWAY_CROSSING("guideway_crossing", GridLayout.FLOOR_Y + 1),
+        /** An elevated rail station over an intersection, with its way down to the street. */
+        GUIDEWAY_STATION("guideway_station", GridLayout.FLOOR_Y + 1),
+        /** A subway tunnel, tracks along X; Y = 0 is the tunnel floor. Carve the tunnel with air. */
+        SUBWAY("subway", 47),
+        /** A subway station under an intersection, with its way up to the street (Y = 17 is the street surface). */
+        SUBWAY_STATION("subway_station", 47),
+        /** A skyway bridge across a road along X (so the bridge runs along Z); Y = 0 is its floor. */
+        SKYWAY("skyway", -1);
 
         public static final Codec<Kind> CODEC = StringIdentifiable.createCodec(Kind::values);
 
         private final String name;
+        // Where a level part's Y = 0 goes; 0 for kinds stacked from the street, -1 where it varies (skyways)
+        private final int baseY;
 
         Kind(String name) {
+            this(name, 0);
+        }
+
+        Kind(String name, int baseY) {
             this.name = name;
+            this.baseY = baseY;
+        }
+
+        /** Whether this kind is one of the city's levels (placed by the levels, not stacked on a chunk). */
+        public boolean isLevel() {
+            return baseY != 0;
+        }
+
+        /** The Y a level part's Y = 0 is placed at; -1 if it depends on the piece (skyways, at their floor). */
+        public int baseY() {
+            return baseY;
         }
 
         @Override
