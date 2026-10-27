@@ -87,7 +87,7 @@ public class ModTextureProvider implements DataProvider {
         String coloredPatternName = String.format("%s_%s", templateName, color.asString().toLowerCase());
         writeBufferedImageToPath(writer, coloredImage, coloredPatternName);
         
-        String emissivePatternName = String.format("%s_%s_e", templateName, color.asString().toLowerCase());
+        String emissivePatternName = String.format("%s_%s_glow", templateName, color.asString().toLowerCase());
         writeBufferedImageToPath(writer, emissiveImage, emissivePatternName);
     }
 

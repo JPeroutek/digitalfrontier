@@ -12,7 +12,14 @@ import net.minecraft.state.property.Properties;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Direction;
 
+import java.util.Optional;
+
 public class ModModelProvider extends FabricModelProvider {
+    // A cube with a second, full-bright overlay layer: the vanilla way to get per-pixel emissive textures
+    private static final TextureKey GLOW = TextureKey.of("glow");
+    private static final Model EMISSIVE_CUBE_ALL = new Model(
+            Optional.of(Identifier.of(DigitalFrontier.MOD_ID, "block/emissive_cube_all")), Optional.empty(), TextureKey.ALL, GLOW);
+
     public ModModelProvider(FabricDataOutput output) {
         super(output);
     }
@@ -54,10 +61,7 @@ public class ModModelProvider extends FabricModelProvider {
         // This will need to be replaced later to support directionality and stuff
         ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS
                 .forEach((patternName, dyeBlockMap) -> {
-                    dyeBlockMap.forEach((color, block) -> {
-//                        translationBuilder.add(block, String.format("%s %s Patterned Gridstone", toTitle(color.asString()), toTitle(patternName)));
-                        blockStateModelGenerator.registerSimpleCubeAll(block);
-                    });
+                    dyeBlockMap.forEach((color, block) -> registerEmissiveCubeAll(blockStateModelGenerator, block));
                 });
 
         
@@ -67,6 +71,15 @@ public class ModModelProvider extends FabricModelProvider {
         blockStateModelGenerator.blockStateCollector.accept(
                 createFacingFaceBlockStates(ModBlocks.LIGHT_BARRIER, ModelIds.getBlockModelId(ModBlocks.LIGHT_BARRIER))
         );
+    }
+
+    // Expects the block's texture plus a <name>_glow texture holding only the pixels that should glow
+    private static void registerEmissiveCubeAll(BlockStateModelGenerator blockStateModelGenerator, Block block) {
+        TextureMap textures = new TextureMap()
+                .put(TextureKey.ALL, TextureMap.getId(block))
+                .put(GLOW, TextureMap.getSubId(block, "_glow"));
+        Identifier modelId = EMISSIVE_CUBE_ALL.upload(block, textures, blockStateModelGenerator.modelCollector);
+        blockStateModelGenerator.blockStateCollector.accept(BlockStateModelGenerator.createSingletonBlockState(block, modelId));
     }
 
     public static BlockStateSupplier createFacingFacePoweredBlockStates(Block block, Identifier regularModelId, Identifier pressedModelId) {

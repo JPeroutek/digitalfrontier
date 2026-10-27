@@ -63,7 +63,6 @@ dependencies {
 	modImplementation("com.terraformersmc:modmenu:${project.modmenu_version}")
 
 	// For testing purposes...
-	modLocalRuntime "curse.maven:continuity-531351:6027976"
 	// Release jar from Modrinth bundles worldedit-core; the EngineHub SNAPSHOTs drift out of sync with each other
 	modLocalRuntime "maven.modrinth:worldedit:7.3.11"
 
