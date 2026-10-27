@@ -32,6 +32,7 @@ final class GridChunkBuild {
     private static final double STREET_FURNITURE_CHANCE = 0.35;
     private static final BlockRotation[] ROTATIONS = BlockRotation.values();
 
+    private final GridLayout layout;
     private final ChunkPlan plan;
     private final int chunkX;
     private final int chunkZ;
@@ -42,6 +43,8 @@ final class GridChunkBuild {
     private final int footprintZ;
     private final int footprintSize;
     private final BlockRotation rotation;
+    // Ground columns, worked out on first use: a height lookup only needs one of them
+    private final GridTerrain.Column[] columns = new GridTerrain.Column[256];
 
     private record Layer(GridPart part, int bottomY) {
         boolean contains(int y) {
@@ -49,8 +52,9 @@ final class GridChunkBuild {
         }
     }
 
-    private GridChunkBuild(ChunkPlan plan, int chunkX, int chunkZ, @Nullable Identifier buildingId, List<Layer> layers,
+    private GridChunkBuild(GridLayout layout, ChunkPlan plan, int chunkX, int chunkZ, @Nullable Identifier buildingId, List<Layer> layers,
                            int footprintChunkX, int footprintChunkZ, int footprintChunks, BlockRotation rotation) {
+        this.layout = layout;
         this.plan = plan;
         this.chunkX = chunkX;
         this.chunkZ = chunkZ;
@@ -74,7 +78,7 @@ final class GridChunkBuild {
                 candidate = assets.pick(GridBuildingDef.Kind.BUILDING, MultiChunk.SIZE, plan.zone(), roll(seed, multi.originX(), multi.originZ(), 0));
             }
             if (candidate != null) {
-                return stacked(plan, chunkX, chunkZ, assets, candidate, multi.originX(), multi.originZ(), MultiChunk.SIZE, seed);
+                return stacked(layout, plan, chunkX, chunkZ, assets, candidate, multi.originX(), multi.originZ(), MultiChunk.SIZE, seed);
             }
             // No 2×2 buildings available: fall through and treat this quarter as an ordinary building chunk
         }
@@ -89,9 +93,9 @@ final class GridChunkBuild {
         };
         GridAssets.Candidate candidate = kind == null ? null : assets.pick(kind, 1, plan.zone(), roll(seed, chunkX, chunkZ, 0));
         if (candidate == null) {
-            return new GridChunkBuild(plan, chunkX, chunkZ, null, List.of(), chunkX, chunkZ, 1, BlockRotation.NONE);
+            return new GridChunkBuild(layout, plan, chunkX, chunkZ, null, List.of(), chunkX, chunkZ, 1, BlockRotation.NONE);
         }
-        return stacked(plan, chunkX, chunkZ, assets, candidate, chunkX, chunkZ, 1, seed);
+        return stacked(layout, plan, chunkX, chunkZ, assets, candidate, chunkX, chunkZ, 1, seed);
     }
 
     @Nullable
@@ -107,7 +111,7 @@ final class GridChunkBuild {
         };
     }
 
-    private static GridChunkBuild stacked(ChunkPlan plan, int chunkX, int chunkZ, GridAssets assets, GridAssets.Candidate candidate,
+    private static GridChunkBuild stacked(GridLayout layout, ChunkPlan plan, int chunkX, int chunkZ, GridAssets assets, GridAssets.Candidate candidate,
                                           int originX, int originZ, int footprintChunks, long seed) {
         GridBuildingDef def = candidate.def();
         List<Layer> layers = new ArrayList<>();
@@ -130,7 +134,7 @@ final class GridChunkBuild {
         BlockRotation rotation = def.kind() == GridBuildingDef.Kind.STREET
                 ? (plan.streetX() ? BlockRotation.NONE : BlockRotation.CLOCKWISE_90)
                 : ROTATIONS[(int) (roll(seed, originX, originZ, 2) * ROTATIONS.length)];
-        return new GridChunkBuild(plan, chunkX, chunkZ, candidate.id(), List.copyOf(layers), originX, originZ, footprintChunks, rotation);
+        return new GridChunkBuild(layout, plan, chunkX, chunkZ, candidate.id(), List.copyOf(layers), originX, originZ, footprintChunks, rotation);
     }
 
     private static int addLayer(List<Layer> layers, GridAssets assets, @Nullable Identifier partId, int bottomY) {
@@ -159,23 +163,38 @@ final class GridChunkBuild {
     /** Highest Y any block of this chunk can occupy. */
     int maxY() {
         if (layers.isEmpty()) {
-            return FLOOR_Y + plan.floors() * GridLayout.FLOOR_HEIGHT;
+            return FLOOR_Y + Math.max(plan.floors() * GridLayout.FLOOR_HEIGHT, GridTerrain.MAX_GROUND_RISE);
         }
         Layer top = layers.getLast();
         return top.bottomY() + top.part().sizeY() - 1;
     }
 
-    /** Highest non-air Y in a column, or the floor if nothing stands on it. */
+    /** Lowest Y with a block in a column. Above the world bottom only in unallocated space. */
+    int columnBottom(int localX, int localZ) {
+        return column(localX, localZ).bottom();
+    }
+
+    /** Highest non-air Y in a column, or the ground if nothing stands on it (below the world bottom for void). */
     int columnTop(int localX, int localZ) {
         if (layers.isEmpty()) {
-            return GridTerrain.columnTop(plan, localX, localZ);
+            return GridTerrain.columnTop(plan, column(localX, localZ), localX, localZ);
         }
         for (int y = maxY(); y > FLOOR_Y; y--) {
             if (!blockAt(localX, y, localZ).isAir()) {
                 return y;
             }
         }
-        return FLOOR_Y;
+        return column(localX, localZ).top();
+    }
+
+    private GridTerrain.Column column(int localX, int localZ) {
+        int index = localZ * 16 + localX;
+        GridTerrain.Column column = columns[index];
+        if (column == null) {
+            column = GridTerrain.column(layout, plan, chunkX * 16 + localX, chunkZ * 16 + localZ);
+            columns[index] = column;
+        }
+        return column;
     }
 
     /** World position of the first Arrival Pad in this chunk's stack, or null if its parts have none. */
@@ -205,7 +224,7 @@ final class GridChunkBuild {
 
     BlockState blockAt(int localX, int y, int localZ) {
         if (layers.isEmpty() || y <= FLOOR_Y) {
-            return GridTerrain.blockAt(plan, localX, y, localZ);
+            return GridTerrain.blockAt(plan, column(localX, localZ), localX, y, localZ);
         }
         for (Layer layer : layers) {
             if (layer.contains(y)) {

@@ -1,9 +1,16 @@
 package com.partatoes.digitalfrontier.grid.gen;
 
 import com.mojang.serialization.MapCodec;
+import com.partatoes.digitalfrontier.entity.ModEntities;
+import com.partatoes.digitalfrontier.entity.custom.ProgramEntity;
 import com.partatoes.digitalfrontier.grid.layout.ChunkPlan;
+import com.partatoes.digitalfrontier.grid.layout.CorruptionTier;
 import com.partatoes.digitalfrontier.grid.layout.GridLayout;
+import com.partatoes.digitalfrontier.grid.layout.GridRandom;
+import com.partatoes.digitalfrontier.grid.layout.PlanType;
 import com.partatoes.digitalfrontier.grid.layout.Site;
+import com.partatoes.digitalfrontier.grid.layout.Zone;
+import net.minecraft.entity.SpawnReason;
 import com.partatoes.digitalfrontier.grid.parts.GridAssets;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -32,7 +39,9 @@ public class GridChunkGenerator extends ChunkGenerator {
     // The generator's settings live on its biome source, so the dimension JSON holds them only once
     public static final MapCodec<GridChunkGenerator> CODEC = GridBiomeSource.CODEC.xmap(GridChunkGenerator::new, GridChunkGenerator::gridBiomeSource);
 
-    private static final int MIN_Y = -64;
+    private static final int MIN_Y = GridTerrain.WORLD_BOTTOM;
+    private static final double PROGRAM_CHANCE = 0.15;
+    private static final int SALT_PROGRAMS = 4000;
     private static final int WORLD_HEIGHT = 384;
 
     private final GridBiomeSource gridBiomeSource;
@@ -61,13 +70,12 @@ public class GridChunkGenerator extends ChunkGenerator {
         GridChunkBuild build = build(chunkPos.x, chunkPos.z);
         Heightmap oceanFloor = chunk.getHeightmap(Heightmap.Type.OCEAN_FLOOR_WG);
         Heightmap worldSurface = chunk.getHeightmap(Heightmap.Type.WORLD_SURFACE_WG);
-        int bottom = GridTerrain.columnBottom(build.plan(), chunk.getBottomY());
         int top = Math.min(build.maxY(), chunk.getTopYInclusive());
         BlockPos.Mutable pos = new BlockPos.Mutable();
 
         for (int localX = 0; localX < 16; localX++) {
             for (int localZ = 0; localZ < 16; localZ++) {
-                for (int y = bottom; y <= top; y++) {
+                for (int y = Math.max(build.columnBottom(localX, localZ), chunk.getBottomY()); y <= top; y++) {
                     BlockState state = build.blockAt(localX, y, localZ);
                     if (state.isAir()) {
                         continue;
@@ -94,7 +102,7 @@ public class GridChunkGenerator extends ChunkGenerator {
         BlockState[] states = new BlockState[world.getHeight()];
         Arrays.fill(states, Blocks.AIR.getDefaultState());
         int top = Math.min(build.maxY(), worldBottom + states.length - 1);
-        for (int y = GridTerrain.columnBottom(build.plan(), worldBottom); y <= top; y++) {
+        for (int y = Math.max(build.columnBottom(x & 15, z & 15), worldBottom); y <= top; y++) {
             states[y - worldBottom] = build.blockAt(x & 15, y, z & 15);
         }
         return new VerticalBlockSample(worldBottom, states);
@@ -163,7 +171,37 @@ public class GridChunkGenerator extends ChunkGenerator {
     public void buildSurface(ChunkRegion region, StructureAccessor structures, NoiseConfig noiseConfig, Chunk chunk) {
     }
 
+    /**
+     * Programs live on the streets and plazas of the city and the waypoints, where corruption is clean or low.
+     * They're placed once, when the chunk generates, and don't despawn.
+     */
     @Override
     public void populateEntities(ChunkRegion region) {
+        ChunkPos chunkPos = region.getCenterPos();
+        GridChunkBuild build = build(chunkPos.x, chunkPos.z);
+        ChunkPlan plan = build.plan();
+        boolean inhabited = plan.zone() == Zone.CITY_CORE || plan.zone() == Zone.CITY || plan.zone() == Zone.WAYPOINT;
+        boolean open = plan.type() == PlanType.STREET || plan.type() == PlanType.PLAZA;
+        if (!inhabited || !open || plan.tier().compareTo(CorruptionTier.LOW) > 0) {
+            return;
+        }
+        long seed = layout().settings().gridSeed();
+        if (GridRandom.unit(GridRandom.hash(seed, chunkPos.x, chunkPos.z, SALT_PROGRAMS)) >= PROGRAM_CHANCE) {
+            return;
+        }
+        int count = 1 + GridRandom.nextInt(GridRandom.hash(seed, chunkPos.x, chunkPos.z, SALT_PROGRAMS + 1), 2);
+        for (int i = 0; i < count; i++) {
+            long spot = GridRandom.hash(seed, chunkPos.x, chunkPos.z, SALT_PROGRAMS + 2 + i);
+            int localX = 2 + GridRandom.nextInt(spot, 12);
+            int localZ = 2 + GridRandom.nextInt(spot >>> 20, 12);
+            ProgramEntity program = ModEntities.PROGRAM.create(region.toServerWorld(), SpawnReason.CHUNK_GENERATION);
+            if (program == null) {
+                return;
+            }
+            program.refreshPositionAndAngles(chunkPos.getStartX() + localX + 0.5, build.columnTop(localX, localZ) + 1,
+                    chunkPos.getStartZ() + localZ + 0.5, GridRandom.nextInt(spot >>> 40, 360), 0);
+            program.setPersistent();
+            region.spawnEntityAndPassengers(program);
+        }
     }
 }

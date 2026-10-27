@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
  * @param streetZ    true if a street runs along the Z axis through this chunk
  * @param avenue     true if this street lies on one of the main X/Z axes through the city center
  * @param multiChunk set when this chunk is part of a 2×2-chunk building
+ * @param diagonal   set when a diagonal highway crosses this (open) chunk
  */
 public record ChunkPlan(
         Zone zone,
@@ -21,6 +22,7 @@ public record ChunkPlan(
         boolean avenue,
         @Nullable Site site,
         @Nullable MultiChunk multiChunk,
+        @Nullable DiagonalRoad diagonal,
         float corruption,
         CorruptionTier tier) {
 

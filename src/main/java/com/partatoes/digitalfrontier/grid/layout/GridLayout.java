@@ -4,6 +4,7 @@ import net.minecraft.util.DyeColor;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -128,15 +129,20 @@ public final class GridLayout {
     public ChunkPlan planAt(int chunkX, int chunkZ) {
         Zone zone = zoneAt(chunkX, chunkZ);
         float intensity = corruption.intensityAt(chunkX, chunkZ);
-        CorruptionTier tier = CorruptionTier.fromIntensity(intensity);
-        DyeColor district = districtAt(chunkX, chunkZ);
+        Plans plans = new Plans(zone, districtAt(chunkX, chunkZ), intensity, CorruptionTier.fromIntensity(intensity));
 
         Site site = sitesByChunk.get(chunkKey(chunkX, chunkZ));
         if (site != null) {
-            return new ChunkPlan(zone, PlanType.SITE, 0, district, false, false, false, site, null, intensity, tier);
+            return plans.site(site);
         }
         if (isArrivalConnector(chunkX, chunkZ, zone)) {
-            return new ChunkPlan(zone, PlanType.STREET, 0, district, false, true, true, null, null, intensity, tier);
+            return plans.street(false, true, true);
+        }
+        if (zone != Zone.CITY && zone != Zone.CITY_CORE) {
+            ChunkPlan highway = highwayAt(chunkX, chunkZ, plans);
+            if (highway != null) {
+                return highway;
+            }
         }
 
         long roll = GridRandom.hash(settings.gridSeed(), chunkX, chunkZ, SALT_PLAN);
@@ -147,25 +153,24 @@ public final class GridLayout {
                 boolean streetZ = Math.floorMod(chunkX, period) == 0;
                 if (streetX || streetZ) {
                     boolean avenue = (streetX && chunkZ == 0) || (streetZ && chunkX == 0);
-                    yield new ChunkPlan(zone, PlanType.STREET, 0, district, streetX, streetZ, avenue, null, null, intensity, tier);
+                    yield plans.street(streetX, streetZ, avenue);
                 }
                 MultiChunk multi = multiChunkAt(chunkX, chunkZ);
                 if (multi != null) {
                     // Every quarter takes its height and color from the origin so the building is consistent
                     int floors = multi.landmark() ? maxFloors(multi.originX(), multi.originZ()) : cityFloors(multi.originX(), multi.originZ());
-                    yield new ChunkPlan(zone, PlanType.BUILDING, floors, districtAt(multi.originX(), multi.originZ()),
-                            false, false, false, null, multi, intensity, tier);
+                    yield plans.building(floors, districtAt(multi.originX(), multi.originZ()), multi);
                 }
                 if (zone == Zone.CITY && GridRandom.unit(roll) < 0.08) {
-                    yield new ChunkPlan(zone, PlanType.PLAZA, 0, district, false, false, false, null, null, intensity, tier);
+                    yield plans.plaza();
                 }
-                yield new ChunkPlan(zone, PlanType.BUILDING, cityFloors(chunkX, chunkZ), district, false, false, false, null, null, intensity, tier);
+                yield plans.building(cityFloors(chunkX, chunkZ), plans.district(), null);
             }
             case OUTSKIRTS -> GridRandom.unit(roll) < 0.12
-                    ? new ChunkPlan(zone, PlanType.BUILDING, 1 + floorRoll(chunkX, chunkZ) % 2, district, false, false, false, null, null, intensity, tier)
-                    : new ChunkPlan(zone, PlanType.OPEN, 0, district, false, false, false, null, null, intensity, tier);
-            case WAYPOINT -> new ChunkPlan(zone, PlanType.PLAZA, 0, district, false, false, false, null, null, intensity, tier);
-            case OUTLANDS, UNALLOCATED -> new ChunkPlan(zone, PlanType.OPEN, 0, district, false, false, false, null, null, intensity, tier);
+                    ? plans.building(1 + floorRoll(chunkX, chunkZ) % 2, plans.district(), null)
+                    : plans.open(null);
+            case WAYPOINT -> settlementAt(chunkX, chunkZ, roll, plans);
+            case OUTLANDS, UNALLOCATED -> plans.open(null);
         };
     }
 
@@ -174,6 +179,107 @@ public final class GridLayout {
         Site terminal = mainArrival();
         return zone != Zone.CITY && zone != Zone.CITY_CORE
                 && chunkX == terminal.chunkX() && chunkZ > 0 && chunkZ < terminal.chunkZ();
+    }
+
+    /**
+     * Highways run from the city edge to each waypoint. Waypoints sit on the axes or the diagonals: axis highways are
+     * ordinary avenue chunks, diagonal ones a {@link DiagonalRoad} across open chunks.
+     */
+    @Nullable
+    private ChunkPlan highwayAt(int chunkX, int chunkZ, Plans plans) {
+        double distance = Math.hypot(chunkX, chunkZ);
+        for (Site waypoint : waypoints) {
+            if (distance >= Math.hypot(waypoint.chunkX(), waypoint.chunkZ())) {
+                continue;
+            }
+            int signX = Integer.signum(waypoint.chunkX());
+            int signZ = Integer.signum(waypoint.chunkZ());
+            if (signZ == 0 && chunkZ == 0 && Integer.signum(chunkX) == signX) {
+                return plans.street(true, false, true);
+            }
+            if (signX == 0 && chunkX == 0 && Integer.signum(chunkZ) == signZ) {
+                return plans.street(false, true, true);
+            }
+            if (signX != 0 && signZ != 0) {
+                // The road band touches the chunks on the diagonal and, at their corners, the ones beside them
+                boolean rising = signX == signZ;
+                int across = rising ? chunkX - chunkZ : chunkX + chunkZ;
+                int along = rising ? chunkX + chunkZ : chunkX - chunkZ;
+                boolean onSettlementCross = chunkX == waypoint.chunkX() || chunkZ == waypoint.chunkZ();
+                if (Math.abs(across) <= 1 && Integer.signum(along) == signX && !onSettlementCross) {
+                    return plans.open(new DiagonalRoad(rising));
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Roughly how far, in blocks, a block is from the edge of the nearest highway (0 on it), or
+     * {@link Double#MAX_VALUE} if no highway runs nearby. Lets the outlands terrain level off beside the roads.
+     */
+    public double highwayDistance(int blockX, int blockZ) {
+        double nearest = Double.MAX_VALUE;
+        double distance = Math.hypot(blockX + 0.5, blockZ + 0.5);
+        for (Site waypoint : waypoints) {
+            double waypointDistance = Math.hypot(waypoint.chunkX() * 16 + 8, waypoint.chunkZ() * 16 + 8);
+            int signX = Integer.signum(waypoint.chunkX());
+            int signZ = Integer.signum(waypoint.chunkZ());
+            if (distance > waypointDistance) {
+                continue;
+            }
+            if (signZ == 0 && Integer.signum(blockX) == signX) {
+                // Axis highways fill the chunk row (or column) through the city center: blocks 0 to 15
+                nearest = Math.min(nearest, Math.max(0, Math.max(-blockZ, blockZ - 15)));
+            } else if (signX == 0 && Integer.signum(blockZ) == signZ) {
+                nearest = Math.min(nearest, Math.max(0, Math.max(-blockX, blockX - 15)));
+            } else if (signX != 0 && signZ != 0) {
+                DiagonalRoad road = new DiagonalRoad(signX == signZ);
+                int along = road.rising() ? blockX + blockZ : blockX - blockZ;
+                if (Integer.signum(along) == signX) {
+                    nearest = Math.min(nearest, Math.max(0, Math.abs(road.offset(blockX, blockZ)) - DiagonalRoad.HALF_WIDTH));
+                }
+            }
+        }
+        return nearest;
+    }
+
+    /**
+     * A waypoint is a small settlement: a street cross through its terminal, and low buildings and plazas around it.
+     */
+    private ChunkPlan settlementAt(int chunkX, int chunkZ, long roll, Plans plans) {
+        Site waypoint = waypoints.stream().min(Comparator.comparingDouble(site -> site.distanceTo(chunkX, chunkZ))).orElseThrow();
+        int dx = chunkX - waypoint.chunkX();
+        int dz = chunkZ - waypoint.chunkZ();
+        if (dx == 0 || dz == 0) {
+            return plans.street(dz == 0, dx == 0, false);
+        }
+        return GridRandom.unit(roll) < 0.45
+                ? plans.building(1 + floorRoll(chunkX, chunkZ) % 3, plans.district(), null)
+                : plans.plaza();
+    }
+
+    // What every plan of one chunk shares, so each kind of plan reads as one short call
+    private record Plans(Zone zone, DyeColor district, float corruption, CorruptionTier tier) {
+        ChunkPlan site(Site site) {
+            return new ChunkPlan(zone, PlanType.SITE, 0, district, false, false, false, site, null, null, corruption, tier);
+        }
+
+        ChunkPlan street(boolean streetX, boolean streetZ, boolean avenue) {
+            return new ChunkPlan(zone, PlanType.STREET, 0, district, streetX, streetZ, avenue, null, null, null, corruption, tier);
+        }
+
+        ChunkPlan building(int floors, DyeColor buildingDistrict, @Nullable MultiChunk multi) {
+            return new ChunkPlan(zone, PlanType.BUILDING, floors, buildingDistrict, false, false, false, null, multi, null, corruption, tier);
+        }
+
+        ChunkPlan plaza() {
+            return new ChunkPlan(zone, PlanType.PLAZA, 0, district, false, false, false, null, null, null, corruption, tier);
+        }
+
+        ChunkPlan open(@Nullable DiagonalRoad diagonal) {
+            return new ChunkPlan(zone, PlanType.OPEN, 0, district, false, false, false, null, null, diagonal, corruption, tier);
+        }
     }
 
     /**

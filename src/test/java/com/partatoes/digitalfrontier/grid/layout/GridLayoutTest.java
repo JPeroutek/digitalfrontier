@@ -115,6 +115,67 @@ class GridLayoutTest {
     }
 
     @Test
+    void highwaysRunFromTheCityEdgeToEveryWaypoint() {
+        // Seeds and waypoint counts that between them put waypoints on both axes and both diagonals
+        for (long seed = 0; seed < 8; seed++) {
+            GridLayout layout = new GridLayout(withSeed(seed));
+            for (Site waypoint : layout.sites()) {
+                if (waypoint.type() != Site.Type.WAYPOINT) {
+                    continue;
+                }
+                int signX = Integer.signum(waypoint.chunkX());
+                int signZ = Integer.signum(waypoint.chunkZ());
+                int steps = Math.max(Math.abs(waypoint.chunkX()), Math.abs(waypoint.chunkZ()));
+                for (int step = 1; step < steps; step++) {
+                    int x = signX * step;
+                    int z = signZ * step;
+                    if (layout.zoneAt(x, z) == Zone.CITY || layout.zoneAt(x, z) == Zone.CITY_CORE) {
+                        continue;
+                    }
+                    ChunkPlan plan = layout.planAt(x, z);
+                    String where = "seed " + seed + ", " + waypoint.id() + " at " + x + "," + z;
+                    if (plan.type() == PlanType.SITE) {
+                        // A highway on +Z passes through the main arrival terminal
+                        continue;
+                    }
+                    if (signX == 0 || signZ == 0) {
+                        assertEquals(PlanType.STREET, plan.type(), where);
+                        assertEquals(signZ == 0, plan.streetX(), where);
+                    } else {
+                        assertNotNull(plan.diagonal(), where);
+                        assertTrue(plan.diagonal().contains(x * 16 + 7, z * 16 + 7), where);
+                        assertEquals(0.0, layout.highwayDistance(x * 16 + 7, z * 16 + 7), where);
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    void waypointSettlementsHaveAStreetCrossThroughTheTerminal() {
+        GridLayout layout = new GridLayout(DEFAULT);
+        for (Site waypoint : layout.sites()) {
+            if (waypoint.type() != Site.Type.WAYPOINT) {
+                continue;
+            }
+            for (int d = 1; d < GridLayout.SITE_RADIUS; d++) {
+                for (int[] arm : new int[][]{{d, 0}, {-d, 0}, {0, d}, {0, -d}}) {
+                    ChunkPlan plan = layout.planAt(waypoint.chunkX() + arm[0], waypoint.chunkZ() + arm[1]);
+                    assertEquals(PlanType.STREET, plan.type(), waypoint.id() + " arm " + arm[0] + "," + arm[1]);
+                }
+            }
+        }
+    }
+
+    @Test
+    void highwayDistanceIsZeroOnlyNearHighways() {
+        GridLayout layout = new GridLayout(DEFAULT);
+        Site stronghold = layout.sites().stream().filter(site -> site.type() == Site.Type.STRONGHOLD).findFirst().orElseThrow();
+        // Strongholds sit between the waypoint directions, so no highway passes them
+        assertTrue(layout.highwayDistance(stronghold.chunkX() * 16, stronghold.chunkZ() * 16) > 100);
+    }
+
+    @Test
     void multiChunkBuildingsAreConsistentTwoByTwoGroups() {
         GridLayout layout = new GridLayout(DEFAULT);
         int groups = 0;

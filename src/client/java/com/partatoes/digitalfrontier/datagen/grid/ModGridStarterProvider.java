@@ -145,7 +145,7 @@ public class ModGridStarterProvider implements DataProvider {
     private static Map<String, GridBuildingDef> buildingDefs() {
         Map<String, GridBuildingDef> defs = new LinkedHashMap<>();
         defs.put("starter_tower", new GridBuildingDef(GridBuildingDef.Kind.BUILDING,
-                List.of(Zone.CITY_CORE, Zone.CITY, Zone.OUTSKIRTS), 10, 1,
+                List.of(Zone.CITY_CORE, Zone.CITY, Zone.OUTSKIRTS, Zone.WAYPOINT), 10, 1,
                 Optional.of(id("grid/starter/tower/base")),
                 List.of(id("grid/starter/tower/floor_glass"), id("grid/starter/tower/floor_striped")),
                 Optional.of(id("grid/starter/tower/roof")), 1, 24));
@@ -163,7 +163,7 @@ public class ModGridStarterProvider implements DataProvider {
                 List.of(Zone.CITY, Zone.WAYPOINT), 10, 1,
                 Optional.of(id("grid/starter/plaza/square")), List.of(), Optional.empty(), 0, 0));
         defs.put("starter_street_lights", new GridBuildingDef(GridBuildingDef.Kind.STREET,
-                List.of(Zone.CITY_CORE, Zone.CITY), 10, 1,
+                List.of(Zone.CITY_CORE, Zone.CITY, Zone.WAYPOINT), 10, 1,
                 Optional.of(id("grid/starter/street/lights")), List.of(), Optional.empty(), 0, 0));
         defs.put("starter_terminal", new GridBuildingDef(GridBuildingDef.Kind.TERMINAL,
                 List.of(Zone.OUTSKIRTS, Zone.WAYPOINT), 10, 1,
