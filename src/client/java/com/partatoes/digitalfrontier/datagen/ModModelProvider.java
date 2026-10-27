@@ -75,6 +75,11 @@ public class ModModelProvider extends FabricModelProvider {
                 .put(TextureKey.SIDE, TextureMap.getId(ModBlocks.GRIDSTONE_BRICKS_BLOCK))
                 .put(TextureKey.BOTTOM, TextureMap.getId(ModBlocks.GRIDSTONE_BLOCK)), blockStateModelGenerator.modelCollector);
         blockStateModelGenerator.blockStateCollector.accept(BlockStateModelGenerator.createSingletonBlockState(ModBlocks.DIGITIZING_LASER, laserModel));
+        Identifier tuningLaserModel = Models.CUBE_BOTTOM_TOP.upload(ModBlocks.GRID_TUNING_LASER, new TextureMap()
+                .put(TextureKey.TOP, TextureMap.getId(ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("thick_ring").get(DyeColor.ORANGE)))
+                .put(TextureKey.SIDE, TextureMap.getId(ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("border_1").get(DyeColor.CYAN)))
+                .put(TextureKey.BOTTOM, TextureMap.getId(ModBlocks.GRIDSTONE_BLOCK)), blockStateModelGenerator.modelCollector);
+        blockStateModelGenerator.blockStateCollector.accept(BlockStateModelGenerator.createSingletonBlockState(ModBlocks.GRID_TUNING_LASER, tuningLaserModel));
 
         blockStateModelGenerator.blockStateCollector.accept(
                 createFacingFacePoweredBlockStates(ModBlocks.LIGHT_BARRIER_EMITTER, ModelIds.getBlockModelId(ModBlocks.LIGHT_BARRIER_EMITTER), ModelIds.getBlockSubModelId(ModBlocks.LIGHT_BARRIER_EMITTER, "_powered"))

@@ -32,6 +32,13 @@ repositories {
 		}
 	}
 	maven {
+		name = "Nucleoid"
+		url = "https://maven.nucleoid.xyz"
+		content {
+			includeGroup "xyz.nucleoid"
+		}
+	}
+	maven {
 		name = "Wisp Forest"
 		url = "https://maven.wispforest.io/releases"
 		content {
@@ -68,6 +75,9 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 	modImplementation("com.terraformersmc:modmenu:${project.modmenu_version}")
+
+	// Runtime worlds for tuned grids; bundled in the jar so players don't install it separately
+	modImplementation include("xyz.nucleoid:fantasy:${project.fantasy_version}")
 
 	// Optional integrations: compiled against, never required at runtime (see compat/ModCompat)
 	modCompileOnly("io.wispforest:accessories-fabric:${project.accessories_version}") {

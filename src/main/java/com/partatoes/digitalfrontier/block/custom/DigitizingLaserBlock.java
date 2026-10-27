@@ -1,11 +1,14 @@
 package com.partatoes.digitalfrontier.block.custom;
 
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.partatoes.digitalfrontier.block.entity.DigitizingLaserBlockEntity;
 import com.partatoes.digitalfrontier.block.entity.ModBlockEntities;
 import com.partatoes.digitalfrontier.grid.arrival.GridArrival;
 import com.partatoes.digitalfrontier.grid.arrival.GridMemory;
 import com.partatoes.digitalfrontier.grid.arrival.TerminalRef;
+import com.partatoes.digitalfrontier.grid.tuning.GridTuningNetworking;
 import com.partatoes.digitalfrontier.item.ModItems;
 import com.partatoes.digitalfrontier.world.ModDimensions;
 import net.minecraft.block.BlockRenderType;
@@ -37,13 +40,24 @@ import java.util.Optional;
 /**
  * Digitizes the player who uses it and sends them to its linked grid terminal. Use it with a Laser Tuner to
  * cycle the link through the nearest terminal and the terminals the player has discovered. Doesn't work
- * inside a grid.
+ * inside a grid. The tunable version (the Grid Tuning Laser) can also be tuned to any grid through a screen.
  */
 public class DigitizingLaserBlock extends BlockWithEntity {
-    public static final MapCodec<DigitizingLaserBlock> CODEC = createCodec(DigitizingLaserBlock::new);
+    public static final MapCodec<DigitizingLaserBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+            Codec.BOOL.fieldOf("tunable").forGetter(DigitizingLaserBlock::isTunable),
+            createSettingsCodec()
+    ).apply(instance, DigitizingLaserBlock::new));
 
-    public DigitizingLaserBlock(Settings settings) {
+    // The Grid Tuning Laser: sneak-use opens a screen to tune it to a different grid
+    private final boolean tunable;
+
+    public DigitizingLaserBlock(boolean tunable, Settings settings) {
         super(settings);
+        this.tunable = tunable;
+    }
+
+    public boolean isTunable() {
+        return tunable;
     }
 
     @Override
@@ -88,6 +102,10 @@ public class DigitizingLaserBlock extends BlockWithEntity {
         if (!usable(serverWorld, serverPlayer) || laser.isScanning()) {
             return ActionResult.SUCCESS;
         }
+        if (tunable && serverPlayer.isSneaking()) {
+            GridTuningNetworking.openScreen(serverPlayer, laser);
+            return ActionResult.SUCCESS;
+        }
         Optional<TerminalRef> link = laser.linkOrNearest(serverWorld);
         if (link.isEmpty()) {
             serverPlayer.sendMessage(Text.translatable("message.digitalfrontier.terminal_unreachable").formatted(Formatting.RED), true);
@@ -108,6 +126,10 @@ public class DigitizingLaserBlock extends BlockWithEntity {
 
     // Cycles: the terminal nearest the laser, then every terminal the player has discovered in the same grid
     private static void tune(ServerWorld world, ServerPlayerEntity player, DigitizingLaserBlockEntity laser) {
+        // A laser tuned to a grid that has since been deleted falls back to the default grid
+        if (laser.link() != null && GridArrival.gridWorld(world.getServer(), laser.link().grid()).isEmpty()) {
+            GridArrival.nearestTerminal(world.getServer(), ModDimensions.DEFAULT_GRID_ID, laser.getPos()).ifPresent(laser::setLink);
+        }
         Optional<TerminalRef> current = laser.linkOrNearest(world);
         if (current.isEmpty()) {
             player.sendMessage(Text.translatable("message.digitalfrontier.terminal_unreachable").formatted(Formatting.RED), true);

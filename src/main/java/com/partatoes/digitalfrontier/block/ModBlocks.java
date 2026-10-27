@@ -207,10 +207,17 @@ public class ModBlocks {
                     .registryKey(RegistryKey.of(RegistryKeys.BLOCK, ARRIVAL_PAD_ID))));
     public static final Identifier DIGITIZING_LASER_ID = Identifier.of(DigitalFrontier.MOD_ID, "digitizing_laser");
     public static final Block DIGITIZING_LASER = registerBlock(DIGITIZING_LASER_ID,
-            new DigitizingLaserBlock(AbstractBlock.Settings
+            new DigitizingLaserBlock(false, AbstractBlock.Settings
                     .copy(Blocks.IRON_BLOCK)
                     .luminance(state -> 7)
                     .registryKey(RegistryKey.of(RegistryKeys.BLOCK, DIGITIZING_LASER_ID))));
+    // The upgraded laser: can also tune into grids other than the default one
+    public static final Identifier GRID_TUNING_LASER_ID = Identifier.of(DigitalFrontier.MOD_ID, "grid_tuning_laser");
+    public static final Block GRID_TUNING_LASER = registerBlock(GRID_TUNING_LASER_ID,
+            new DigitizingLaserBlock(true, AbstractBlock.Settings
+                    .copy(Blocks.NETHERITE_BLOCK)
+                    .luminance(state -> 10)
+                    .registryKey(RegistryKey.of(RegistryKeys.BLOCK, GRID_TUNING_LASER_ID))));
     // The way out of a grid; only generated at Portal sites, so it can't be broken or crafted
     public static final Identifier GRID_PORTAL_ID = Identifier.of(DigitalFrontier.MOD_ID, "grid_portal");
     public static final Block GRID_PORTAL = registerBlock(GRID_PORTAL_ID,

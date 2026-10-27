@@ -28,6 +28,7 @@ public class ModItemGroups {
                         entries.add(ModItems.DIMENSION_TELEPORTER);
                         entries.add(ModItems.LASER_TUNER);
                         entries.add(ModBlocks.DIGITIZING_LASER);
+                        entries.add(ModBlocks.GRID_TUNING_LASER);
                         entries.add(ModBlocks.ARRIVAL_PAD);
                         entries.add(ModItems.ESCAPE_KEY);
                         entries.add(ModItems.MEMORY_PAGING);

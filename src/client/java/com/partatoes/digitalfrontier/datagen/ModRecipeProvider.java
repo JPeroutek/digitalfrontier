@@ -96,6 +96,19 @@ public class ModRecipeProvider extends FabricRecipeProvider {
                         .criterion(hasItem(ModItems.LUMINESSENCE), conditionsFromItem(ModItems.LUMINESSENCE))
                         .offerTo(exporter);
 
+                // Tuning into other grids is end-game: a nether star and netherite on top of the laser
+                createShaped(RecipeCategory.TRANSPORTATION, ModBlocks.GRID_TUNING_LASER, 1)
+                        .pattern(" S ")
+                        .pattern("DLD")
+                        .pattern("NPN")
+                        .input('S', Items.NETHER_STAR)
+                        .input('D', Items.DIAMOND)
+                        .input('L', ModBlocks.DIGITIZING_LASER)
+                        .input('N', Items.NETHERITE_INGOT)
+                        .input('P', ModBlocks.PIXEL_BLOCK)
+                        .criterion(hasItem(ModBlocks.DIGITIZING_LASER), conditionsFromItem(ModBlocks.DIGITIZING_LASER))
+                        .offerTo(exporter);
+
                 createShaped(RecipeCategory.TOOLS, ModItems.LASER_TUNER, 1)
                         .pattern(" L ")
                         .pattern("ICI")

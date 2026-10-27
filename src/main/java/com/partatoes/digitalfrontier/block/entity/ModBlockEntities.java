@@ -11,7 +11,7 @@ import net.minecraft.util.Identifier;
 public class ModBlockEntities {
     public static final BlockEntityType<DigitizingLaserBlockEntity> DIGITIZING_LASER = Registry.register(Registries.BLOCK_ENTITY_TYPE,
             Identifier.of(DigitalFrontier.MOD_ID, "digitizing_laser"),
-            FabricBlockEntityTypeBuilder.create(DigitizingLaserBlockEntity::new, ModBlocks.DIGITIZING_LASER).build());
+            FabricBlockEntityTypeBuilder.create(DigitizingLaserBlockEntity::new, ModBlocks.DIGITIZING_LASER, ModBlocks.GRID_TUNING_LASER).build());
 
     public static void registerModBlockEntities() {
         DigitalFrontier.LOGGER.info("Registering block entities for " + DigitalFrontier.MOD_ID);

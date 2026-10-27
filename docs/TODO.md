@@ -3,6 +3,17 @@
 Ideas and planned work for the grid world generator that aren't scheduled into a phase yet. See
 `docs/grid-structures.md` for how the current generator and building templates work.
 
+## Tuned grids
+
+- **Idle unloading.** Every tuned grid stays loaded from server start (Fantasy persistent worlds), costing memory
+  even when nobody is in it. Unload grids with no players after a while and reopen them on demand (lasers,
+  `/grid open`, players logging in inside one). The `digitalfrontierMaxTunedGrids` game rule (default 8) caps
+  the cost until then.
+- **A price for new grids.** Tuning to a grid that doesn't exist yet is free once you own a Grid Tuning Laser.
+  Consider consuming an item per new grid.
+- **Settings outside the tuning bounds.** Only the settings a `GridTuning` can express have grid codes; a grid
+  written by hand (e.g. a datapack replacing the default grid's settings) can't be shared as a code.
+
 ## Multiple street sizes
 
 Today every street is exactly one chunk (16 blocks) wide, because a chunk is either a street or part of a city

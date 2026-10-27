@@ -6,7 +6,10 @@ import com.partatoes.digitalfrontier.compat.ModCompat;
 import com.partatoes.digitalfrontier.entity.ModEntities;
 import com.partatoes.digitalfrontier.entity.ModVehicles;
 import com.partatoes.digitalfrontier.entity.custom.ProgramEntity;
+import com.partatoes.digitalfrontier.grid.GridCommands;
+import com.partatoes.digitalfrontier.grid.GridManager;
 import com.partatoes.digitalfrontier.grid.GridRegistries;
+import com.partatoes.digitalfrontier.grid.tuning.GridTuningNetworking;
 import com.partatoes.digitalfrontier.grid.arrival.GridArrival;
 import com.partatoes.digitalfrontier.grid.exit.MemoryPaging;
 import com.partatoes.digitalfrontier.item.ModFuelItems;
@@ -53,6 +56,9 @@ public class DigitalFrontier implements ModInitializer {
 		GridRegistries.register();
 		GridArrival.register();
 		MemoryPaging.register();
+		GridManager.register();
+		GridCommands.register();
+		GridTuningNetworking.register();
 		ModCompat.register();
 	}
 }

@@ -51,6 +51,33 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add("message.digitalfrontier.escape_key_outside_grid", "The Escape Key only works inside the grid");
         translationBuilder.add("message.digitalfrontier.memory_paged", "Memory paged back in at %s");
         translationBuilder.add(ModItems.CORE_DUMP, "Core Dump");
+
+        // Tuned grids
+        translationBuilder.add(ModBlocks.GRID_TUNING_LASER, "Grid Tuning Laser");
+        translationBuilder.add("gamerule.digitalfrontierMaxTunedGrids", "Digital Frontier: maximum tuned grids");
+        translationBuilder.add("message.digitalfrontier.invalid_grid_code", "That isn't a valid grid code");
+        translationBuilder.add("message.digitalfrontier.grid_limit", "This server can't hold more than %s tuned grids");
+        translationBuilder.add("message.digitalfrontier.laser_tuned_grid", "Laser tuned to grid %s");
+        translationBuilder.add("screen.digitalfrontier.grid_tuning", "Grid Tuning");
+        translationBuilder.add("screen.digitalfrontier.grid_tuning.seed", "Seed");
+        translationBuilder.add("screen.digitalfrontier.grid_tuning.random", "Random");
+        translationBuilder.add("screen.digitalfrontier.grid_tuning.corruption", "Corruption: %s%%");
+        translationBuilder.add("screen.digitalfrontier.grid_tuning.city_radius", "City radius: %s chunks (%s blocks)");
+        translationBuilder.add("screen.digitalfrontier.grid_tuning.block_size", "City blocks");
+        translationBuilder.add("screen.digitalfrontier.grid_tuning.waypoints", "Waypoints");
+        translationBuilder.add("screen.digitalfrontier.grid_tuning.districts", "District colors (%s of up to %s)");
+        translationBuilder.add("screen.digitalfrontier.grid_tuning.code", "Grid code");
+        translationBuilder.add("screen.digitalfrontier.grid_tuning.copy", "Copy");
+        translationBuilder.add("screen.digitalfrontier.grid_tuning.paste", "Paste");
+        translationBuilder.add("screen.digitalfrontier.grid_tuning.grid_id", "Grid: %s");
+        translationBuilder.add("screen.digitalfrontier.grid_tuning.tune", "Tune");
+        translationBuilder.add("commands.digitalfrontier.grid.list", "%s of %s tuned grids:");
+        translationBuilder.add("commands.digitalfrontier.grid.list.entry", "(city radius %s, corruption %s%%, %s players)");
+        translationBuilder.add("commands.digitalfrontier.grid.code", "Grid %s has code %s");
+        translationBuilder.add("commands.digitalfrontier.grid.code.untunable", "This grid's settings can't be written as a grid code");
+        translationBuilder.add("commands.digitalfrontier.grid.open", "Opened grid %s");
+        translationBuilder.add("commands.digitalfrontier.grid.delete", "Deleted grid %s");
+        translationBuilder.add("commands.digitalfrontier.grid.delete.unknown", "There's no tuned grid %s");
         translationBuilder.add("message.digitalfrontier.core_dumped", "Core dump restored at %s, inventory intact");
 
         // Grid terminals and arrival messages
