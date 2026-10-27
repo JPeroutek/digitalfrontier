@@ -44,6 +44,7 @@ public final class GridLayout {
     // Streets along X are found on the Z axis (a row of chunks), streets along Z on the X axis
     private final StreetAxis xAxis;
     private final StreetAxis zAxis;
+    private final TransitLayout transit;
 
     public GridLayout(GridLayoutSettings settings) {
         this.settings = settings;
@@ -94,6 +95,7 @@ public final class GridLayout {
         int extent = settings.cityRadius() + MultiChunk.SIZE + 2;
         this.xAxis = new StreetAxis(settings.streetStyle(), seed, SALT_STREETS_X, settings.blockSize(), extent);
         this.zAxis = new StreetAxis(settings.streetStyle(), seed, SALT_STREETS_Z, settings.blockSize(), extent);
+        this.transit = new TransitLayout(settings, xAxis, zAxis);
     }
 
     /** One stronghold up to 64% corruption (the default grid has 50%), two up to 84%, three above that. */
@@ -107,6 +109,11 @@ public final class GridLayout {
     // The middle of one of the 8 gaps between waypoint directions
     private static double slotAngle(int slot) {
         return (slot + 0.5) * Math.PI / 4;
+    }
+
+    /** The city's levels above and below the streets. */
+    public TransitLayout transit() {
+        return transit;
     }
 
     public GridLayoutSettings settings() {

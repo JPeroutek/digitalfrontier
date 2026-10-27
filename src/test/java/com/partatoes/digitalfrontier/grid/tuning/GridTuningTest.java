@@ -27,7 +27,8 @@ class GridTuningTest {
             for (int block = GridTuning.MIN_BLOCK_SIZE; block <= GridTuning.MAX_BLOCK_SIZE; block++) {
                 for (int waypoints : GridTuning.WAYPOINT_COUNTS) {
                     StreetStyle style = StreetStyle.values()[(city + block) % StreetStyle.values().length];
-                    GridTuning tuning = new GridTuning(city * 31L, city % 101, city, block, waypoints, List.of(DyeColor.RED), style);
+                    GridTuning.Levels levels = GridTuning.Levels.values()[city % GridTuning.Levels.values().length];
+                    GridTuning tuning = new GridTuning(city * 31L, city % 101, city, block, waypoints, List.of(DyeColor.RED), style, levels);
                     assertTrue(tuning.isValid());
                     GridLayoutSettings settings = tuning.toSettings();
                     // The codec's validation is what the dimension loader applies
@@ -41,9 +42,9 @@ class GridTuningTest {
     @Test
     void codesRoundTrip() {
         GridTuning tuning = new GridTuning(-8_123_456_789L, 73, 96, 6, 8,
-                List.of(DyeColor.ORANGE, DyeColor.MAGENTA, DyeColor.WHITE, DyeColor.BLACK, DyeColor.LIME), StreetStyle.UNIFORM);
+                List.of(DyeColor.ORANGE, DyeColor.MAGENTA, DyeColor.WHITE, DyeColor.BLACK, DyeColor.LIME), StreetStyle.UNIFORM, GridTuning.Levels.TRANSIT);
         String code = tuning.code();
-        assertTrue(code.startsWith("DF2."));
+        assertTrue(code.startsWith("DF3."));
         assertEquals(tuning, GridTuning.fromCode(code).orElseThrow());
         assertEquals(tuning, GridTuning.fromCode("  " + code + "\n").orElseThrow(), "pasted codes are trimmed");
         assertEquals(GridTuning.DEFAULT, GridTuning.fromCode(GridTuning.DEFAULT.code()).orElseThrow());
@@ -83,6 +84,7 @@ class GridTuningTest {
         // A DF1 code shared before street styles existed, and the grid id a server gave it then
         GridTuning old = GridTuning.fromCode("DF1.AQAAAAAAAAAqUBgECAIOBQ").orElseThrow();
         assertEquals(StreetStyle.UNIFORM, old.streetStyle());
+        assertEquals(GridTuning.Levels.OFF, old.levels());
         assertEquals(24, old.cityRadius());
         assertEquals("0x2e7aae69", GridKey.of(old.toSettings()).getPath());
     }

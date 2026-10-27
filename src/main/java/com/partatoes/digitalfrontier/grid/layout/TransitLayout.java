@@ -1,0 +1,307 @@
+package com.partatoes.digitalfrontier.grid.layout;
+
+import com.partatoes.digitalfrontier.grid.layout.StreetAxis.Road;
+import com.partatoes.digitalfrontier.grid.layout.StreetAxis.RoadClass;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * The city's levels above and below the streets, decided from the street pattern ({@link StreetAxis}) and the grid
+ * seed alone, so each chunk can still work out what it holds on its own:
+ * <ul>
+ *   <li><b>Skyroads</b>: a 16-wide light-cycle deck over every boulevard, centered on its median, at surface
+ *       height Y 80. It ramps down to the street at the city edge, and on-ramps climb the outer lane of
+ *       one boulevard half along some of the city blocks.</li>
+ *   <li><b>Elevated rail</b>: guideways over some one-chunk streets running along Z (north–south).</li>
+ *   <li><b>Subway</b>: tunnels under some one-chunk streets running along X (east–west).</li>
+ *   <li><b>Skyways</b>: bridges across a one-chunk road between the towers on either side.</li>
+ * </ul>
+ * Rail and subway lines run along different axes, so their tracks never cross at the same level. Both have
+ * stations where a cross road meets them.
+ *
+ * <p>Ramp heights are in half blocks above the street surface: 0 is the street (Y 65 to stand on), 30 the deck
+ * (Y 80).
+ */
+public final class TransitLayout {
+    public static final int DECK_LEVEL = 30;
+    /** Blocks either side of a boulevard's median that are deck. */
+    public static final int DECK_HALF_WIDTH = 8;
+    public static final int MIN_LINE_SPACING = 6;
+    public static final int MIN_STATION_SPACING = 6;
+    public static final int MAX_STATION_SPACING = 10;
+    /** On-ramps keep this many chunks clear of the end ramps. */
+    private static final int RAMP_END_CLEARANCE = 3;
+
+    private static final int SALT_SEED = 0x7A;
+    private static final int SALT_RAMP = 1;
+    private static final int SALT_RAIL_LINE = 2;
+    private static final int SALT_STATION = 3;
+    private static final int SALT_SKYWAY = 4;
+
+    /** A skyway bridge crossing a road chunk, between the building chunks either side; Y is its walking height. */
+    public record Skyway(boolean roadAlongX, int standY) {
+    }
+
+    private final GridLayoutSettings settings;
+    private final StreetAxis xAxis;
+    private final StreetAxis zAxis;
+    private final long seed;
+    private final Set<Integer> railColumns = new HashSet<>();
+    private final Set<Integer> subwayRows = new HashSet<>();
+    private final Set<Long> railStations = new HashSet<>();
+    private final Set<Long> subwayStations = new HashSet<>();
+
+    TransitLayout(GridLayoutSettings settings, StreetAxis xAxis, StreetAxis zAxis) {
+        this.settings = settings;
+        this.xAxis = xAxis;
+        this.zAxis = zAxis;
+        this.seed = GridRandom.hash(settings.gridSeed(), 0, 0, SALT_SEED);
+        if (has(GridLevel.ELEVATED_RAIL)) {
+            // Streets along Z sit at x-axis road positions
+            railColumns.addAll(pickLines(xAxis, 0));
+            railColumns.forEach(column -> addStations(railStations, column, zAxis, true));
+        }
+        if (has(GridLevel.SUBWAY)) {
+            subwayRows.addAll(pickLines(zAxis, 1));
+            subwayRows.forEach(row -> addStations(subwayStations, row, xAxis, false));
+        }
+    }
+
+    public boolean has(GridLevel level) {
+        return settings.levels().contains(level);
+    }
+
+    // ---- Skyroads ----
+
+    /**
+     * The skyroad deck's height at a block (in half blocks above the street, {@link #DECK_LEVEL} on the deck itself,
+     * less on the end ramps), or -1 if there's no deck here.
+     */
+    public int deckLevel(int blockX, int blockZ) {
+        if (!has(GridLevel.SKYROADS)) {
+            return -1;
+        }
+        return Math.max(deckLevelAlong(zAxis, blockZ, blockX), deckLevelAlong(xAxis, blockX, blockZ));
+    }
+
+    /** Whether this block row is the center line of a deck running along X (the lit median line). */
+    public boolean isDeckCenterRow(int blockZ) {
+        return has(GridLevel.SKYROADS) && isCenter(zAxis, blockZ);
+    }
+
+    /** Whether this block column is the center line of a deck running along Z. */
+    public boolean isDeckCenterColumn(int blockX) {
+        return has(GridLevel.SKYROADS) && isCenter(xAxis, blockX);
+    }
+
+    private boolean isCenter(StreetAxis axis, int across) {
+        Road road = axis.roadAt(across >> 4);
+        if (road == null || road.roadClass() != RoadClass.BOULEVARD) {
+            return false;
+        }
+        int local = across & 15;
+        return road.half() == 0 ? local == 15 : local == 0;
+    }
+
+    // A deck along a boulevard: across the band next to the median, along the line between its end ramps
+    private int deckLevelAlong(StreetAxis acrossAxis, int across, int along) {
+        Road road = acrossAxis.roadAt(across >> 4);
+        if (road == null || road.roadClass() != RoadClass.BOULEVARD) {
+            return -1;
+        }
+        int local = across & 15;
+        boolean inBand = road.half() == 0 ? local >= 16 - DECK_HALF_WIDTH : local < DECK_HALF_WIDTH;
+        if (!inBand) {
+            return -1;
+        }
+        int end = lineEnd(boulevardRows(across >> 4, road));
+        // Blocks inside the city along the line run from -end*16 to (end+1)*16 - 1
+        int fromEnd = Math.min((end + 1) * 16 - 1 - along, along + end * 16);
+        return fromEnd < 0 ? -1 : Math.min(DECK_LEVEL, fromEnd);
+    }
+
+    /**
+     * An on-ramp's height at a block, or -1 if there's none. On-ramps climb two chunks of one boulevard half's outer
+     * lane, alongside the deck, on about half the city blocks the boulevard passes.
+     */
+    public int rampLevel(int blockX, int blockZ) {
+        if (!has(GridLevel.SKYROADS)) {
+            return -1;
+        }
+        return Math.max(rampLevelAlong(zAxis, xAxis, blockZ, blockX, 0), rampLevelAlong(xAxis, zAxis, blockX, blockZ, 1));
+    }
+
+    /** Whether this ramp block is on the ramp's outer edge, away from the deck (where its railing goes). */
+    public boolean isRampOuterEdge(int blockX, int blockZ) {
+        return isRampOuter(zAxis, blockZ) || isRampOuter(xAxis, blockX);
+    }
+
+    private boolean isRampOuter(StreetAxis acrossAxis, int across) {
+        Road road = acrossAxis.roadAt(across >> 4);
+        if (road == null || road.roadClass() != RoadClass.BOULEVARD) {
+            return false;
+        }
+        return (across & 15) == (road.half() == 0 ? rampFirst(0) : rampLast(1));
+    }
+
+    // Ramp lanes: the 6 blocks of a half just outside the deck band
+    private static int rampFirst(int half) {
+        return half == 0 ? 16 - DECK_HALF_WIDTH - 6 : DECK_HALF_WIDTH;
+    }
+
+    private static int rampLast(int half) {
+        return rampFirst(half) + 5;
+    }
+
+    private int rampLevelAlong(StreetAxis acrossAxis, StreetAxis alongAxis, int across, int along, int axisSalt) {
+        Road road = acrossAxis.roadAt(across >> 4);
+        if (road == null || road.roadClass() != RoadClass.BOULEVARD) {
+            return -1;
+        }
+        int local = across & 15;
+        if (local < rampFirst(road.half()) || local > rampLast(road.half())) {
+            return -1;
+        }
+        int alongChunk = along >> 4;
+        if (alongAxis.roadAt(alongChunk) != null) {
+            return -1;
+        }
+        StreetAxis.Block block = alongAxis.blockAt(alongChunk);
+        if (block.size() < 2 || alongChunk > block.start() + 1) {
+            return -1;
+        }
+        int[] rows = boulevardRows(across >> 4, road);
+        int end = lineEnd(rows);
+        if (Math.abs(block.start()) > end - RAMP_END_CLEARANCE || Math.abs(block.start() + 1) > end - RAMP_END_CLEARANCE) {
+            return -1;
+        }
+        long hash = GridRandom.hash(seed, block.index(), rows[0], SALT_RAMP * 4 + axisSalt);
+        if (GridRandom.unit(hash) >= 0.5 || (int) (hash >>> 1 & 1) != road.half()) {
+            return -1;
+        }
+        int step = along - block.start() * 16;
+        if ((hash >>> 2 & 1) == 1) {
+            step = 31 - step;
+        }
+        return Math.min(DECK_LEVEL, step);
+    }
+
+    // The two chunk rows (or columns) of a boulevard, given one of them
+    private static int[] boulevardRows(int c, Road road) {
+        int first = road.half() == 0 ? c : c - 1;
+        return new int[]{first, first + 1};
+    }
+
+    /** The last chunk along a line (both directions, symmetric) that is still inside the city on all of its rows. */
+    private int lineEnd(int... rows) {
+        int farthest = 0;
+        for (int row : rows) {
+            farthest = Math.max(farthest, Math.abs(row));
+        }
+        int radius = settings.cityRadius();
+        return farthest > radius ? -1 : (int) Math.floor(Math.sqrt((double) radius * radius - (double) farthest * farthest));
+    }
+
+    // ---- Rail ----
+
+    /** Whether an elevated rail guideway runs along Z through this chunk. */
+    public boolean elevatedRail(int chunkX, int chunkZ) {
+        return railColumns.contains(chunkX) && Math.abs(chunkZ) <= lineEnd(chunkX);
+    }
+
+    /** Whether a subway tunnel runs along X under this chunk. */
+    public boolean subway(int chunkX, int chunkZ) {
+        return subwayRows.contains(chunkZ) && Math.abs(chunkX) <= lineEnd(chunkZ);
+    }
+
+    /** Whether this chunk holds an elevated rail station (stations are always on intersections). */
+    public boolean railStation(int chunkX, int chunkZ) {
+        return railStations.contains(key(chunkX, chunkZ));
+    }
+
+    /** Whether this chunk holds a subway station (stations are always on intersections). */
+    public boolean subwayStation(int chunkX, int chunkZ) {
+        return subwayStations.contains(key(chunkX, chunkZ));
+    }
+
+    // Lines from the center outward: ordinary one-chunk streets, picked by seed, never closer than MIN_LINE_SPACING
+    private List<Integer> pickLines(StreetAxis axis, int salt) {
+        List<Integer> candidates = new ArrayList<>();
+        for (int c = -axis.extent(); c <= axis.extent(); c++) {
+            Road road = axis.roadAt(c);
+            if (road != null && road.roadClass() == RoadClass.STREET && lineEnd(c) > 0) {
+                candidates.add(c);
+            }
+        }
+        candidates.sort(Comparator.<Integer>comparingInt(Math::abs).thenComparingInt(c -> c));
+        List<Integer> picked = new ArrayList<>();
+        for (int c : candidates) {
+            boolean spaced = picked.stream().allMatch(other -> Math.abs(other - c) >= MIN_LINE_SPACING);
+            if (spaced && GridRandom.unit(GridRandom.hash(seed, c, salt, SALT_RAIL_LINE)) < 0.5) {
+                picked.add(c);
+            }
+        }
+        return picked;
+    }
+
+    // Stations at intersections along a line: at least MIN_STATION_SPACING apart, never more than MAX_STATION_SPACING
+    private void addStations(Set<Long> stations, int line, StreetAxis crossAxis, boolean lineAlongZ) {
+        int end = lineEnd(line);
+        int last = Integer.MIN_VALUE / 2;
+        for (int c = -end; c <= end; c++) {
+            if (crossAxis.roadAt(c) == null || c - last < MIN_STATION_SPACING) {
+                continue;
+            }
+            boolean due = c - last >= MAX_STATION_SPACING - 1;
+            if (due || GridRandom.unit(GridRandom.hash(seed, line, c, SALT_STATION)) < 0.4) {
+                stations.add(lineAlongZ ? key(line, c) : key(c, line));
+                last = c;
+            }
+        }
+    }
+
+    // ---- Skyways ----
+
+    /**
+     * A skyway candidate on this chunk: a one-chunk street or lane (not an intersection, no rail over it) with city
+     * blocks on both sides. Whether the towers either side are tall enough is up to the caller, which knows their
+     * buildings.
+     */
+    @Nullable
+    public Skyway skywayAt(int chunkX, int chunkZ) {
+        if (!has(GridLevel.SKYWAYS) || Math.hypot(chunkX, chunkZ) > settings.cityRadius() - 1) {
+            return null;
+        }
+        Road roadX = zAxis.roadAt(chunkZ);
+        Road roadZ = xAxis.roadAt(chunkX);
+        if ((roadX == null) == (roadZ == null)) {
+            return null;
+        }
+        Road road = roadX != null ? roadX : roadZ;
+        boolean alongX = roadX != null;
+        if (road.roadClass() == RoadClass.BOULEVARD || (!alongX && railColumns.contains(chunkX))) {
+            return null;
+        }
+        // The chunks either side, across the road, must be blocks
+        StreetAxis acrossAxis = alongX ? zAxis : xAxis;
+        int across = alongX ? chunkZ : chunkX;
+        if (acrossAxis.roadAt(across - 1) != null || acrossAxis.roadAt(across + 1) != null) {
+            return null;
+        }
+        long hash = GridRandom.hash(seed, chunkX, chunkZ, SALT_SKYWAY);
+        if (GridRandom.unit(hash) >= 0.3) {
+            return null;
+        }
+        int floor = 6 + GridRandom.nextInt(hash >>> 16, 3);
+        return new Skyway(alongX, GridLayout.FLOOR_Y + 1 + floor * GridLayout.FLOOR_HEIGHT);
+    }
+
+    private static long key(int x, int z) {
+        return ((long) x << 32) | (z & 0xFFFFFFFFL);
+    }
+}

@@ -156,6 +156,11 @@ public final class StreetAxis {
         }
     }
 
+    /** How far out (in chunks either side of the center) the pattern is laid out. */
+    public int extent() {
+        return extent;
+    }
+
     /** The road along this chunk row (or column), or null if it's part of a city block. */
     @Nullable
     public Road roadAt(int c) {

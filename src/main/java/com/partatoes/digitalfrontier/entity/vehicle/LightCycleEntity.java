@@ -117,6 +117,12 @@ public class LightCycleEntity extends VehicleEntity {
         return .04;
     }
 
+    // Enough to ride up slab ramps, like the grid's skyroad ramps, without hopping full blocks
+    @Override
+    public float getStepHeight() {
+        return 0.6f;
+    }
+
     @Override
     public boolean collidesWith(Entity other) {
         return canCollide(this, other);

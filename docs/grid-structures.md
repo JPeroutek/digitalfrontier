@@ -172,6 +172,23 @@ Tuning Laser):
 - **`uniform`**: a one-chunk street every `block_size + 1` chunks, as grids made before street styles have.
 
 2×2 buildings fit in any block at least 2 chunks wide both ways.
+
+## The city's levels
+
+Above and below the streets, grids can have (`levels` in the grid settings, or the Levels button on the tuning
+laser; the default grid has all four):
+
+| Level | Height | Where |
+|---|---|---|
+| Skyroads | drive at Y 80 | a 16-wide deck over every boulevard, on pillars along the median; on-ramps climb a boulevard's outer lane, and the deck ramps down at the city edge |
+| Elevated rail | rails at Y 88 | over some one-chunk streets running north–south, with ladder-access stations at intersections |
+| Subway | rails at Y 48 | under some one-chunk streets running east–west, with ladder-access stations at intersections |
+| Skyways | Y 101, 107 or 113 | bridges across a street between two towers, at their floor heights; the towers get doorways |
+
+They're built in code for now, and they're placed over (and carved into) whatever your parts put there, so
+**leave the space clear**: in tall buildings, keep floors at 6-block intervals from Y 65 (so the floor plates
+skyways land on are at Y 100, 106, 112) and expect a 4-wide doorway in the middle of an outer wall at those
+heights. Templates for the levels themselves are planned.
 - **`terminal`**: the building on an arrival terminal's chunk: the main terminal just outside the city (zone
   `outskirts`) and the center of each waypoint (zone `waypoint`). Single chunk only. Place one
   **Arrival Pad** (`digitalfrontier:arrival_pad`) where players should appear: they arrive standing on top of

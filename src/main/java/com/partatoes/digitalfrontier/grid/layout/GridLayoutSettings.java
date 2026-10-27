@@ -7,6 +7,7 @@ import com.partatoes.digitalfrontier.grid.layout.StreetAxis.StreetStyle;
 import net.minecraft.util.DyeColor;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Everything that defines a grid. Two grids with identical settings are the same grid,
@@ -24,11 +25,13 @@ public record GridLayoutSettings(
         int waypointCount,
         int outlandsRadius,
         List<DyeColor> districtColors,
-        StreetStyle streetStyle) {
+        StreetStyle streetStyle,
+        Set<GridLevel> levels) {
 
     public static final GridLayoutSettings DEFAULT = new GridLayoutSettings(
             0L, 0.5f, 10, 40, 3, 64, 80, 4, 128,
-            List.of(DyeColor.LIGHT_BLUE, DyeColor.CYAN, DyeColor.BLUE, DyeColor.ORANGE), StreetStyle.VARIED);
+            List.of(DyeColor.LIGHT_BLUE, DyeColor.CYAN, DyeColor.BLUE, DyeColor.ORANGE), StreetStyle.VARIED,
+            Set.of(GridLevel.values()));
 
     public static final Codec<GridLayoutSettings> CODEC = RecordCodecBuilder.<GridLayoutSettings>create(instance -> instance.group(
             Codec.LONG.fieldOf("grid_seed").forGetter(GridLayoutSettings::gridSeed),
@@ -42,7 +45,9 @@ public record GridLayoutSettings(
             Codec.intRange(5, 1024).fieldOf("outlands_radius").forGetter(GridLayoutSettings::outlandsRadius),
             DyeColor.CODEC.listOf(1, 16).fieldOf("district_colors").forGetter(GridLayoutSettings::districtColors),
             // Left out of the JSON when uniform, so grids from before varied streets keep their encoding (and GridKey)
-            StreetStyle.CODEC.optionalFieldOf("street_style", StreetStyle.UNIFORM).forGetter(GridLayoutSettings::streetStyle)
+            StreetStyle.CODEC.optionalFieldOf("street_style", StreetStyle.UNIFORM).forGetter(GridLayoutSettings::streetStyle),
+            // Also left out when empty, for the same reason
+            GridLevel.SET_CODEC.optionalFieldOf("levels", Set.of()).forGetter(GridLayoutSettings::levels)
     ).apply(instance, GridLayoutSettings::new)).validate(GridLayoutSettings::validate);
 
     private static DataResult<GridLayoutSettings> validate(GridLayoutSettings settings) {

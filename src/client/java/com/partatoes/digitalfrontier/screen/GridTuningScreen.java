@@ -51,7 +51,7 @@ public class GridTuningScreen extends Screen {
     @Override
     protected void init() {
         left = (width - WIDTH) / 2;
-        top = Math.max(8, (height - 236) / 2);
+        top = Math.max(8, (height - 260) / 2);
         int y = top + 16;
 
         TextFieldWidget seedField = new TextFieldWidget(textRenderer, left + 60, y, WIDTH - 60 - 66, 20,
@@ -97,6 +97,14 @@ public class GridTuningScreen extends Screen {
                 .initially(tuning.streetStyle())
                 .build(left + 2 * (third + 4), y, third, 20, Text.translatable("screen.digitalfrontier.grid_tuning.street_style"),
                         (button, value) -> update(tuning.withStreetStyle(value))));
+        y += ROW;
+
+        addDrawableChild(CyclingButtonWidget.<GridTuning.Levels>builder(
+                        value -> Text.translatable("screen.digitalfrontier.grid_tuning.levels." + value.asString()))
+                .values(GridTuning.Levels.values())
+                .initially(tuning.levels())
+                .build(left, y, WIDTH, 20, Text.translatable("screen.digitalfrontier.grid_tuning.levels"),
+                        (button, value) -> update(tuning.withLevels(value))));
         y += ROW + 12;
 
         DyeColor[] colors = DyeColor.values();
@@ -138,7 +146,7 @@ public class GridTuningScreen extends Screen {
         super.render(context, mouseX, mouseY, delta);
         context.drawCenteredTextWithShadow(textRenderer, title, width / 2, top, WHITE);
         context.drawTextWithShadow(textRenderer, Text.translatable("screen.digitalfrontier.grid_tuning.seed"), left, top + 22, GRAY);
-        int colorsLabelY = top + 16 + 4 * ROW;
+        int colorsLabelY = top + 16 + 5 * ROW;
         context.drawTextWithShadow(textRenderer, Text.translatable("screen.digitalfrontier.grid_tuning.districts",
                 tuning.districtColors().size(), GridTuning.MAX_DISTRICT_COLORS), left, colorsLabelY, GRAY);
         int codeLabelY = colorsLabelY + 12 + SWATCH + 6;

@@ -8,6 +8,7 @@ import com.partatoes.digitalfrontier.grid.layout.PlanType;
 import com.partatoes.digitalfrontier.grid.layout.Site;
 import com.partatoes.digitalfrontier.grid.layout.StreetAxis.Road;
 import com.partatoes.digitalfrontier.grid.layout.StreetAxis.RoadClass;
+import com.partatoes.digitalfrontier.grid.layout.TransitLayout;
 import com.partatoes.digitalfrontier.grid.parts.DistrictPalette;
 import com.partatoes.digitalfrontier.grid.parts.GridAssets;
 import com.partatoes.digitalfrontier.grid.parts.GridBuildingDef;
@@ -35,6 +36,7 @@ final class GridChunkBuild {
     private static final BlockRotation[] ROTATIONS = BlockRotation.values();
 
     private final GridLayout layout;
+    private final GridAssets assets;
     private final ChunkPlan plan;
     private final int chunkX;
     private final int chunkZ;
@@ -49,6 +51,8 @@ final class GridChunkBuild {
     private final GridTerrain.Column[] columns = new GridTerrain.Column[256];
     @Nullable
     private float[] corruptionGrid;
+    @Nullable
+    private GridTransit.ChunkTransit transit;
 
     private record Layer(GridPart part, int bottomY) {
         boolean contains(int y) {
@@ -56,9 +60,10 @@ final class GridChunkBuild {
         }
     }
 
-    private GridChunkBuild(GridLayout layout, ChunkPlan plan, int chunkX, int chunkZ, @Nullable Identifier buildingId, List<Layer> layers,
+    private GridChunkBuild(GridLayout layout, GridAssets assets, ChunkPlan plan, int chunkX, int chunkZ, @Nullable Identifier buildingId, List<Layer> layers,
                            int footprintChunkX, int footprintChunkZ, int footprintChunks, BlockRotation rotation) {
         this.layout = layout;
+        this.assets = assets;
         this.plan = plan;
         this.chunkX = chunkX;
         this.chunkZ = chunkZ;
@@ -100,7 +105,7 @@ final class GridChunkBuild {
             candidate = kind == null ? null : assets.pick(kind, 1, plan.zone(), roll(seed, chunkX, chunkZ, 0));
         }
         if (candidate == null) {
-            return new GridChunkBuild(layout, plan, chunkX, chunkZ, null, List.of(), chunkX, chunkZ, 1, BlockRotation.NONE);
+            return new GridChunkBuild(layout, assets, plan, chunkX, chunkZ, null, List.of(), chunkX, chunkZ, 1, BlockRotation.NONE);
         }
         return stacked(layout, plan, chunkX, chunkZ, assets, candidate, chunkX, chunkZ, 1, seed);
     }
@@ -170,7 +175,7 @@ final class GridChunkBuild {
         BlockRotation rotation = def.kind() == GridBuildingDef.Kind.STREET
                 ? streetRotation(plan)
                 : ROTATIONS[(int) (roll(seed, originX, originZ, 2) * ROTATIONS.length)];
-        return new GridChunkBuild(layout, plan, chunkX, chunkZ, candidate.id(), List.copyOf(layers), originX, originZ, footprintChunks, rotation);
+        return new GridChunkBuild(layout, assets, plan, chunkX, chunkZ, candidate.id(), List.copyOf(layers), originX, originZ, footprintChunks, rotation);
     }
 
     private static int addLayer(List<Layer> layers, GridAssets assets, @Nullable Identifier partId, int bottomY) {
@@ -203,11 +208,58 @@ final class GridChunkBuild {
     }
 
     private int uncorruptedMaxY() {
+        GridTransit.ChunkTransit levels = transit();
+        return levels.any() ? Math.max(structureTop(), levels.maxY()) : structureTop();
+    }
+
+    // The ground and building alone, without the city's levels; what a skyway needs to know about a tower
+    private int structureTop() {
         if (layers.isEmpty()) {
             return FLOOR_Y + Math.max(plan.floors() * GridLayout.FLOOR_HEIGHT, GridTerrain.MAX_GROUND_RISE);
         }
         Layer top = layers.getLast();
         return top.bottomY() + top.part().sizeY() - 1;
+    }
+
+    private GridTransit.ChunkTransit transit() {
+        if (transit == null) {
+            transit = GridTransit.forChunk(layout.transit(), plan, chunkX, chunkZ, this::skywayFits);
+        }
+        return transit;
+    }
+
+    // A skyway only goes up where there are buildings on both sides of the road, tall enough to meet it
+    private boolean skywayFits(TransitLayout.Skyway skyway, int roadChunkX, int roadChunkZ) {
+        int[][] sides = skyway.roadAlongX()
+                ? new int[][]{{roadChunkX, roadChunkZ - 1}, {roadChunkX, roadChunkZ + 1}}
+                : new int[][]{{roadChunkX - 1, roadChunkZ}, {roadChunkX + 1, roadChunkZ}};
+        for (int[] side : sides) {
+            GridChunkBuild building = side[0] == chunkX && side[1] == chunkZ ? this : resolve(layout, assets, side[0], side[1]);
+            if (building.plan.type() != PlanType.BUILDING || building.structureTop() < skyway.standY() + 3) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** What the city's levels put in this chunk, for the debug screen. */
+    String describeLevels() {
+        GridTransit.ChunkTransit levels = transit();
+        List<String> parts = new ArrayList<>();
+        if (levels.deckChunk()) {
+            parts.add("skyroad");
+        }
+        if (levels.elevatedRail()) {
+            parts.add(levels.railStation() ? "elevated rail station" : "elevated rail");
+        }
+        if (levels.subway()) {
+            parts.add(levels.subwayStation() ? "subway station" : "subway");
+        }
+        if (levels.skyway() != null) {
+            parts.add("skyway at Y " + levels.skyway().standY());
+        }
+        levels.doors().forEach(door -> parts.add("skyway door at Y " + door.standY()));
+        return String.join(", ", parts);
     }
 
     /** Lowest Y with a block in a column. Above the world bottom only in unallocated space. */
@@ -217,7 +269,7 @@ final class GridChunkBuild {
 
     /** Highest non-air Y in a column, or the ground if nothing stands on it (below the world bottom for void). */
     int columnTop(int localX, int localZ) {
-        if (layers.isEmpty()) {
+        if (layers.isEmpty() && !transit().any()) {
             return GridTerrain.columnTop(plan, column(localX, localZ), localX, localZ);
         }
         for (int y = maxY(); y > FLOOR_Y; y--) {
@@ -267,7 +319,9 @@ final class GridChunkBuild {
         if (!corrupted()) {
             return uncorruptedBlockAt(localX, y, localZ);
         }
-        return GridCorruption.apply(layout.settings().gridSeed(), corruptionAt(localX, localZ), plan.type() != PlanType.SITE,
+        GridTransit.ChunkTransit levels = transit();
+        boolean level = levels.any() && GridTransit.blockAt(levels, localX, y, localZ) != null;
+        return GridCorruption.apply(layout.settings().gridSeed(), corruptionAt(localX, localZ), plan.type() != PlanType.SITE, level,
                 uncorruptedMaxY(), chunkX * 16 + localX, y, chunkZ * 16 + localZ, sourceY -> uncorruptedBlockAt(localX, sourceY, localZ));
     }
 
@@ -311,6 +365,14 @@ final class GridChunkBuild {
     }
 
     private BlockState uncorruptedBlockAt(int localX, int y, int localZ) {
+        // The city's levels win wherever they put something
+        GridTransit.ChunkTransit levels = transit();
+        if (levels.any()) {
+            BlockState level = GridTransit.blockAt(levels, localX, y, localZ);
+            if (level != null) {
+                return level;
+            }
+        }
         if (layers.isEmpty() || y <= FLOOR_Y) {
             return GridTerrain.blockAt(plan, column(localX, localZ), localX, y, localZ);
         }

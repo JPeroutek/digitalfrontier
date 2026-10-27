@@ -54,6 +54,10 @@ final class GridCorruption {
     private static final int SALT_BREAK = 5009;
     private static final int SALT_BREAK_HEIGHT = 5010;
     private static final int SALT_FRAGMENT = 5011;
+    private static final int SALT_SPAN = 5012;
+    private static final int SALT_CAVE_IN = 5013;
+    /** Missing spans of the city's levels are this many blocks each way. */
+    private static final int SPAN = 8;
 
     private static final DyeColor[] COLORS = DyeColor.values();
     private static volatile Map<Block, Pattern> patterns;
@@ -75,11 +79,27 @@ final class GridCorruption {
      * The corrupted block at a position.
      *
      * @param structural whether holes, shifted columns and broken-off buildings may apply here
+     * @param level      whether the block belongs to one of the city's levels (see {@link GridTransit})
      * @param top        the highest Y the uncorrupted chunk has blocks at; nothing generates above it
      */
-    static BlockState apply(long seed, float intensity, boolean structural, int top, int blockX, int y, int blockZ, Source source) {
-        if (intensity < LOW || y < FLOOR_Y - DEPTH) {
+    static BlockState apply(long seed, float intensity, boolean structural, boolean level, int top, int blockX, int y, int blockZ,
+                            Source source) {
+        // The city's levels (decks, guideways, tunnels, skyways) keep their shape until corruption is strong
+        if (level) {
+            structural &= intensity >= CORRUPTED;
+        }
+        if (intensity < LOW || y < FLOOR_Y - DEPTH && !level) {
             return source.blockAt(y);
+        }
+        if (level && intensity >= CORRUPTED) {
+            if (y > FLOOR_Y && roll(seed, Math.floorDiv(blockX, SPAN), Math.floorDiv(y, SPAN), Math.floorDiv(blockZ, SPAN), SALT_SPAN)
+                    < (intensity - CORRUPTED) * 1.5) {
+                // A whole span of the deck, guideway or bridge is gone
+                return Blocks.AIR.getDefaultState();
+            }
+            if (y < FLOOR_Y && source.blockAt(y).isAir() && roll(seed, blockX, y, blockZ, SALT_CAVE_IN) < (intensity - CORRUPTED) * 0.6) {
+                return ModBlocks.STATIC_BLOCK.getDefaultState();
+            }
         }
         int sourceY = y;
         if (structural && intensity >= UNSTABLE && y > FLOOR_Y) {

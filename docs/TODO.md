@@ -35,49 +35,20 @@ Varied streets (lanes, streets, boulevards, blocks of 2–5 chunks) are in; see 
   building parts with smaller footprints, or a mask that clears the alley after placing a part.
 - **Waypoint settlements** still use plain one-chunk streets; they could use the same street styles.
 
-## Subway and elevated rail
+## The city's levels
 
-Two rail networks, modeled on Lost Cities' railways (`mcjty/lostcities/worldgen/lost/Railway`,
-`RailChunkInfo`). Lost Cities decides per chunk, from coordinates alone, whether a chunk holds a straight rail,
-a bend, a junction or a station, and at which level. It then builds the chunk from rail parts. That works here
-unchanged, because our generator already plans each chunk independently.
+Skyroads, elevated rail, subway and skyways are in (`TransitLayout` decides where, `GridTransit` builds placeholder
+geometry in code). Next:
 
-### Shared design
-
-- **A rail plan per chunk.** Add a `RailPlan` (or a field on `ChunkPlan`): `NONE`, `STRAIGHT_X`, `STRAIGHT_Z`,
-  `JUNCTION`, `STATION`, `RAMP` (changing level), plus the level (subway or elevated). It's computed in
-  `GridLayout` from coordinates and `gridSeed` only.
-- **Lines follow the street grid.** Rails run under or over street rows/columns (e.g. every second or third
-  street line), so they stay straight and chunk-aligned and never cut through building foundations. Lines
-  extend past the city along the highways to the waypoints (Phase 5).
-- **New template kinds.** `GridBuildingDef.Kind` gains `RAIL` and `STATION`, authored along X like street
-  furniture and rotated for Z. Junctions and ramps get their own kinds or a `rail_shape` field.
-- **Stations.** Placed at intersections or chosen city blocks at a regular spacing, with stairs or elevators
-  up to street level. Waypoints and the arrival terminals get a station, so the rail network doubles as
-  fast travel.
-- **Rideable.** Start with vanilla minecarts on powered rails. Later: a custom light-rail train entity.
-
-### Subway
-
-- A tunnel band below the street, e.g. Y 44–56. The ground under Y 64 is currently solid gridstone
-  (`GridTerrain`), so the tunnel templates carve their space out with air.
-- Building bases above a subway line may need a basement-free variant, or the rail plan simply never places
-  tunnels under building chunks (only under streets).
-- Optional "subway dungeons" (like Lost Cities' tunnel corridors): side passages and maintenance rooms, a good
-  home for corrupted programs at higher corruption tiers.
-
-### Elevated rail
-
-- A viaduct at a fixed height above the street, e.g. track at Y 80, on pillars that land on the street
-  between the light lines (keep the light-cycle lanes clear).
-- Runs over avenues and highways, so it reads clearly from the ground and can glow in the district color.
-- Where an elevated line meets a tall building it must pass beside it; following street lines avoids this.
-- `GridChunkGenerator.getHeight` and heightmaps must account for viaducts so mobs don't spawn on the track.
-
-### Order of work
-
-1. `RailPlan` in `GridLayout` with unit tests: lines are continuous, junctions connect, stations are spaced
-   out.
-2. Placeholder rails built in code (like Phase 1's placeholder towers) to check the layout in-game.
-3. Rail, station and ramp templates and definitions, plus authoring notes in `grid-structures.md`.
-4. Trains.
+- **Templates.** New building kinds for deck halves, on-ramps, junctions, guideways, stations, stairwells and
+  skyway bridges, authored along X like street furniture and rotated per line and half, replacing the code-built
+  placeholders; authoring notes in `grid-structures.md`.
+- **Out to the waypoints.** Rail and skyroads along the highways to the waypoints, with a station at each
+  terminal, so the network doubles as fast travel. Diagonal highways need a rail answer (vanilla rails can't run
+  diagonally).
+- **Trains.** A light-rail train entity instead of vanilla minecarts.
+- **Stations with names and stairs.** Stations are reached by ladders today; stairs or lifts, and signs naming
+  the station and line.
+- **Subway side passages** (like Lost Cities' corridors): maintenance rooms off the tunnels, a home for
+  corrupted programs at higher corruption tiers.
+- **Skyways at several heights** on one street, and skyways in grids with uniform streets' taller blocks.

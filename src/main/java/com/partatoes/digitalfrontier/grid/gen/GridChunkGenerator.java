@@ -124,6 +124,10 @@ public class GridChunkGenerator extends ChunkGenerator {
         if (plan.site() != null) {
             text.add("Grid site: " + plan.site().id());
         }
+        String levels = build.describeLevels();
+        if (!levels.isEmpty()) {
+            text.add("Grid levels: " + levels);
+        }
     }
 
     /**

@@ -12,13 +12,13 @@ class GridLayoutTest {
 
     private static GridLayoutSettings withStreetStyle(GridLayoutSettings d, StreetAxis.StreetStyle style) {
         return new GridLayoutSettings(d.gridSeed(), d.corruption(), d.coreRadius(), d.cityRadius(), d.blockSize(),
-                d.outskirtsRadius(), d.waypointRingRadius(), d.waypointCount(), d.outlandsRadius(), d.districtColors(), style);
+                d.outskirtsRadius(), d.waypointRingRadius(), d.waypointCount(), d.outlandsRadius(), d.districtColors(), style, d.levels());
     }
 
     private static GridLayoutSettings withSeed(long seed) {
         GridLayoutSettings d = DEFAULT;
         return new GridLayoutSettings(seed, d.corruption(), d.coreRadius(), d.cityRadius(), d.blockSize(),
-                d.outskirtsRadius(), d.waypointRingRadius(), d.waypointCount(), d.outlandsRadius(), d.districtColors(), d.streetStyle());
+                d.outskirtsRadius(), d.waypointRingRadius(), d.waypointCount(), d.outlandsRadius(), d.districtColors(), d.streetStyle(), d.levels());
     }
 
     @Test
@@ -244,7 +244,7 @@ class GridLayoutTest {
     private static GridLayoutSettings withSeedAndCorruption(long seed, float corruption) {
         GridLayoutSettings d = DEFAULT;
         return new GridLayoutSettings(seed, corruption, d.coreRadius(), d.cityRadius(), d.blockSize(),
-                d.outskirtsRadius(), d.waypointRingRadius(), d.waypointCount(), d.outlandsRadius(), d.districtColors(), d.streetStyle());
+                d.outskirtsRadius(), d.waypointRingRadius(), d.waypointCount(), d.outlandsRadius(), d.districtColors(), d.streetStyle(), d.levels());
     }
 
     private static List<Site> sitesOfType(GridLayout layout, Site.Type type) {
