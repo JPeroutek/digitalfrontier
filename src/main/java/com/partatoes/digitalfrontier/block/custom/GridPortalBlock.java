@@ -1,6 +1,8 @@
 package com.partatoes.digitalfrontier.block.custom;
 
 import com.partatoes.digitalfrontier.grid.exit.GridExit;
+import com.partatoes.digitalfrontier.grid.stronghold.GridEvent;
+import com.partatoes.digitalfrontier.grid.stronghold.StrongholdManager;
 import com.partatoes.digitalfrontier.world.ModDimensions;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -19,6 +21,7 @@ public class GridPortalBlock extends Block {
     protected void onEntityCollision(BlockState state, World world, BlockPos pos, Entity entity) {
         // A player touches several portal blocks in one tick; only the first one, while they're still here, counts
         if (entity instanceof ServerPlayerEntity player && player.getWorld() == world && ModDimensions.isGrid(world)) {
+            StrongholdManager.fire(player.getServerWorld(), new GridEvent.PortalUsed());
             GridExit.toRealWorld(player);
         }
     }

@@ -62,6 +62,7 @@ public class ModItemGroups {
                                 .forEach(colorMapping -> colorMapping.values().forEach(entries::add));
 
                         entries.add(ModBlocks.STATIC_BLOCK);
+                        entries.add(ModBlocks.STRONGHOLD_UPLINK);
                         ModBlocks.GLITCHED_GRIDSTONE.values().forEach(entries::add);
                     })
                     .build());

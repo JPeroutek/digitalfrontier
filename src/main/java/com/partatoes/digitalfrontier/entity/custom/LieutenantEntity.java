@@ -1,0 +1,247 @@
+package com.partatoes.digitalfrontier.entity.custom;
+
+import com.partatoes.digitalfrontier.entity.ModEntities;
+import com.partatoes.digitalfrontier.grid.stronghold.LieutenantDef;
+import com.partatoes.digitalfrontier.grid.stronghold.Lieutenants;
+import com.partatoes.digitalfrontier.grid.stronghold.StrongholdManager;
+import com.partatoes.digitalfrontier.item.ModItems;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.ai.goal.ActiveTargetGoal;
+import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.entity.ai.goal.LookAroundGoal;
+import net.minecraft.entity.ai.goal.LookAtEntityGoal;
+import net.minecraft.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.entity.ai.goal.RevengeGoal;
+import net.minecraft.entity.ai.goal.SwimGoal;
+import net.minecraft.entity.ai.goal.WanderAroundGoal;
+import net.minecraft.entity.attribute.DefaultAttributeContainer;
+import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.boss.BossBar;
+import net.minecraft.entity.boss.ServerBossBar;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.entity.mob.HostileEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtHelper;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.EnumSet;
+
+/**
+ * A stronghold's lieutenant: a named boss spawned by {@link StrongholdManager} from a {@link LieutenantDef}. Its
+ * name, skin and health come from the definition; how it fights from the definition's archetype. It stays near its
+ * stronghold, and drops an Escape Key when derezzed.
+ */
+public class LieutenantEntity extends HostileEntity {
+    private static final TrackedData<String> TEXTURE = DataTracker.registerData(LieutenantEntity.class, TrackedDataHandlerRegistry.STRING);
+    private static final int LEASH = 24;
+    private static final int MAX_ENFORCERS = 4;
+
+    private final ServerBossBar bossBar = new ServerBossBar(Text.empty(), BossBar.Color.RED, BossBar.Style.NOTCHED_10);
+    @Nullable
+    private Identifier lieutenantId;
+    @Nullable
+    private String strongholdId;
+    private LieutenantDef.Archetype archetype = LieutenantDef.Archetype.RULER;
+    private BlockPos home = BlockPos.ORIGIN;
+    private int abilityCooldown = 100;
+
+    public LieutenantEntity(EntityType<? extends HostileEntity> entityType, World world) {
+        super(entityType, world);
+        this.experiencePoints = 100;
+        setPersistent();
+    }
+
+    public static DefaultAttributeContainer.Builder createLieutenantAttributes() {
+        return HostileEntity.createHostileAttributes()
+                .add(EntityAttributes.MAX_HEALTH, 300)
+                .add(EntityAttributes.ATTACK_DAMAGE, 10)
+                .add(EntityAttributes.MOVEMENT_SPEED, 0.3)
+                .add(EntityAttributes.ARMOR, 8)
+                .add(EntityAttributes.FOLLOW_RANGE, 40)
+                .add(EntityAttributes.KNOCKBACK_RESISTANCE, 0.8);
+    }
+
+    /** Called once when the stronghold spawns it. */
+    public void setup(Lieutenants.Lieutenant lieutenant, String strongholdId, BlockPos home) {
+        LieutenantDef def = lieutenant.def();
+        this.lieutenantId = lieutenant.id();
+        this.strongholdId = strongholdId;
+        this.archetype = def.archetype();
+        this.home = home;
+        setCustomName(def.name());
+        setCustomNameVisible(true);
+        dataTracker.set(TEXTURE, def.textureOrDefault().toString());
+        getAttributeInstance(EntityAttributes.MAX_HEALTH).setBaseValue(def.healthOrDefault());
+        getAttributeInstance(EntityAttributes.MOVEMENT_SPEED).setBaseValue(def.archetype().speed());
+        setHealth(getMaxHealth());
+    }
+
+    @Nullable
+    public String strongholdId() {
+        return strongholdId;
+    }
+
+    @Nullable
+    public Identifier texture() {
+        String texture = dataTracker.get(TEXTURE);
+        return texture.isEmpty() ? null : Identifier.tryParse(texture);
+    }
+
+    @Override
+    protected void initDataTracker(DataTracker.Builder builder) {
+        super.initDataTracker(builder);
+        builder.add(TEXTURE, "");
+    }
+
+    @Override
+    protected void initGoals() {
+        this.goalSelector.add(0, new SwimGoal(this));
+        this.goalSelector.add(2, new MeleeAttackGoal(this, 1.1, true));
+        this.goalSelector.add(3, new ReturnHomeGoal());
+        this.goalSelector.add(5, new WanderAroundGoal(this, 0.6));
+        this.goalSelector.add(6, new LookAtEntityGoal(this, PlayerEntity.class, 16));
+        this.goalSelector.add(7, new LookAroundGoal(this));
+        this.targetSelector.add(1, new RevengeGoal(this));
+        this.targetSelector.add(2, new ActiveTargetGoal<>(this, PlayerEntity.class, true));
+    }
+
+    @Override
+    protected void mobTick(ServerWorld world) {
+        super.mobTick(world);
+        // A copy the stronghold no longer expects (defeated, respawned elsewhere, duplicated) removes itself
+        if (age % 20 == 0 && !StrongholdManager.isCurrent(this)) {
+            discard();
+            return;
+        }
+        bossBar.setName(getDisplayName());
+        bossBar.setPercent(getHealth() / getMaxHealth());
+
+        LivingEntity target = getTarget();
+        if (target == null || --abilityCooldown > 0) {
+            return;
+        }
+        switch (archetype) {
+            case RULER -> summonEnforcers(world);
+            case DUELIST -> dashAt(target);
+        }
+    }
+
+    // The ruler calls its guard: two enforcers at a time, never more than four around it
+    private void summonEnforcers(ServerWorld world) {
+        abilityCooldown = 300;
+        int nearby = world.getEntitiesByClass(EnforcerEntity.class, getBoundingBox().expand(24), entity -> true).size();
+        for (int i = 0; i < 2 && nearby + i < MAX_ENFORCERS; i++) {
+            EnforcerEntity enforcer = ModEntities.ENFORCER.create(world, SpawnReason.MOB_SUMMONED);
+            if (enforcer == null) {
+                return;
+            }
+            enforcer.refreshPositionAndAngles(getX() + random.nextInt(7) - 3, getY(), getZ() + random.nextInt(7) - 3, getYaw(), 0);
+            enforcer.setTarget(getTarget());
+            world.spawnEntity(enforcer);
+        }
+        world.playSound(null, getX(), getY(), getZ(), SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.HOSTILE, 1.5f, 0.5f);
+    }
+
+    // The duelist closes distance in a sudden leap
+    private void dashAt(LivingEntity target) {
+        double distance = distanceTo(target);
+        if (distance < 4 || distance > 14) {
+            abilityCooldown = 10;
+            return;
+        }
+        abilityCooldown = 80;
+        Vec3d toward = target.getPos().subtract(getPos()).normalize();
+        setVelocity(toward.x * 1.6, 0.35, toward.z * 1.6);
+        velocityModified = true;
+        getWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_BREEZE_WIND_BURST, SoundCategory.HOSTILE, 1.0f, 1.4f);
+    }
+
+    @Override
+    public void onDeath(DamageSource damageSource) {
+        super.onDeath(damageSource);
+        if (getWorld() instanceof ServerWorld world) {
+            StrongholdManager.onDefeated(this);
+            dropStack(world, new ItemStack(ModItems.ESCAPE_KEY));
+        }
+    }
+
+    @Override
+    public void onStartedTrackingBy(ServerPlayerEntity player) {
+        super.onStartedTrackingBy(player);
+        bossBar.addPlayer(player);
+    }
+
+    @Override
+    public void onStoppedTrackingBy(ServerPlayerEntity player) {
+        super.onStoppedTrackingBy(player);
+        bossBar.removePlayer(player);
+    }
+
+    @Override
+    public void writeCustomDataToNbt(NbtCompound nbt) {
+        super.writeCustomDataToNbt(nbt);
+        if (lieutenantId != null) {
+            nbt.putString("Lieutenant", lieutenantId.toString());
+        }
+        if (strongholdId != null) {
+            nbt.putString("Stronghold", strongholdId);
+        }
+        nbt.putString("Archetype", archetype.asString());
+        nbt.put("Home", NbtHelper.fromBlockPos(home));
+        nbt.putString("Texture", dataTracker.get(TEXTURE));
+    }
+
+    @Override
+    public void readCustomDataFromNbt(NbtCompound nbt) {
+        super.readCustomDataFromNbt(nbt);
+        lieutenantId = nbt.contains("Lieutenant") ? Identifier.tryParse(nbt.getString("Lieutenant")) : null;
+        strongholdId = nbt.contains("Stronghold") ? nbt.getString("Stronghold") : null;
+        for (LieutenantDef.Archetype candidate : LieutenantDef.Archetype.values()) {
+            if (candidate.asString().equals(nbt.getString("Archetype"))) {
+                archetype = candidate;
+            }
+        }
+        NbtHelper.toBlockPos(nbt, "Home").ifPresent(pos -> home = pos);
+        dataTracker.set(TEXTURE, nbt.getString("Texture"));
+        if (hasCustomName()) {
+            bossBar.setName(getDisplayName());
+        }
+    }
+
+    private class ReturnHomeGoal extends Goal {
+        ReturnHomeGoal() {
+            setControls(EnumSet.of(Control.MOVE));
+        }
+
+        @Override
+        public boolean canStart() {
+            return getTarget() == null && !home.equals(BlockPos.ORIGIN) && home.getSquaredDistance(getPos()) > LEASH * LEASH;
+        }
+
+        @Override
+        public void start() {
+            getNavigation().startMovingTo(home.getX() + 0.5, home.getY(), home.getZ() + 0.5, 1.0);
+        }
+
+        @Override
+        public boolean shouldContinue() {
+            return getTarget() == null && !getNavigation().isIdle();
+        }
+    }
+}

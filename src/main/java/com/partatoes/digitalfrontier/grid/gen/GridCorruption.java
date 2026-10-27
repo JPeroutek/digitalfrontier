@@ -26,7 +26,7 @@ import static com.partatoes.digitalfrontier.grid.layout.GridLayout.FLOOR_Y;
  *   <li>CORRUPTED and up: blocks dissolve into static; buildings break off above a cut and float apart.</li>
  * </ul>
  * Structural effects (holes, shifts, breaks) are skipped on site chunks so terminals, the Portal and strongholds
- * stay intact; their materials still corrupt. Arrival Pads and Portal blocks are never touched.
+ * stay intact; their materials still corrupt. Arrival Pads, Portal blocks and Stronghold Uplinks are never touched.
  */
 final class GridCorruption {
     /** Below this intensity nothing changes. */
@@ -92,7 +92,7 @@ final class GridCorruption {
             }
         }
         BlockState state = source.blockAt(sourceY);
-        if (state.isAir() || state.isOf(ModBlocks.ARRIVAL_PAD) || state.isOf(ModBlocks.GRID_PORTAL)) {
+        if (state.isAir() || state.isOf(ModBlocks.ARRIVAL_PAD) || state.isOf(ModBlocks.GRID_PORTAL) || state.isOf(ModBlocks.STRONGHOLD_UPLINK)) {
             return state;
         }
         if (structural && intensity >= UNSTABLE && hole(seed, intensity, blockX, y, blockZ)) {

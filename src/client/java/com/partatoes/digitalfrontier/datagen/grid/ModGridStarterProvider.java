@@ -46,6 +46,7 @@ public class ModGridStarterProvider implements DataProvider {
     private static final BlockState PAD = ModBlocks.ARRIVAL_PAD.getDefaultState();
     private static final BlockState PORTAL = ModBlocks.GRID_PORTAL.getDefaultState();
     private static final BlockState DARK_GLASS = Blocks.BLACK_STAINED_GLASS.getDefaultState();
+    private static final BlockState UPLINK = ModBlocks.STRONGHOLD_UPLINK.getDefaultState();
     private static final BlockState RED_LIGHT = pattern("full", DyeColor.RED);
     private static final BlockState RED_STRIPE = pattern("center_stripe", DyeColor.RED);
     private static final BlockState RED_TARGET = pattern("thick_target", DyeColor.RED);
@@ -144,7 +145,8 @@ public class ModGridStarterProvider implements DataProvider {
                 .openings(0, 3, 0, 4, AIR)
                 .ring(4, 4, 0, RED_LIGHT)
                 .plate(7, 0, BRICKS)
-                .box(6, 0, 6, 9, 0, 9, RED_TARGET));
+                .box(6, 0, 6, 9, 0, 9, RED_TARGET)
+                .box(1, 0, 8, 1, 0, 8, UPLINK));
         parts.put("grid/starter/stronghold/floor", new StarterPart(16, 6)
                 .ring(0, 4, 1, BRICKS)
                 .openings(1, 3, 1, 2, DARK_GLASS)

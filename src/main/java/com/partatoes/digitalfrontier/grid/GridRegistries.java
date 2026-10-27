@@ -4,6 +4,7 @@ import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.grid.gen.GridBiomeSource;
 import com.partatoes.digitalfrontier.grid.gen.GridChunkGenerator;
 import com.partatoes.digitalfrontier.grid.parts.GridAssetsLoader;
+import com.partatoes.digitalfrontier.grid.stronghold.Lieutenants;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
@@ -18,5 +19,6 @@ public class GridRegistries {
         Registry.register(Registries.CHUNK_GENERATOR, GRID_ID, GridChunkGenerator.CODEC);
         Registry.register(Registries.BIOME_SOURCE, GRID_ID, GridBiomeSource.CODEC);
         ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new GridAssetsLoader());
+        ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new Lieutenants());
     }
 }

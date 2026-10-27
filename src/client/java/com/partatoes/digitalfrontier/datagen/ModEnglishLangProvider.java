@@ -57,6 +57,27 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         ModBlocks.GLITCHED_GRIDSTONE.forEach((color, block) ->
                 translationBuilder.add(block, String.format("%s Glitched Gridstone", toTitle(color.asString()))));
 
+        // Inhabitants and strongholds
+        translationBuilder.add(ModEntities.CORRUPTED_PROGRAM, "Corrupted Program");
+        translationBuilder.add(ModEntities.ENFORCER, "Enforcer");
+        translationBuilder.add(ModEntities.LIEUTENANT, "Lieutenant");
+        translationBuilder.add("lieutenant.digitalfrontier.the_sovereign", "The Sovereign");
+        translationBuilder.add("lieutenant.digitalfrontier.the_warden", "The Warden");
+        translationBuilder.add(ModBlocks.STRONGHOLD_UPLINK, "Stronghold Uplink");
+        translationBuilder.add("message.digitalfrontier.lieutenant_defeated", "%s has been derezzed");
+        translationBuilder.add("message.digitalfrontier.lieutenant_returned", "%s has returned to its stronghold");
+        translationBuilder.add("commands.digitalfrontier.grid.unknown", "There's no loaded grid %s");
+        translationBuilder.add("commands.digitalfrontier.grid.lieutenant.none", "no lieutenant");
+        translationBuilder.add("commands.digitalfrontier.grid.lieutenant.alive", "alive");
+        translationBuilder.add("commands.digitalfrontier.grid.lieutenant.defeated", "defeated %ss ago");
+        translationBuilder.add("commands.digitalfrontier.grid.lieutenant.status", "%s at %s: %s, %s, respawned %s times");
+        translationBuilder.add("commands.digitalfrontier.grid.lieutenant.trigger.counted", "The signal reached a stronghold");
+        translationBuilder.add("commands.digitalfrontier.grid.lieutenant.trigger.ignored", "No defeated lieutenant listens for that signal");
+        translationBuilder.add("commands.digitalfrontier.grid.lieutenant.respawn", "The lieutenant of %s has returned");
+        translationBuilder.add("commands.digitalfrontier.grid.lieutenant.defeat", "The lieutenant of %s is marked defeated");
+        translationBuilder.add("commands.digitalfrontier.grid.lieutenant.defeat.failed", "Couldn't defeat the lieutenant of %s: it isn't alive, or there's no such stronghold");
+        translationBuilder.add("commands.digitalfrontier.grid.lieutenant.respawn.failed","Couldn't bring back the lieutenant of %s: it isn't defeated, or there's no such stronghold");
+
         // Biomes
         translationBuilder.add("biome.digitalfrontier.grid_city_core", "City Core");
         translationBuilder.add("biome.digitalfrontier.grid_city", "City");

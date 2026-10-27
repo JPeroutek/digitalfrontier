@@ -52,6 +52,10 @@ public class ModTextureProvider implements DataProvider {
         futures.add(CompletableFuture.runAsync(() -> createStatic(writer)));
         ModBlocks.GLITCHED_GRIDSTONE.keySet().forEach(color ->
                 futures.add(CompletableFuture.runAsync(() -> createGlitched(writer, color))));
+        for (int i = 0; i < CORRUPTED_PROGRAM_SOURCES.length; i++) {
+            int variant = i;
+            futures.add(CompletableFuture.runAsync(() -> createCorruptedProgram(writer, variant)));
+        }
 
         // Combine all futures into a single future that completes when all variants are done
         return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
@@ -107,6 +111,71 @@ public class ModTextureProvider implements DataProvider {
         String name = "glitched_gridstone_" + color.asString();
         writeAnimated(writer, image, name, 3);
         writeAnimated(writer, glow, name + "_glow", 3);
+    }
+
+    // Program skins that corrupted programs are made from
+    private static final String[] CORRUPTED_PROGRAM_SOURCES = {"quorra64", "sam64", "zuse64"};
+
+    /**
+     * A program skin gone wrong: its glowing circuit lines (bright and blue-ish) turn the regime's red-orange,
+     * everything else loses most of its color, and scattered pixels become static.
+     */
+    private void createCorruptedProgram(DataWriter writer, int variant) {
+        String path = String.format("assets/%s/textures/entity/%s.png", DigitalFrontier.MOD_ID, CORRUPTED_PROGRAM_SOURCES[variant]);
+        BufferedImage source;
+        try (var stream = ModTextureProvider.class.getClassLoader().getResourceAsStream(path)) {
+            if (stream == null) {
+                LOGGER.error("Could not find resource at {}", path);
+                return;
+            }
+            source = ImageIO.read(stream);
+        } catch (IOException e) {
+            LOGGER.error("Failed to load image from {}", path, e);
+            return;
+        }
+        Random random = new Random(0xC0DEL + variant);
+        BufferedImage image = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        for (int y = 0; y < source.getHeight(); y++) {
+            for (int x = 0; x < source.getWidth(); x++) {
+                int pixel = source.getRGB(x, y);
+                int alpha = pixel >>> 24;
+                int r = pixel >> 16 & 0xFF;
+                int g = pixel >> 8 & 0xFF;
+                int b = pixel & 0xFF;
+                int result;
+                if (alpha == 0) {
+                    result = pixel;
+                } else if (random.nextFloat() < 0.08f) {
+                    int gray = 0x30 + random.nextInt(0xB0);
+                    result = alpha << 24 | gray << 16 | gray << 8 | gray;
+                } else if (Math.max(Math.max(r, g), b) > 150 && b >= r) {
+                    int bright = Math.max(Math.max(r, g), b);
+                    result = alpha << 24 | bright << 16 | (bright * 3 / 10) << 8 | (bright / 10);
+                } else {
+                    int gray = (r * 3 + g * 6 + b) / 10;
+                    result = alpha << 24 | mix(r, gray) << 16 | mix(g, gray) << 8 | mix(b, gray);
+                }
+                image.setRGB(x, y, result);
+            }
+        }
+        DataOutput.PathResolver resolver = dataOutput.getResolver(OutputType.RESOURCE_PACK, "textures/entity");
+        writeImage(writer, image, resolver.resolve(Identifier.of(DigitalFrontier.MOD_ID, "corrupted_program_" + variant), "png"));
+    }
+
+    // Mostly gray, with a little of the original color left
+    private static int mix(int channel, int gray) {
+        return (channel + gray * 3) / 4;
+    }
+
+    private void writeImage(DataWriter writer, BufferedImage image, Path path) {
+        try {
+            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+            HashingOutputStream hashing = new HashingOutputStream(Hashing.sha1(), bytes);
+            ImageIO.write(image, "png", hashing);
+            writer.write(path, bytes.toByteArray(), hashing.hash());
+        } catch (IOException e) {
+            LOGGER.error("Failed to save file to {}", path, e);
+        }
     }
 
     private void writeAnimated(DataWriter writer, BufferedImage image, String assetName, int frameTime) {

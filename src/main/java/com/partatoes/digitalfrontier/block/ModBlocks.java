@@ -236,6 +236,13 @@ public class ModBlocks {
                         .registryKey(RegistryKey.of(RegistryKeys.BLOCK, id))));
             }, (a, b) -> a, () -> new EnumMap<>(DyeColor.class)));
 
+    public static final Identifier STRONGHOLD_UPLINK_ID = Identifier.of(DigitalFrontier.MOD_ID, "stronghold_uplink");
+    public static final Block STRONGHOLD_UPLINK = registerBlock(STRONGHOLD_UPLINK_ID,
+            new StrongholdUplinkBlock(AbstractBlock.Settings
+                    .copy(Blocks.OBSIDIAN)
+                    .luminance(state -> state.get(StrongholdUplinkBlock.POWERED) ? 12 : 5)
+                    .registryKey(RegistryKey.of(RegistryKeys.BLOCK, STRONGHOLD_UPLINK_ID))));
+
     // The way out of a grid; only generated at Portal sites, so it can't be broken or crafted
     public static final Identifier GRID_PORTAL_ID = Identifier.of(DigitalFrontier.MOD_ID, "grid_portal");
     public static final Block GRID_PORTAL = registerBlock(GRID_PORTAL_ID,

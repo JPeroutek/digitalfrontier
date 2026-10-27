@@ -39,6 +39,7 @@ public class ModLootTableProvider extends FabricBlockLootTableProvider {
         addDrop(ModBlocks.ARRIVAL_PAD);
         addDrop(ModBlocks.DIGITIZING_LASER);
         addDrop(ModBlocks.GRID_TUNING_LASER);
+        addDrop(ModBlocks.STRONGHOLD_UPLINK);
 
         ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.values()
                 .forEach(colorMapping -> colorMapping.values().forEach(this::addDrop));

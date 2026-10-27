@@ -6,6 +6,8 @@ import com.partatoes.digitalfrontier.grid.arrival.GridArrival;
 import com.partatoes.digitalfrontier.grid.arrival.GridMemory;
 import com.partatoes.digitalfrontier.grid.arrival.TerminalRef;
 import com.partatoes.digitalfrontier.grid.layout.GridLayout;
+import com.partatoes.digitalfrontier.grid.stronghold.GridEvent;
+import com.partatoes.digitalfrontier.grid.stronghold.StrongholdManager;
 import com.partatoes.digitalfrontier.item.ModItems;
 import com.partatoes.digitalfrontier.world.ModDimensions;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
@@ -98,6 +100,7 @@ public final class MemoryPaging {
                 .filter(terminal -> terminal.grid().equals(grid))
                 .orElse(new TerminalRef(grid, GridLayout.MAIN_ARRIVAL_ID));
         player.setAttached(PENDING, target);
+        StrongholdManager.fire(player.getServerWorld(), new GridEvent.MemoryPaged());
     }
 
     // What the keepInventory game rule copies; vanilla skips it for a death without that rule
