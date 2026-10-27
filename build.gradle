@@ -67,6 +67,12 @@ dependencies {
 	// Release jar from Modrinth bundles worldedit-core; the EngineHub SNAPSHOTs drift out of sync with each other
 	modLocalRuntime "maven.modrinth:worldedit:7.3.11"
 
+	// Runs JUnit tests inside Fabric Loader so Minecraft classes are available
+	testImplementation "net.fabricmc:fabric-loader-junit:${project.loader_version}"
+}
+
+test {
+	useJUnitPlatform()
 }
 
 processResources {

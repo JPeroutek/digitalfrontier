@@ -1,0 +1,140 @@
+package com.partatoes.digitalfrontier.grid.gen;
+
+import com.mojang.serialization.MapCodec;
+import com.partatoes.digitalfrontier.grid.layout.ChunkPlan;
+import com.partatoes.digitalfrontier.grid.layout.GridLayout;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.ChunkRegion;
+import net.minecraft.world.HeightLimitView;
+import net.minecraft.world.Heightmap;
+import net.minecraft.world.biome.source.BiomeAccess;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.gen.StructureAccessor;
+import net.minecraft.world.gen.chunk.Blender;
+import net.minecraft.world.gen.chunk.ChunkGenerator;
+import net.minecraft.world.gen.chunk.VerticalBlockSample;
+import net.minecraft.world.gen.noise.NoiseConfig;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
+/**
+ * Generates a grid chunk by chunk from its {@link GridLayout}. Each chunk only ever writes its own blocks,
+ * so generation order doesn't matter.
+ */
+public class GridChunkGenerator extends ChunkGenerator {
+    // The generator's settings live on its biome source, so the dimension JSON holds them only once
+    public static final MapCodec<GridChunkGenerator> CODEC = GridBiomeSource.CODEC.xmap(GridChunkGenerator::new, GridChunkGenerator::gridBiomeSource);
+
+    private static final int MIN_Y = -64;
+    private static final int WORLD_HEIGHT = 384;
+
+    private final GridBiomeSource gridBiomeSource;
+
+    public GridChunkGenerator(GridBiomeSource biomeSource) {
+        super(biomeSource);
+        this.gridBiomeSource = biomeSource;
+    }
+
+    public GridBiomeSource gridBiomeSource() {
+        return gridBiomeSource;
+    }
+
+    public GridLayout layout() {
+        return gridBiomeSource.layout();
+    }
+
+    @Override
+    protected MapCodec<? extends ChunkGenerator> getCodec() {
+        return CODEC;
+    }
+
+    @Override
+    public CompletableFuture<Chunk> populateNoise(Blender blender, NoiseConfig noiseConfig, StructureAccessor structureAccessor, Chunk chunk) {
+        ChunkPos chunkPos = chunk.getPos();
+        ChunkPlan plan = layout().planAt(chunkPos.x, chunkPos.z);
+        Heightmap oceanFloor = chunk.getHeightmap(Heightmap.Type.OCEAN_FLOOR_WG);
+        Heightmap worldSurface = chunk.getHeightmap(Heightmap.Type.WORLD_SURFACE_WG);
+        int bottom = GridTerrain.columnBottom(plan, chunk.getBottomY());
+        BlockPos.Mutable pos = new BlockPos.Mutable();
+
+        for (int localX = 0; localX < 16; localX++) {
+            for (int localZ = 0; localZ < 16; localZ++) {
+                int top = GridTerrain.columnTop(plan, localX, localZ);
+                for (int y = bottom; y <= top; y++) {
+                    BlockState state = GridTerrain.blockAt(plan, localX, y, localZ);
+                    chunk.setBlockState(pos.set(chunkPos.getStartX() + localX, y, chunkPos.getStartZ() + localZ), state, false);
+                    oceanFloor.trackUpdate(localX, y, localZ, state);
+                    worldSurface.trackUpdate(localX, y, localZ, state);
+                }
+            }
+        }
+        return CompletableFuture.completedFuture(chunk);
+    }
+
+    @Override
+    public int getHeight(int x, int z, Heightmap.Type heightmap, HeightLimitView world, NoiseConfig noiseConfig) {
+        // Every block the grid places is solid, so all heightmap types agree
+        ChunkPlan plan = layout().planAt(x >> 4, z >> 4);
+        return GridTerrain.columnTop(plan, x & 15, z & 15) + 1;
+    }
+
+    @Override
+    public VerticalBlockSample getColumnSample(int x, int z, HeightLimitView world, NoiseConfig noiseConfig) {
+        ChunkPlan plan = layout().planAt(x >> 4, z >> 4);
+        int worldBottom = world.getBottomY();
+        BlockState[] states = new BlockState[world.getHeight()];
+        Arrays.fill(states, Blocks.AIR.getDefaultState());
+        int top = Math.min(GridTerrain.columnTop(plan, x & 15, z & 15), worldBottom + states.length - 1);
+        for (int y = GridTerrain.columnBottom(plan, worldBottom); y <= top; y++) {
+            states[y - worldBottom] = GridTerrain.blockAt(plan, x & 15, y, z & 15);
+        }
+        return new VerticalBlockSample(worldBottom, states);
+    }
+
+    @Override
+    public void appendDebugHudText(List<String> text, NoiseConfig noiseConfig, BlockPos pos) {
+        ChunkPlan plan = layout().planAt(pos.getX() >> 4, pos.getZ() >> 4);
+        text.add(String.format("Grid: %s %s floors=%d district=%s", plan.zone(), plan.type(), plan.floors(), plan.district().asString()));
+        text.add(String.format("Grid corruption: %.2f (%s)", plan.corruption(), plan.tier()));
+        if (plan.site() != null) {
+            text.add("Grid site: " + plan.site().id());
+        }
+    }
+
+    @Override
+    public int getSpawnHeight(HeightLimitView world) {
+        return GridLayout.FLOOR_Y + 1;
+    }
+
+    @Override
+    public int getSeaLevel() {
+        return GridLayout.FLOOR_Y;
+    }
+
+    @Override
+    public int getMinimumY() {
+        return MIN_Y;
+    }
+
+    @Override
+    public int getWorldHeight() {
+        return WORLD_HEIGHT;
+    }
+
+    @Override
+    public void carve(ChunkRegion chunkRegion, long seed, NoiseConfig noiseConfig, BiomeAccess biomeAccess, StructureAccessor structureAccessor, Chunk chunk) {
+    }
+
+    @Override
+    public void buildSurface(ChunkRegion region, StructureAccessor structures, NoiseConfig noiseConfig, Chunk chunk) {
+    }
+
+    @Override
+    public void populateEntities(ChunkRegion region) {
+    }
+}

@@ -1,6 +1,7 @@
 package com.partatoes.digitalfrontier.world;
 
 import com.partatoes.digitalfrontier.DigitalFrontier;
+import com.partatoes.digitalfrontier.grid.GridKey;
 import net.minecraft.registry.Registerable;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
@@ -15,10 +16,18 @@ import net.minecraft.world.dimension.DimensionTypes;
 import java.util.OptionalLong;
 
 public class ModDimensions {
-    public static final Identifier DIGITAL_FRONTIER_ID = Identifier.of(DigitalFrontier.MOD_ID, "digitalfrontier");
-    public static final RegistryKey<DimensionOptions> DIGITAL_FRONTIER_KEY = RegistryKey.of(RegistryKeys.DIMENSION, DIGITAL_FRONTIER_ID);
-    public static final RegistryKey<DimensionType> DIGITAL_FRONTIER_TYPE_KEY = RegistryKey.of(RegistryKeys.DIMENSION_TYPE, DIGITAL_FRONTIER_ID);
-    public static final RegistryKey<World> DIGITAL_FRONTIER_WORLD_KEY = RegistryKey.of(RegistryKeys.WORLD, DIGITAL_FRONTIER_ID);
+    // One dimension type shared by every grid
+    public static final Identifier DIGITAL_FRONTIER_TYPE_ID = Identifier.of(DigitalFrontier.MOD_ID, "digitalfrontier");
+    public static final RegistryKey<DimensionType> DIGITAL_FRONTIER_TYPE_KEY = RegistryKey.of(RegistryKeys.DIMENSION_TYPE, DIGITAL_FRONTIER_TYPE_ID);
+
+    // The default grid; tuned grids get their ids from GridKey at runtime
+    public static final Identifier DEFAULT_GRID_ID = Identifier.of(DigitalFrontier.MOD_ID, GridKey.DEFAULT_PATH);
+    public static final RegistryKey<DimensionOptions> DEFAULT_GRID_KEY = RegistryKey.of(RegistryKeys.DIMENSION, DEFAULT_GRID_ID);
+    public static final RegistryKey<World> DEFAULT_GRID_WORLD_KEY = RegistryKey.of(RegistryKeys.WORLD, DEFAULT_GRID_ID);
+
+    public static boolean isGrid(World world) {
+        return world.getDimensionEntry().matchesKey(DIGITAL_FRONTIER_TYPE_KEY);
+    }
 
     public static void bootstrapType(Registerable<DimensionType> context) {
         context.register(DIGITAL_FRONTIER_TYPE_KEY, new DimensionType(
@@ -28,8 +37,8 @@ public class ModDimensions {
                 false, // ultrawarm
                 false, // natural
                 1.0, // coordinateScale
-                true, // bedWorks
-                true, // respawnAnchorWorks
+                false, // bedWorks: players always respawn outside the grid unless something says otherwise
+                false, // respawnAnchorWorks
                 -64, // minY
                 384, // height
                 384, // logicalHeight

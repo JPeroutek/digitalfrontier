@@ -41,3 +41,6 @@ replay_*.log
 
 # generated files
 /src/main/generated/
+
+# fabric-loader-junit writes logs to the working directory
+/logs/

@@ -12,15 +12,27 @@ import net.minecraft.world.biome.GenerationSettings;
 import net.minecraft.world.biome.SpawnSettings;
 
 public class ModBiomes {
+    public static final RegistryKey<Biome> GRID_CITY_CORE = registerKey("grid_city_core");
+    public static final RegistryKey<Biome> GRID_CITY = registerKey("grid_city");
+    public static final RegistryKey<Biome> OUTSKIRTS = registerKey("outskirts");
+    public static final RegistryKey<Biome> OUTLANDS = registerKey("outlands");
     public static final RegistryKey<Biome> UNALLOCATED_SPACE = registerKey("unallocated_space");
 
     public static void bootstrap(Registerable<Biome> context) {
-        context.register(UNALLOCATED_SPACE, new Biome.Builder()
+        context.register(GRID_CITY_CORE, gridBiome(0x0B2A3D));
+        context.register(GRID_CITY, gridBiome(0x0A1F2E));
+        context.register(OUTSKIRTS, gridBiome(0x111A22));
+        context.register(OUTLANDS, gridBiome(0x1C1510));
+        context.register(UNALLOCATED_SPACE, gridBiome(0xA080A0));
+    }
+
+    private static Biome gridBiome(int fogColor) {
+        return new Biome.Builder()
                 .precipitation(false)
                 .temperature(0.5f)
                 .downfall(0.5f)
                 .effects(new BiomeEffects.Builder()
-                        .fogColor(0xA080A0)
+                        .fogColor(fogColor)
                         .skyColor(0x000000)
                         .waterColor(0x3F76E4)
                         .waterFogColor(0x050533)
@@ -28,7 +40,7 @@ public class ModBiomes {
                         .build())
                 .spawnSettings(new SpawnSettings.Builder().build())
                 .generationSettings(new GenerationSettings.Builder().build())
-                .build());
+                .build();
     }
 
     public static RegistryKey<Biome> registerKey(String name) {

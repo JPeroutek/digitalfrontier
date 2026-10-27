@@ -4,6 +4,7 @@ import com.partatoes.digitalfrontier.block.ModBlocks;
 import com.partatoes.digitalfrontier.entity.ModEntities;
 import com.partatoes.digitalfrontier.entity.ModVehicles;
 import com.partatoes.digitalfrontier.entity.custom.ProgramEntity;
+import com.partatoes.digitalfrontier.grid.GridRegistries;
 import com.partatoes.digitalfrontier.item.ModFuelItems;
 import com.partatoes.digitalfrontier.item.ModItemGroups;
 import com.partatoes.digitalfrontier.item.ModItems;
@@ -44,5 +45,6 @@ public class DigitalFrontier implements ModInitializer {
 		ModEntities.registerModEntities();
 
 		ModWorldGeneration.generateModWorldGen();
+		GridRegistries.register();
 	}
 }

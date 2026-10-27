@@ -30,7 +30,7 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add("item.digitalfrontier.luminance_detector.tooltip", "Right click a block to detect luminance ore below it.");
         translationBuilder.add(ModItems.BYTE, "Byte");
         translationBuilder.add(ModItems.LIGHTCYCLE_BATON, "Lightcycle Baton");
-        translationBuilder.add(ModItems.DIMENSION_TELEPORTER, "Dimension Teleporter");
+        translationBuilder.add(ModItems.DIMENSION_TELEPORTER, "Grid Teleporter (Debug)");
 
         translationBuilder.add(ModBlocks.PIXEL_BLOCK, "Pixel");
         translationBuilder.add(ModBlocks.PIXEL_LAMP, "Pixel Lamp");
