@@ -16,10 +16,6 @@ Ideas and planned work for the grid world generator that aren't scheduled into a
 
 ## Corruption and inhabitants
 
-- **More strongholds in corrupted grids.** Every grid has exactly one stronghold today. Grids tuned to high
-  corruption could have two or three, so `all_lieutenants_defeated` and `lieutenant_defeated` chains matter.
-- **Lieutenant loot as data.** Lieutenants always drop an Escape Key; a `loot` field (a loot table id) in the
-  lieutenant definition would let datapacks choose.
 - **A final boss.** `all_lieutenants_defeated` is in place to bring back (or summon) something bigger once the
   whole regime falls.
 - **Real art.** Corrupted programs, enforcers and lieutenants use the Program model with existing or generated

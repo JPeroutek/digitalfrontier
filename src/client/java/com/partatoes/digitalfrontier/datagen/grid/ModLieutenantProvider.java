@@ -3,6 +3,7 @@ package com.partatoes.digitalfrontier.datagen.grid;
 import com.google.gson.JsonElement;
 import com.mojang.serialization.JsonOps;
 import com.partatoes.digitalfrontier.DigitalFrontier;
+import com.partatoes.digitalfrontier.datagen.ModEntityLootProvider;
 import com.partatoes.digitalfrontier.grid.stronghold.LieutenantDef;
 import com.partatoes.digitalfrontier.grid.stronghold.RegistryMatcher;
 import com.partatoes.digitalfrontier.grid.stronghold.Trigger;
@@ -51,6 +52,7 @@ public class ModLieutenantProvider implements DataProvider {
         defs.put("the_sovereign", new LieutenantDef(
                 Text.translatable("lieutenant.digitalfrontier.the_sovereign"),
                 LieutenantDef.Archetype.RULER, Optional.empty(), Optional.empty(), 10, 0f, 1f,
+                Optional.of(ModEntityLootProvider.SOVEREIGN_LOOT),
                 new LieutenantDef.Respawn(DAY, -1, anyOf(
                         new Triggers.Time(7 * DAY),
                         new Triggers.Count(3, new Triggers.PlayerDerezzed(-1)),
@@ -67,7 +69,7 @@ public class ModLieutenantProvider implements DataProvider {
         // The duelist waits for its stronghold to be deserted, then for someone to come back, or for fresh blood
         defs.put("the_warden", new LieutenantDef(
                 Text.translatable("lieutenant.digitalfrontier.the_warden"),
-                LieutenantDef.Archetype.DUELIST, Optional.empty(), Optional.empty(), 10, 0f, 1f,
+                LieutenantDef.Archetype.DUELIST, Optional.empty(), Optional.empty(), 10, 0f, 1f, Optional.empty(),
                 new LieutenantDef.Respawn(DAY / 2, -1, anyOf(
                         new Triggers.StrongholdEntered(DAY),
                         new Triggers.GridEntered(true),

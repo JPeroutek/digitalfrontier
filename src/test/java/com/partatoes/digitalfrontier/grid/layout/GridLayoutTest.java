@@ -175,6 +175,66 @@ class GridLayoutTest {
         assertTrue(layout.highwayDistance(stronghold.chunkX() * 16, stronghold.chunkZ() * 16) > 100);
     }
 
+    private static GridLayoutSettings withSeedAndCorruption(long seed, float corruption) {
+        GridLayoutSettings d = DEFAULT;
+        return new GridLayoutSettings(seed, corruption, d.coreRadius(), d.cityRadius(), d.blockSize(),
+                d.outskirtsRadius(), d.waypointRingRadius(), d.waypointCount(), d.outlandsRadius(), d.districtColors());
+    }
+
+    private static List<Site> sitesOfType(GridLayout layout, Site.Type type) {
+        return layout.sites().stream().filter(site -> site.type() == type).toList();
+    }
+
+    @Test
+    void defaultGridKeepsItsOneStrongholdAndPortal() {
+        // Existing worlds were generated with these; more strongholds must not move them
+        GridLayout layout = new GridLayout(DEFAULT);
+        List<Site> strongholds = sitesOfType(layout, Site.Type.STRONGHOLD);
+        assertEquals(1, strongholds.size());
+        assertEquals(new Site(Site.Type.STRONGHOLD, "stronghold_0", 89, -37), strongholds.getFirst());
+        assertEquals(new Site(Site.Type.PORTAL, "portal_0", -111, 46), sitesOfType(layout, Site.Type.PORTAL).getFirst());
+    }
+
+    @Test
+    void moreCorruptedGridsHaveMoreStrongholds() {
+        assertEquals(1, GridLayout.strongholdCount(0f));
+        assertEquals(1, GridLayout.strongholdCount(0.5f));
+        assertEquals(2, GridLayout.strongholdCount(0.65f));
+        assertEquals(3, GridLayout.strongholdCount(0.85f));
+        for (long seed = 0; seed < 32; seed++) {
+            for (float corruption : new float[]{0.5f, 0.7f, 0.9f}) {
+                GridLayout layout = new GridLayout(withSeedAndCorruption(seed, corruption));
+                List<Site> strongholds = sitesOfType(layout, Site.Type.STRONGHOLD);
+                String where = "seed " + seed + ", corruption " + corruption;
+                assertEquals(GridLayout.strongholdCount(corruption), strongholds.size(), where);
+                assertEquals(strongholds.size(), strongholds.stream().map(Site::id).distinct().count(), where);
+                Site portal = sitesOfType(layout, Site.Type.PORTAL).getFirst();
+                for (Site stronghold : strongholds) {
+                    assertEquals(CorruptionTier.SEVERE, layout.planAt(stronghold.chunkX(), stronghold.chunkZ()).tier(), where);
+                    assertEquals(PlanType.SITE, layout.planAt(stronghold.chunkX(), stronghold.chunkZ()).type(), where);
+                    // Never in the portal's direction
+                    double angle = Math.abs(Math.atan2(stronghold.chunkZ(), stronghold.chunkX()) - Math.atan2(portal.chunkZ(), portal.chunkX()));
+                    assertTrue(Math.min(angle, 2 * Math.PI - angle) > Math.PI / 8, where + ", " + stronghold.id());
+                }
+                // The first stronghold doesn't depend on corruption, so the portal stays opposite it
+                assertEquals(sitesOfType(new GridLayout(withSeed(seed)), Site.Type.STRONGHOLD).getFirst(), strongholds.getFirst(), where);
+            }
+        }
+    }
+
+    @Test
+    void sitesNeverOverlapInCorruptedGrids() {
+        for (long seed = 0; seed < 64; seed++) {
+            List<Site> sites = new GridLayout(withSeedAndCorruption(seed, 1f)).sites();
+            for (int i = 0; i < sites.size(); i++) {
+                for (int j = i + 1; j < sites.size(); j++) {
+                    assertTrue(sites.get(i).distanceTo(sites.get(j).chunkX(), sites.get(j).chunkZ()) > 2 * GridLayout.SITE_RADIUS,
+                            "seed " + seed + ": " + sites.get(i).id() + " overlaps " + sites.get(j).id());
+                }
+            }
+        }
+    }
+
     @Test
     void multiChunkBuildingsAreConsistentTwoByTwoGroups() {
         GridLayout layout = new GridLayout(DEFAULT);

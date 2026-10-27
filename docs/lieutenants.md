@@ -1,7 +1,9 @@
 # Stronghold lieutenants
 
-Every grid has a stronghold deep in its most corrupted territory, and every stronghold has a **lieutenant**: a
-named boss who appears when players come near, and who comes back some time after being derezzed. Lieutenants
+Every grid has strongholds deep in its most corrupted territory, and every stronghold has a **lieutenant**: a
+named boss who appears when players come near, and who comes back some time after being derezzed. How many
+strongholds a grid has depends on its corruption setting (the Grid Tuning Laser's slider): one up to 64% (the
+default grid has 50%), two from 65%, three from 85%. Lieutenants
 are data: a datapack can rename them (for example to lore-accurate TRON names), reskin them, change when they
 return, or add new ones.
 
@@ -23,6 +25,7 @@ Each lieutenant is a file at `data/<namespace>/grid/lieutenant/<name>.json`. The
   "weight": 10,
   "min_grid_corruption": 0.0,
   "max_grid_corruption": 1.0,
+  "loot_table": "digitalfrontier:entities/lieutenant",
   "respawn": {
     "min_delay": 12000,
     "max_respawns": -1,
@@ -39,12 +42,27 @@ Each lieutenant is a file at `data/<namespace>/grid/lieutenant/<name>.json`. The
 | `health` | no | Defaults to 300 (ruler) or 220 (duelist). |
 | `weight` | no (10) | Relative chance when a stronghold picks its lieutenant. |
 | `min_grid_corruption` / `max_grid_corruption` | no (0 / 1) | Only grids whose corruption setting (the Grid Tuning Laser's slider, 0–1) is in this range can have this lieutenant. |
+| `loot_table` | no | What it drops when derezzed (a loot table id). Defaults to `digitalfrontier:entities/lieutenant`. |
 | `respawn.min_delay` | no (0) | Ticks after the defeat before anything can bring it back (24000 ticks = 1 day). |
 | `respawn.max_respawns` | no (-1) | How many times it can come back; -1 for no limit. |
 | `respawn.trigger` | yes | When it comes back; see below. |
 
-Each stronghold picks its lieutenant once, when the grid first needs it, by weight and grid seed. Defeated
-lieutenants drop an Escape Key.
+Each stronghold picks its lieutenant once, when the grid first needs it, by weight and grid seed. Strongholds
+pick in order (`stronghold_0` first), each preferring a lieutenant no other stronghold of the grid has; only once
+every eligible lieutenant is taken do they repeat.
+
+### Loot
+
+Lieutenants drop their `loot_table`, an ordinary loot table (`data/<namespace>/loot_table/...`) with the
+`minecraft:entity` context, so `killed_by_player`, looting and the like all work. The mod ships two:
+
+| Table | Drops |
+|---|---|
+| `digitalfrontier:entities/lieutenant` (the default, used by the Warden) | an Escape Key; a 25% chance of Memory Paging; 2–5 Luminessence |
+| `digitalfrontier:entities/lieutenant/the_sovereign` | the same, but the 25% chance is a Core Dump |
+
+A datapack can point a lieutenant at its own table, or replace either shipped table to change every lieutenant
+that uses it. `"loot_table": "minecraft:empty"` drops nothing.
 
 ### Lore names
 
@@ -91,7 +109,7 @@ them out matches anything. `radius` is in blocks around the stronghold; -1 means
 | `block_placed` | `block`, `radius` (32) | A player places a matching block. |
 | `block_broken` | `block`, `radius` (32) | A player breaks a matching block. |
 | `redstone` | `radius` (32) | A **Stronghold Uplink** receives a redstone signal. Every starter keep has one inside. |
-| `lieutenant_defeated` | `lieutenant`, `others_only` (true) | A lieutenant in this grid is defeated (by default, only another one: when one falls, another rises). |
+| `lieutenant_defeated` | `lieutenant`, `others_only` (true) | A lieutenant in this grid is defeated: by default only one at another stronghold (when one falls, another rises); with `lieutenant` set, only that one. |
 | `player_derezzed` | `radius` (-1) | A player dies in the grid. |
 | `portal_used` | | Someone leaves the grid through its Portal. |
 | `program_derezzed` | `radius` (-1) | A player kills a clean program. |

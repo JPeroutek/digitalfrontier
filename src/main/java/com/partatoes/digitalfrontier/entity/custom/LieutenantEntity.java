@@ -4,7 +4,6 @@ import com.partatoes.digitalfrontier.entity.ModEntities;
 import com.partatoes.digitalfrontier.grid.stronghold.LieutenantDef;
 import com.partatoes.digitalfrontier.grid.stronghold.Lieutenants;
 import com.partatoes.digitalfrontier.grid.stronghold.StrongholdManager;
-import com.partatoes.digitalfrontier.item.ModItems;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.SpawnReason;
@@ -26,9 +25,13 @@ import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
+import net.minecraft.loot.LootTable;
+import net.minecraft.loot.context.LootContextParameters;
+import net.minecraft.loot.context.LootContextTypes;
+import net.minecraft.loot.context.LootWorldContext;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtHelper;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -41,11 +44,12 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
+import java.util.Optional;
 
 /**
  * A stronghold's lieutenant: a named boss spawned by {@link StrongholdManager} from a {@link LieutenantDef}. Its
  * name, skin and health come from the definition; how it fights from the definition's archetype. It stays near its
- * stronghold, and drops an Escape Key when derezzed.
+ * stronghold. What it drops when derezzed is its definition's loot table, or {@code digitalfrontier:entities/lieutenant}.
  */
 public class LieutenantEntity extends HostileEntity {
     private static final TrackedData<String> TEXTURE = DataTracker.registerData(LieutenantEntity.class, TrackedDataHandlerRegistry.STRING);
@@ -175,10 +179,31 @@ public class LieutenantEntity extends HostileEntity {
     @Override
     public void onDeath(DamageSource damageSource) {
         super.onDeath(damageSource);
-        if (getWorld() instanceof ServerWorld world) {
+        if (getWorld() instanceof ServerWorld) {
             StrongholdManager.onDefeated(this);
-            dropStack(world, new ItemStack(ModItems.ESCAPE_KEY));
         }
+    }
+
+    // A definition can name its own loot table; vanilla's death loot would always use the entity type's
+    @Override
+    protected void dropLoot(ServerWorld world, DamageSource source, boolean causedByPlayer) {
+        Lieutenants.Lieutenant lieutenant = lieutenantId == null ? null : Lieutenants.get(lieutenantId);
+        Optional<RegistryKey<LootTable>> table = lieutenant == null ? Optional.empty() : lieutenant.def().lootTable();
+        if (table.isEmpty()) {
+            super.dropLoot(world, source, causedByPlayer);
+            return;
+        }
+        LootWorldContext.Builder context = new LootWorldContext.Builder(world)
+                .add(LootContextParameters.THIS_ENTITY, this)
+                .add(LootContextParameters.ORIGIN, getPos())
+                .add(LootContextParameters.DAMAGE_SOURCE, source)
+                .addOptional(LootContextParameters.ATTACKING_ENTITY, source.getAttacker())
+                .addOptional(LootContextParameters.DIRECT_ATTACKING_ENTITY, source.getSource());
+        if (causedByPlayer && attackingPlayer != null) {
+            context = context.add(LootContextParameters.LAST_DAMAGE_PLAYER, attackingPlayer).luck(attackingPlayer.getLuck());
+        }
+        world.getServer().getReloadableRegistries().getLootTable(table.get())
+                .generateLoot(context.build(LootContextTypes.ENTITY), getLootTableSeed(), stack -> dropStack(world, stack));
     }
 
     @Override

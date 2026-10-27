@@ -80,7 +80,7 @@ public final class StrongholdManager {
                 continue;
             }
             stronghold.fitProgress(lieutenant.respawn().leaves().size());
-            Context context = new Context(grid, state, stronghold, lieutenant, center(site));
+            Context context = new Context(grid, state, site.id(), stronghold, lieutenant, center(site));
             boolean countedHere = false;
             for (Trigger leaf : lieutenant.respawn().leaves()) {
                 if (leaf instanceof Trigger.EventTrigger eventTrigger && eventTrigger.matches(event, context)
@@ -199,7 +199,7 @@ public final class StrongholdManager {
             }
             stronghold.fitProgress(lieutenant.respawn().leaves().size());
             BlockPos center = center(site);
-            Context context = new Context(grid, state, stronghold, lieutenant, center);
+            Context context = new Context(grid, state, site.id(), stronghold, lieutenant, center);
 
             boolean near = playerNear(grid, center);
             if (near && !stronghold.occupied && !stronghold.alive()) {
@@ -280,14 +280,21 @@ public final class StrongholdManager {
     private static Stronghold stronghold(ServerWorld grid, GridLayout layout, StrongholdState state, Site site) {
         Stronghold stronghold = state.get(site.id());
         if (stronghold == null) {
-            stronghold = new Stronghold(pickLieutenant(layout, site).orElse(null));
+            stronghold = new Stronghold(pickLieutenant(layout, state, site).orElse(null));
             state.put(site.id(), stronghold);
         }
         return stronghold;
     }
 
-    private static Optional<Identifier> pickLieutenant(GridLayout layout, Site site) {
+    // Strongholds pick in site order (stronghold_0 first), each preferring a lieutenant no other stronghold of the
+    // grid has; once every eligible lieutenant is taken, they can repeat
+    private static Optional<Identifier> pickLieutenant(GridLayout layout, StrongholdState state, Site site) {
         List<Lieutenant> eligible = Lieutenants.eligible(layout.settings().corruption());
+        List<Identifier> taken = state.all().values().stream().map(Stronghold::lieutenant).toList();
+        List<Lieutenant> untaken = eligible.stream().filter(lieutenant -> !taken.contains(lieutenant.id())).toList();
+        if (!untaken.isEmpty()) {
+            eligible = untaken;
+        }
         if (eligible.isEmpty()) {
             return Optional.empty();
         }
@@ -323,7 +330,8 @@ public final class StrongholdManager {
         grid.getPlayers().forEach(player -> player.sendMessage(message, false));
     }
 
-    private record Context(ServerWorld grid, StrongholdState state, Stronghold stronghold, Lieutenant lieutenantEntry, BlockPos center)
+    private record Context(ServerWorld grid, StrongholdState state, String stronghold, Stronghold record, Lieutenant lieutenantEntry,
+                           BlockPos center)
             implements TriggerContext {
         @Override
         public Identifier lieutenant() {
@@ -332,7 +340,7 @@ public final class StrongholdManager {
 
         @Override
         public long defeatedAt() {
-            return stronghold.defeatedAt();
+            return record.defeatedAt();
         }
 
         @Override
@@ -343,7 +351,7 @@ public final class StrongholdManager {
         @Override
         public int count(Trigger leaf) {
             int index = lieutenantEntry.respawn().index(leaf);
-            return index < stronghold.progress().size() ? stronghold.progress().get(index) : 0;
+            return index < record.progress().size() ? record.progress().get(index) : 0;
         }
 
         @Override

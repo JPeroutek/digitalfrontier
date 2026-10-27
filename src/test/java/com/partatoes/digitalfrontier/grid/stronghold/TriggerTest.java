@@ -149,10 +149,16 @@ class TriggerTest {
         assertTrue(new Triggers.Redstone(10).matches(new GridEvent.Redstone(new BlockPos(5, 65, 5)), context));
         assertFalse(new Triggers.Redstone(10).matches(new GridEvent.Redstone(new BlockPos(20, 65, 0)), context));
         assertTrue(new Triggers.Redstone(-1).matches(new GridEvent.Redstone(new BlockPos(2000, 65, 0)), context));
-        Identifier self = context.lieutenant();
-        Identifier other = Identifier.of("digitalfrontier", "the_warden");
-        assertFalse(new Triggers.LieutenantDefeated(Optional.empty(), true).matches(new GridEvent.LieutenantDefeated(self, "s"), context));
-        assertTrue(new Triggers.LieutenantDefeated(Optional.empty(), true).matches(new GridEvent.LieutenantDefeated(other, "s"), context));
+        // "Others" means other strongholds: two strongholds can have the same lieutenant
+        Identifier sovereign = context.lieutenant();
+        Identifier warden = Identifier.of("digitalfrontier", "the_warden");
+        Triggers.LieutenantDefeated others = new Triggers.LieutenantDefeated(Optional.empty(), true);
+        assertFalse(others.matches(new GridEvent.LieutenantDefeated(sovereign, context.stronghold()), context), "this stronghold");
+        assertTrue(others.matches(new GridEvent.LieutenantDefeated(sovereign, "stronghold_1"), context), "same lieutenant elsewhere");
+        assertTrue(others.matches(new GridEvent.LieutenantDefeated(warden, "stronghold_1"), context));
+        Triggers.LieutenantDefeated onlyWarden = new Triggers.LieutenantDefeated(Optional.of(warden), false);
+        assertTrue(onlyWarden.matches(new GridEvent.LieutenantDefeated(warden, "stronghold_1"), context));
+        assertFalse(onlyWarden.matches(new GridEvent.LieutenantDefeated(sovereign, "stronghold_1"), context));
         assertFalse(new Triggers.PortalUsed().matches(new GridEvent.MemoryPaged(), context));
     }
 
@@ -175,6 +181,10 @@ class TriggerTest {
 
         public Identifier lieutenant() {
             return Identifier.of("digitalfrontier", "the_sovereign");
+        }
+
+        public String stronghold() {
+            return "stronghold_0";
         }
 
         public long defeatedAt() {
@@ -205,5 +215,15 @@ class TriggerTest {
         assertEquals(LieutenantDef.Archetype.RULER, def.archetype());
         assertEquals(300, def.healthOrDefault());
         assertEquals(3, def.respawn().maxRespawns());
+        assertTrue(def.lootTable().isEmpty(), "no loot_table: the entity type's default table");
+    }
+
+    @Test
+    void definitionsCanNameALootTable() {
+        String json = """
+                {"name": "Rinzler", "archetype": "duelist", "loot_table": "mypack:entities/rinzler",
+                 "respawn": {"trigger": {"type": "function"}}}""";
+        LieutenantDef def = LieutenantDef.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseString(json)).getOrThrow();
+        assertEquals(Identifier.of("mypack", "entities/rinzler"), def.lootTable().orElseThrow().getValue());
     }
 }

@@ -13,6 +13,9 @@ public interface TriggerContext {
 
     Identifier lieutenant();
 
+    /** The stronghold's site id, e.g. {@code stronghold_0}. */
+    String stronghold();
+
     /** Game time (of the grid world) when the lieutenant was defeated. */
     long defeatedAt();
 

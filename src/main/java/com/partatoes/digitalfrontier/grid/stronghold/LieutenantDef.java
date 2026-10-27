@@ -3,6 +3,9 @@ package com.partatoes.digitalfrontier.grid.stronghold;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.partatoes.digitalfrontier.DigitalFrontier;
+import net.minecraft.loot.LootTable;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextCodecs;
 import net.minecraft.util.Identifier;
@@ -16,6 +19,8 @@ import java.util.Optional;
  * comes back after being defeated. Its fighting style is one of the built-in {@link Archetype}s.
  *
  * @param minGridCorruption only strongholds of grids tuned at least this corrupt (0 to 1) can have this lieutenant
+ * @param lootTable         what it drops when derezzed; without one, the lieutenant entity's default table
+ *                          ({@code digitalfrontier:entities/lieutenant})
  */
 public record LieutenantDef(
         Text name,
@@ -25,6 +30,7 @@ public record LieutenantDef(
         int weight,
         float minGridCorruption,
         float maxGridCorruption,
+        Optional<RegistryKey<LootTable>> lootTable,
         Respawn respawn) {
 
     public static final Codec<LieutenantDef> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -35,6 +41,7 @@ public record LieutenantDef(
             Codec.intRange(1, 1000).optionalFieldOf("weight", 10).forGetter(LieutenantDef::weight),
             Codec.floatRange(0, 1).optionalFieldOf("min_grid_corruption", 0f).forGetter(LieutenantDef::minGridCorruption),
             Codec.floatRange(0, 1).optionalFieldOf("max_grid_corruption", 1f).forGetter(LieutenantDef::maxGridCorruption),
+            RegistryKey.createCodec(RegistryKeys.LOOT_TABLE).optionalFieldOf("loot_table").forGetter(LieutenantDef::lootTable),
             Respawn.CODEC.fieldOf("respawn").forGetter(LieutenantDef::respawn)
     ).apply(instance, LieutenantDef::new));
 

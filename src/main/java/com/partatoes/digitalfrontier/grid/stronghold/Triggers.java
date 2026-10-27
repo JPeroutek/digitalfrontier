@@ -283,7 +283,10 @@ public final class Triggers {
         }
     }
 
-    /** A lieutenant of this grid fell: by default only a different one (when one falls, another rises). */
+    /**
+     * A lieutenant of this grid fell: by default only one at another stronghold (when one falls, another rises).
+     * With {@code lieutenant} set, only that lieutenant counts.
+     */
     public record LieutenantDefeated(Optional<Identifier> lieutenant, boolean othersOnly) implements EventTrigger {
         static final String TYPE = "lieutenant_defeated";
         static final MapCodec<LieutenantDefeated> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
@@ -296,7 +299,7 @@ public final class Triggers {
 
         public boolean matches(GridEvent event, TriggerContext context) {
             return event instanceof GridEvent.LieutenantDefeated defeated
-                    && (!othersOnly || !defeated.lieutenant().equals(context.lieutenant()))
+                    && (!othersOnly || !defeated.stronghold().equals(context.stronghold()))
                     && lieutenant.map(id -> id.equals(defeated.lieutenant())).orElse(true);
         }
     }

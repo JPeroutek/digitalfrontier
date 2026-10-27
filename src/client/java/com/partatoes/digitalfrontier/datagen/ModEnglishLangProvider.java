@@ -97,7 +97,7 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add("screen.digitalfrontier.grid_tuning", "Grid Tuning");
         translationBuilder.add("screen.digitalfrontier.grid_tuning.seed", "Seed");
         translationBuilder.add("screen.digitalfrontier.grid_tuning.random", "Random");
-        translationBuilder.add("screen.digitalfrontier.grid_tuning.corruption", "Corruption: %s%%");
+        translationBuilder.add("screen.digitalfrontier.grid_tuning.corruption", "Corruption: %s%% (strongholds: %s)");
         translationBuilder.add("screen.digitalfrontier.grid_tuning.city_radius", "City radius: %s chunks (%s blocks)");
         translationBuilder.add("screen.digitalfrontier.grid_tuning.block_size", "City blocks");
         translationBuilder.add("screen.digitalfrontier.grid_tuning.waypoints", "Waypoints");

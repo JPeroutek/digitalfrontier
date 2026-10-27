@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.IntStream;
 
 /**
  * The macro map of one grid. A pure function of {@link GridLayoutSettings}: no world access, so every
@@ -29,6 +30,7 @@ public final class GridLayout {
     private static final int SALT_MULTI = 6;
     private static final int SALT_MULTI_OFFSET_X = 7;
     private static final int SALT_MULTI_OFFSET_Z = 8;
+    private static final int SALT_EXTRA_STRONGHOLDS = 9;
 
     private final GridLayoutSettings settings;
     private final List<Site> sites;
@@ -56,12 +58,25 @@ public final class GridLayout {
         }
         allSites.addAll(waypointSites);
 
-        // Strongholds and portals sit between the 8 waypoint directions, so they never collide with a waypoint
-        double strongholdAngle = (GridRandom.nextInt(GridRandom.hash(seed, 0, 0, SALT_STRONGHOLD), 8) + 0.5) * Math.PI / 4;
-        Site stronghold = siteOnRing(Site.Type.STRONGHOLD, "stronghold_0", strongholdAngle,
-                (settings.outskirtsRadius() + settings.outlandsRadius()) / 2);
-        allSites.add(stronghold);
-        allSites.add(siteOnRing(Site.Type.PORTAL, "portal_0", strongholdAngle + Math.PI, settings.outlandsRadius() - 8));
+        // Strongholds and the portal sit in the 8 slots between the waypoint directions, so they never collide with
+        // a waypoint. The portal is opposite the first stronghold; more corrupted grids get more strongholds, in
+        // other slots picked by the seed.
+        int firstSlot = GridRandom.nextInt(GridRandom.hash(seed, 0, 0, SALT_STRONGHOLD), 8);
+        int portalSlot = (firstSlot + 4) % 8;
+        List<Integer> slots = new ArrayList<>(List.of(firstSlot));
+        IntStream.range(0, 8)
+                .filter(slot -> slot != firstSlot && slot != portalSlot)
+                .boxed()
+                .sorted(Comparator.comparingLong(slot -> GridRandom.hash(seed, slot, 0, SALT_EXTRA_STRONGHOLDS)))
+                .limit(strongholdCount(settings.corruption()) - 1)
+                .forEach(slots::add);
+        List<Site> strongholds = new ArrayList<>();
+        for (int i = 0; i < slots.size(); i++) {
+            strongholds.add(siteOnRing(Site.Type.STRONGHOLD, "stronghold_" + i, slotAngle(slots.get(i)),
+                    (settings.outskirtsRadius() + settings.outlandsRadius()) / 2));
+        }
+        allSites.addAll(strongholds);
+        allSites.add(siteOnRing(Site.Type.PORTAL, "portal_0", slotAngle(portalSlot), settings.outlandsRadius() - 8));
 
         this.sites = List.copyOf(allSites);
         this.waypoints = List.copyOf(waypointSites);
@@ -69,8 +84,21 @@ public final class GridLayout {
         for (Site site : sites) {
             sitesByChunk.put(chunkKey(site.chunkX(), site.chunkZ()), site);
         }
-        this.corruption = new CorruptionField(settings, List.of(stronghold));
+        this.corruption = new CorruptionField(settings, List.copyOf(strongholds));
         this.districtRotation = GridRandom.unit(GridRandom.hash(seed, 0, 0, SALT_DISTRICTS)) * Math.PI * 2;
+    }
+
+    /** One stronghold up to 64% corruption (the default grid has 50%), two up to 84%, three above that. */
+    public static int strongholdCount(float corruption) {
+        if (corruption >= 0.85f) {
+            return 3;
+        }
+        return corruption >= 0.65f ? 2 : 1;
+    }
+
+    // The middle of one of the 8 gaps between waypoint directions
+    private static double slotAngle(int slot) {
+        return (slot + 0.5) * Math.PI / 4;
     }
 
     public GridLayoutSettings settings() {

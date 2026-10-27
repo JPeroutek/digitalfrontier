@@ -1,6 +1,7 @@
 package com.partatoes.digitalfrontier.screen;
 
 import com.partatoes.digitalfrontier.grid.GridKey;
+import com.partatoes.digitalfrontier.grid.layout.GridLayout;
 import com.partatoes.digitalfrontier.grid.tuning.GridTuning;
 import com.partatoes.digitalfrontier.grid.tuning.GridTuningNetworking;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -64,7 +65,8 @@ public class GridTuningScreen extends Screen {
         y += ROW;
 
         addDrawableChild(new IntSlider(left, y, WIDTH, 0, 100, tuning.corruptionPercent(),
-                value -> Text.translatable("screen.digitalfrontier.grid_tuning.corruption", value),
+                value -> Text.translatable("screen.digitalfrontier.grid_tuning.corruption", value,
+                        GridLayout.strongholdCount(value / 100f)),
                 value -> update(tuning.withCorruptionPercent(value))));
         y += ROW;
         addDrawableChild(new IntSlider(left, y, WIDTH, GridTuning.MIN_CITY_RADIUS, GridTuning.MAX_CITY_RADIUS, tuning.cityRadius(),
