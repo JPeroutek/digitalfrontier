@@ -3,6 +3,7 @@ package com.partatoes.digitalfrontier.grid.gen;
 import com.mojang.serialization.MapCodec;
 import com.partatoes.digitalfrontier.grid.layout.ChunkPlan;
 import com.partatoes.digitalfrontier.grid.layout.GridLayout;
+import com.partatoes.digitalfrontier.grid.parts.GridAssets;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -56,17 +57,20 @@ public class GridChunkGenerator extends ChunkGenerator {
     @Override
     public CompletableFuture<Chunk> populateNoise(Blender blender, NoiseConfig noiseConfig, StructureAccessor structureAccessor, Chunk chunk) {
         ChunkPos chunkPos = chunk.getPos();
-        ChunkPlan plan = layout().planAt(chunkPos.x, chunkPos.z);
+        GridChunkBuild build = build(chunkPos.x, chunkPos.z);
         Heightmap oceanFloor = chunk.getHeightmap(Heightmap.Type.OCEAN_FLOOR_WG);
         Heightmap worldSurface = chunk.getHeightmap(Heightmap.Type.WORLD_SURFACE_WG);
-        int bottom = GridTerrain.columnBottom(plan, chunk.getBottomY());
+        int bottom = GridTerrain.columnBottom(build.plan(), chunk.getBottomY());
+        int top = Math.min(build.maxY(), chunk.getTopYInclusive());
         BlockPos.Mutable pos = new BlockPos.Mutable();
 
         for (int localX = 0; localX < 16; localX++) {
             for (int localZ = 0; localZ < 16; localZ++) {
-                int top = GridTerrain.columnTop(plan, localX, localZ);
                 for (int y = bottom; y <= top; y++) {
-                    BlockState state = GridTerrain.blockAt(plan, localX, y, localZ);
+                    BlockState state = build.blockAt(localX, y, localZ);
+                    if (state.isAir()) {
+                        continue;
+                    }
                     chunk.setBlockState(pos.set(chunkPos.getStartX() + localX, y, chunkPos.getStartZ() + localZ), state, false);
                     oceanFloor.trackUpdate(localX, y, localZ, state);
                     worldSurface.trackUpdate(localX, y, localZ, state);
@@ -78,32 +82,43 @@ public class GridChunkGenerator extends ChunkGenerator {
 
     @Override
     public int getHeight(int x, int z, Heightmap.Type heightmap, HeightLimitView world, NoiseConfig noiseConfig) {
-        // Every block the grid places is solid, so all heightmap types agree
-        ChunkPlan plan = layout().planAt(x >> 4, z >> 4);
-        return GridTerrain.columnTop(plan, x & 15, z & 15) + 1;
+        // Close enough for spawning and structure checks: the first non-air block counts for every heightmap type
+        return build(x >> 4, z >> 4).columnTop(x & 15, z & 15) + 1;
     }
 
     @Override
     public VerticalBlockSample getColumnSample(int x, int z, HeightLimitView world, NoiseConfig noiseConfig) {
-        ChunkPlan plan = layout().planAt(x >> 4, z >> 4);
+        GridChunkBuild build = build(x >> 4, z >> 4);
         int worldBottom = world.getBottomY();
         BlockState[] states = new BlockState[world.getHeight()];
         Arrays.fill(states, Blocks.AIR.getDefaultState());
-        int top = Math.min(GridTerrain.columnTop(plan, x & 15, z & 15), worldBottom + states.length - 1);
-        for (int y = GridTerrain.columnBottom(plan, worldBottom); y <= top; y++) {
-            states[y - worldBottom] = GridTerrain.blockAt(plan, x & 15, y, z & 15);
+        int top = Math.min(build.maxY(), worldBottom + states.length - 1);
+        for (int y = GridTerrain.columnBottom(build.plan(), worldBottom); y <= top; y++) {
+            states[y - worldBottom] = build.blockAt(x & 15, y, z & 15);
         }
         return new VerticalBlockSample(worldBottom, states);
     }
 
     @Override
     public void appendDebugHudText(List<String> text, NoiseConfig noiseConfig, BlockPos pos) {
-        ChunkPlan plan = layout().planAt(pos.getX() >> 4, pos.getZ() >> 4);
+        GridChunkBuild build = build(pos.getX() >> 4, pos.getZ() >> 4);
+        ChunkPlan plan = build.plan();
         text.add(String.format("Grid: %s %s floors=%d district=%s", plan.zone(), plan.type(), plan.floors(), plan.district().asString()));
         text.add(String.format("Grid corruption: %.2f (%s)", plan.corruption(), plan.tier()));
+        if (build.buildingId() != null) {
+            text.add("Grid building: " + build.buildingId());
+        }
+        if (plan.multiChunk() != null) {
+            text.add(String.format("Grid multi-chunk origin: %d, %d%s", plan.multiChunk().originX(), plan.multiChunk().originZ(),
+                    plan.multiChunk().landmark() ? " (landmark)" : ""));
+        }
         if (plan.site() != null) {
             text.add("Grid site: " + plan.site().id());
         }
+    }
+
+    private GridChunkBuild build(int chunkX, int chunkZ) {
+        return GridChunkBuild.resolve(layout(), GridAssets.current(), chunkX, chunkZ);
     }
 
     @Override

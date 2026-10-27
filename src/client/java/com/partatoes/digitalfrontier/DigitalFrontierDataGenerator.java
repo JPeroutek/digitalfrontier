@@ -1,6 +1,7 @@
 package com.partatoes.digitalfrontier;
 
 import com.partatoes.digitalfrontier.datagen.*;
+import com.partatoes.digitalfrontier.datagen.grid.ModGridStarterProvider;
 import com.partatoes.digitalfrontier.world.ModBiomes;
 import com.partatoes.digitalfrontier.world.ModConfiguredFeatures;
 import com.partatoes.digitalfrontier.world.ModDimensions;
@@ -22,6 +23,7 @@ public class DigitalFrontierDataGenerator implements DataGeneratorEntrypoint {
 		pack.addProvider(ModRecipeProvider::new);
 		pack.addProvider(ModWorldGenerator::new);
 		pack.addProvider(ModDimensionProvider::new);
+		pack.addProvider(ModGridStarterProvider::new);
 		pack.addProvider(ModEnglishLangProvider::new);
 		pack.addProvider(ModTextureProvider::new);
 	}

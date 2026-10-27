@@ -69,6 +69,41 @@ class GridLayoutTest {
     }
 
     @Test
+    void multiChunkBuildingsAreConsistentTwoByTwoGroups() {
+        GridLayout layout = new GridLayout(DEFAULT);
+        int groups = 0;
+        for (int x = -40; x <= 40; x++) {
+            for (int z = -40; z <= 40; z++) {
+                ChunkPlan plan = layout.planAt(x, z);
+                MultiChunk multi = plan.multiChunk();
+                if (multi == null || multi.originX() != x || multi.originZ() != z) {
+                    continue;
+                }
+                groups++;
+                for (int dx = 0; dx < MultiChunk.SIZE; dx++) {
+                    for (int dz = 0; dz < MultiChunk.SIZE; dz++) {
+                        ChunkPlan member = layout.planAt(x + dx, z + dz);
+                        assertEquals(PlanType.BUILDING, member.type(), "member of " + x + "," + z);
+                        assertEquals(multi, member.multiChunk(), "member of " + x + "," + z);
+                        assertEquals(plan.floors(), member.floors(), "floors of " + x + "," + z);
+                        assertEquals(plan.district(), member.district(), "district of " + x + "," + z);
+                    }
+                }
+            }
+        }
+        assertTrue(groups > 10, "expected a reasonable number of 2x2 buildings, got " + groups);
+    }
+
+    @Test
+    void landmarkSitsNextToTheCityCenter() {
+        MultiChunk landmark = new GridLayout(DEFAULT).planAt(1, 1).multiChunk();
+        assertNotNull(landmark);
+        assertTrue(landmark.landmark());
+        assertEquals(1, landmark.originX());
+        assertEquals(1, landmark.originZ());
+    }
+
+    @Test
     void sitesNeverOverlap() {
         for (long seed = 0; seed < 64; seed++) {
             List<Site> sites = new GridLayout(withSeed(seed)).sites();

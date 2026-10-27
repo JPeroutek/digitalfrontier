@@ -1,6 +1,7 @@
 package com.partatoes.digitalfrontier.grid.layout;
 
 import net.minecraft.util.DyeColor;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,6 +24,9 @@ public final class GridLayout {
     private static final int SALT_DISTRICTS = 3;
     private static final int SALT_PLAN = 4;
     private static final int SALT_FLOORS = 5;
+    private static final int SALT_MULTI = 6;
+    private static final int SALT_MULTI_OFFSET_X = 7;
+    private static final int SALT_MULTI_OFFSET_Z = 8;
 
     private final GridLayoutSettings settings;
     private final List<Site> sites;
@@ -107,11 +111,10 @@ public final class GridLayout {
 
         Site site = sitesByChunk.get(chunkKey(chunkX, chunkZ));
         if (site != null) {
-            return new ChunkPlan(zone, PlanType.SITE, 0, district, false, false, false, site, intensity, tier);
+            return new ChunkPlan(zone, PlanType.SITE, 0, district, false, false, false, site, null, intensity, tier);
         }
 
         long roll = GridRandom.hash(settings.gridSeed(), chunkX, chunkZ, SALT_PLAN);
-        int floorRoll = GridRandom.nextInt(GridRandom.hash(settings.gridSeed(), chunkX, chunkZ, SALT_FLOORS), 1 << 16);
         return switch (zone) {
             case CITY_CORE, CITY -> {
                 int period = settings.blockSize() + 1;
@@ -119,21 +122,81 @@ public final class GridLayout {
                 boolean streetZ = Math.floorMod(chunkX, period) == 0;
                 if (streetX || streetZ) {
                     boolean avenue = (streetX && chunkZ == 0) || (streetZ && chunkX == 0);
-                    yield new ChunkPlan(zone, PlanType.STREET, 0, district, streetX, streetZ, avenue, null, intensity, tier);
+                    yield new ChunkPlan(zone, PlanType.STREET, 0, district, streetX, streetZ, avenue, null, null, intensity, tier);
+                }
+                MultiChunk multi = multiChunkAt(chunkX, chunkZ);
+                if (multi != null) {
+                    // Every quarter takes its height and color from the origin so the building is consistent
+                    int floors = multi.landmark() ? maxFloors(multi.originX(), multi.originZ()) : cityFloors(multi.originX(), multi.originZ());
+                    yield new ChunkPlan(zone, PlanType.BUILDING, floors, districtAt(multi.originX(), multi.originZ()),
+                            false, false, false, null, multi, intensity, tier);
                 }
                 if (zone == Zone.CITY && GridRandom.unit(roll) < 0.08) {
-                    yield new ChunkPlan(zone, PlanType.PLAZA, 0, district, false, false, false, null, intensity, tier);
+                    yield new ChunkPlan(zone, PlanType.PLAZA, 0, district, false, false, false, null, null, intensity, tier);
                 }
-                int maxFloors = maxFloors(chunkX, chunkZ);
-                int floors = maxFloors / 2 + floorRoll % (maxFloors - maxFloors / 2 + 1);
-                yield new ChunkPlan(zone, PlanType.BUILDING, Math.max(1, floors), district, false, false, false, null, intensity, tier);
+                yield new ChunkPlan(zone, PlanType.BUILDING, cityFloors(chunkX, chunkZ), district, false, false, false, null, null, intensity, tier);
             }
             case OUTSKIRTS -> GridRandom.unit(roll) < 0.12
-                    ? new ChunkPlan(zone, PlanType.BUILDING, 1 + floorRoll % 2, district, false, false, false, null, intensity, tier)
-                    : new ChunkPlan(zone, PlanType.OPEN, 0, district, false, false, false, null, intensity, tier);
-            case WAYPOINT -> new ChunkPlan(zone, PlanType.PLAZA, 0, district, false, false, false, null, intensity, tier);
-            case OUTLANDS, UNALLOCATED -> new ChunkPlan(zone, PlanType.OPEN, 0, district, false, false, false, null, intensity, tier);
+                    ? new ChunkPlan(zone, PlanType.BUILDING, 1 + floorRoll(chunkX, chunkZ) % 2, district, false, false, false, null, null, intensity, tier)
+                    : new ChunkPlan(zone, PlanType.OPEN, 0, district, false, false, false, null, null, intensity, tier);
+            case WAYPOINT -> new ChunkPlan(zone, PlanType.PLAZA, 0, district, false, false, false, null, null, intensity, tier);
+            case OUTLANDS, UNALLOCATED -> new ChunkPlan(zone, PlanType.OPEN, 0, district, false, false, false, null, null, intensity, tier);
         };
+    }
+
+    /**
+     * City blocks (the chunks between streets) may hold one 2×2-chunk building. The block nearest the
+     * city center always does: that's the landmark tower. Groups that would spill out of the city are dropped.
+     */
+    @Nullable
+    private MultiChunk multiChunkAt(int chunkX, int chunkZ) {
+        int blockSize = settings.blockSize();
+        if (blockSize < MultiChunk.SIZE) {
+            return null;
+        }
+        int period = blockSize + 1;
+        int blockX = Math.floorDiv(chunkX, period);
+        int blockZ = Math.floorDiv(chunkZ, period);
+        int firstX = blockX * period + 1;
+        int firstZ = blockZ * period + 1;
+        long seed = settings.gridSeed();
+
+        boolean landmark = blockX == 0 && blockZ == 0;
+        int offsetX = 0;
+        int offsetZ = 0;
+        if (!landmark) {
+            double chance = zoneAt(firstX, firstZ) == Zone.CITY_CORE ? 0.5 : 0.25;
+            if (GridRandom.unit(GridRandom.hash(seed, blockX, blockZ, SALT_MULTI)) >= chance) {
+                return null;
+            }
+            int slack = blockSize - MultiChunk.SIZE + 1;
+            offsetX = GridRandom.nextInt(GridRandom.hash(seed, blockX, blockZ, SALT_MULTI_OFFSET_X), slack);
+            offsetZ = GridRandom.nextInt(GridRandom.hash(seed, blockX, blockZ, SALT_MULTI_OFFSET_Z), slack);
+        }
+
+        int originX = firstX + offsetX;
+        int originZ = firstZ + offsetZ;
+        if (chunkX < originX || chunkX >= originX + MultiChunk.SIZE || chunkZ < originZ || chunkZ >= originZ + MultiChunk.SIZE) {
+            return null;
+        }
+        for (int dx = 0; dx < MultiChunk.SIZE; dx++) {
+            for (int dz = 0; dz < MultiChunk.SIZE; dz++) {
+                Zone zone = zoneAt(originX + dx, originZ + dz);
+                if (zone != Zone.CITY && zone != Zone.CITY_CORE) {
+                    return null;
+                }
+            }
+        }
+        return new MultiChunk(originX, originZ, landmark);
+    }
+
+    private int cityFloors(int chunkX, int chunkZ) {
+        int maxFloors = maxFloors(chunkX, chunkZ);
+        return Math.max(1, maxFloors / 2 + floorRoll(chunkX, chunkZ) % (maxFloors - maxFloors / 2 + 1));
+    }
+
+    private int floorRoll(int chunkX, int chunkZ) {
+        return GridRandom.nextInt(GridRandom.hash(settings.gridSeed(), chunkX, chunkZ, SALT_FLOORS), 1 << 16);
     }
 
     /** Tallest building allowed at this chunk: up to 24 floors in the core, tapering to 3 at the city edge. */
