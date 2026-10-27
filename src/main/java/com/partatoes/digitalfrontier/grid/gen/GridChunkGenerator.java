@@ -3,6 +3,7 @@ package com.partatoes.digitalfrontier.grid.gen;
 import com.mojang.serialization.MapCodec;
 import com.partatoes.digitalfrontier.grid.layout.ChunkPlan;
 import com.partatoes.digitalfrontier.grid.layout.GridLayout;
+import com.partatoes.digitalfrontier.grid.layout.Site;
 import com.partatoes.digitalfrontier.grid.parts.GridAssets;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -115,6 +116,19 @@ public class GridChunkGenerator extends ChunkGenerator {
         if (plan.site() != null) {
             text.add("Grid site: " + plan.site().id());
         }
+    }
+
+    /**
+     * Where a player arriving at a terminal stands: on top of the Arrival Pad in the terminal's template, or the
+     * middle of the site chunk if it has none. Worked out from the layout alone, so the chunk needn't be loaded.
+     */
+    public BlockPos arrivalPos(Site terminal) {
+        GridChunkBuild build = build(terminal.chunkX(), terminal.chunkZ());
+        BlockPos pad = build.arrivalPad();
+        if (pad != null) {
+            return pad.up();
+        }
+        return new BlockPos(terminal.chunkX() * 16 + 8, build.columnTop(8, 8) + 1, terminal.chunkZ() * 16 + 8);
     }
 
     private GridChunkBuild build(int chunkX, int chunkZ) {

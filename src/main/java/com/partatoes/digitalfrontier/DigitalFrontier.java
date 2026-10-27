@@ -1,10 +1,12 @@
 package com.partatoes.digitalfrontier;
 
 import com.partatoes.digitalfrontier.block.ModBlocks;
+import com.partatoes.digitalfrontier.block.entity.ModBlockEntities;
 import com.partatoes.digitalfrontier.entity.ModEntities;
 import com.partatoes.digitalfrontier.entity.ModVehicles;
 import com.partatoes.digitalfrontier.entity.custom.ProgramEntity;
 import com.partatoes.digitalfrontier.grid.GridRegistries;
+import com.partatoes.digitalfrontier.grid.arrival.GridArrival;
 import com.partatoes.digitalfrontier.item.ModFuelItems;
 import com.partatoes.digitalfrontier.item.ModItemGroups;
 import com.partatoes.digitalfrontier.item.ModItems;
@@ -35,6 +37,7 @@ public class DigitalFrontier implements ModInitializer {
 		ModItemGroups.registerItemGroups();
 		ModItems.registerModItems();
 		ModBlocks.registerModBlocks();
+		ModBlockEntities.registerModBlockEntities();
 		ModFuelItems.registerModFuelItems();
 
 		// Vehicle Registration
@@ -46,5 +49,6 @@ public class DigitalFrontier implements ModInitializer {
 
 		ModWorldGeneration.generateModWorldGen();
 		GridRegistries.register();
+		GridArrival.register();
 	}
 }

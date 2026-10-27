@@ -198,6 +198,20 @@ public class ModBlocks {
                     .emissiveLighting((state, world, pos) -> state.get(LightBarrierEmitterBlock.POWERED)) // Should always create light, regardless of state.  This may not be needed?
             ));
 
+    // Marks where players arrive in a grid terminal template; the generator looks for it when loading parts
+    public static final Identifier ARRIVAL_PAD_ID = Identifier.of(DigitalFrontier.MOD_ID, "arrival_pad");
+    public static final Block ARRIVAL_PAD = registerBlock(ARRIVAL_PAD_ID,
+            new Block(AbstractBlock.Settings
+                    .copy(ModBlocks.GRIDSTONE_BLOCK)
+                    .luminance(state -> 12)
+                    .registryKey(RegistryKey.of(RegistryKeys.BLOCK, ARRIVAL_PAD_ID))));
+    public static final Identifier DIGITIZING_LASER_ID = Identifier.of(DigitalFrontier.MOD_ID, "digitizing_laser");
+    public static final Block DIGITIZING_LASER = registerBlock(DIGITIZING_LASER_ID,
+            new DigitizingLaserBlock(AbstractBlock.Settings
+                    .copy(Blocks.IRON_BLOCK)
+                    .luminance(state -> 7)
+                    .registryKey(RegistryKey.of(RegistryKeys.BLOCK, DIGITIZING_LASER_ID))));
+
 
     private static Block registerBlock(Identifier name, Block block) {
         registerBlockItem(name, block);

@@ -54,7 +54,9 @@ public class ModBlockTagProvider extends FabricTagProvider.BlockTagProvider {
                 .add(ModBlocks.GRIDSTONE_BRICKS_STAIRS)
                 .add(ModBlocks.GRIDSTONE_BRICKS_SLAB)
                 .add(ModBlocks.GRIDSTONE_BRICKS_WALL)
-                .add(ModBlocks.GRIDSTONE_PRESSURE_PLATE);
+                .add(ModBlocks.GRIDSTONE_PRESSURE_PLATE)
+                .add(ModBlocks.ARRIVAL_PAD)
+                .add(ModBlocks.DIGITIZING_LASER);
 
         getOrCreateTagBuilder(BlockTags.NEEDS_IRON_TOOL)
                 .add(ModBlocks.LUMINANCE_ORE);

@@ -83,7 +83,29 @@ public class ModRecipeProvider extends FabricRecipeProvider {
                         .criterion(hasItem(ModItems.BINARY_1), conditionsFromItem(ModItems.BINARY_1))
                         .offerTo(exporter);
 
-                offerSlabRecipe(RecipeCategory.BUILDING_BLOCKS, ModBlocks.CRACKED_GRIDSTONE_SLAB, ModBlocks.CRACKED_GRIDSTONE_BLOCK);
+                // The way into the grid is meant to be a mid/late-game build
+                createShaped(RecipeCategory.TRANSPORTATION, ModBlocks.DIGITIZING_LASER, 1)
+                        .pattern("LDL")
+                        .pattern("PEP")
+                        .pattern("III")
+                        .input('L', ModItems.LUMINESSENCE)
+                        .input('D', Items.DIAMOND)
+                        .input('P', ModBlocks.PIXEL_BLOCK)
+                        .input('E', Items.ENDER_EYE)
+                        .input('I', Items.IRON_BLOCK)
+                        .criterion(hasItem(ModItems.LUMINESSENCE), conditionsFromItem(ModItems.LUMINESSENCE))
+                        .offerTo(exporter);
+
+                createShaped(RecipeCategory.TOOLS, ModItems.LASER_TUNER, 1)
+                        .pattern(" L ")
+                        .pattern("ICI")
+                        .input('L', ModItems.LUMINESSENCE)
+                        .input('I', Items.IRON_INGOT)
+                        .input('C', Items.COMPASS)
+                        .criterion(hasItem(ModBlocks.DIGITIZING_LASER), conditionsFromItem(ModBlocks.DIGITIZING_LASER))
+                        .offerTo(exporter);
+
+                offerSlabRecipe(RecipeCategory.BUILDING_BLOCKS, ModBlocks.CRACKED_GRIDSTONE_SLAB,ModBlocks.CRACKED_GRIDSTONE_BLOCK);
                 offerWallRecipe(RecipeCategory.BUILDING_BLOCKS, ModBlocks.CRACKED_GRIDSTONE_WALL, ModBlocks.CRACKED_GRIDSTONE_BLOCK);
                 createShaped(RecipeCategory.BUILDING_BLOCKS, ModBlocks.CRACKED_GRIDSTONE_STAIRS, 4)
                         .pattern("G  ")

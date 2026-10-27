@@ -130,7 +130,7 @@ id (`digitalfrontier:<name>`), which F3 shows when you stand on it.
 
 | Field | Required | Meaning |
 |---|---|---|
-| `kind` | yes | `building`, `landmark`, `plaza` or `street` (see below). |
+| `kind` | yes | `building`, `landmark`, `plaza`, `street` or `terminal` (see below). |
 | `zones` | yes | Where it can appear: `city_core`, `city`, `outskirts`, `waypoint`, `outlands`, `unallocated`. Buildings only generate where the layout places buildings (city zones, and a few in the outskirts). Plazas appear in the city and at waypoints. |
 | `weight` | no (10) | Relative chance against other matching definitions. |
 | `footprint` | no (1) | `1` for 16×16 parts, `2` for 32×32 parts. |
@@ -154,6 +154,12 @@ the world (Y 319).
   running east–west (along X)**: the street's light lines run along Z = 1 and Z = 14, and the edges at
   Z = 0 and Z = 15 meet the sidewalks. The generator turns them 90° for streets running north–south. Keep the
   middle (Z = 2..13) clear so light cycles can drive through.
+- **`terminal`**: the building on an arrival terminal's chunk: the main terminal just outside the city (zone
+  `outskirts`) and the center of each waypoint (zone `waypoint`). Single chunk only. Place one
+  **Arrival Pad** (`digitalfrontier:arrival_pad`) where players should appear: they arrive standing on top of
+  it, facing the way they were facing. If a part has several pads, the first one found is used; if the
+  stack has none, players arrive in the middle of the chunk on top of whatever is there. Leave at least two
+  blocks of air above the pad.
 
 ## Testing your structures
 
@@ -190,6 +196,8 @@ The mod ships a small generated placeholder set under `grid/starter/` (made in c
 | `starter_core_tower` | landmark, 32×32 | the block tower parts, 32–40 floors |
 | `starter_plaza` | plaza | `grid/starter/plaza/square` |
 | `starter_street_lights` | street | `grid/starter/street/lights` |
+| `starter_terminal` | terminal | `grid/starter/terminal/platform` (pad at 7, 0, 7) |
+
 Use them as references, or load one with `/place template digitalfrontier:grid/starter/tower/floor_glass ~ ~ ~`
 to see how it's built. When you have your own buildings, lower the starters' weight or remove their
 definitions from the provider.

@@ -43,6 +43,8 @@ public class ModGridStarterProvider implements DataProvider {
     private static final BlockState LIGHT = pattern("full");
     private static final BlockState STRIPE = pattern("center_stripe");
     private static final BlockState TARGET = pattern("thick_target");
+    private static final BlockState PAD = ModBlocks.ARRIVAL_PAD.getDefaultState();
+
     private final DataOutput.PathResolver structures;
     private final DataOutput.PathResolver buildings;
 
@@ -114,6 +116,15 @@ public class ModGridStarterProvider implements DataProvider {
                 .box(3, 0, 12, 3, 1, 12, WALL).box(3, 2, 12, 3, 2, 12, LIGHT)
                 .box(12, 0, 12, 12, 1, 12, WALL).box(12, 2, 12, 12, 2, 12, LIGHT)
                 .box(7, 0, 7, 8, 0, 8, TARGET));
+        // Arrival terminal: a lit platform under a glass canopy, with the Arrival Pad in the middle
+        parts.put("grid/starter/terminal/platform", new StarterPart(16, 8)
+                .plate(0, 3, BRICKS)
+                .ring(0, 0, 3, LIGHT)
+                .box(7, 0, 7, 7, 0, 7, PAD)
+                .box(3, 1, 3, 3, 6, 3, BRICKS).box(12, 1, 3, 12, 6, 3, BRICKS)
+                .box(3, 1, 12, 3, 6, 12, BRICKS).box(12, 1, 12, 12, 6, 12, BRICKS)
+                .plate(7, 3, GLASS)
+                .ring(7, 7, 3, LIGHT));
         parts.put("grid/starter/street/lights",new StarterPart(16, 4)
                 .box(3, 0, 0, 3, 2, 0, WALL).box(3, 3, 0, 3, 3, 0, LIGHT)
                 .box(11, 0, 0, 11, 2, 0, WALL).box(11, 3, 0, 11, 3, 0, LIGHT)
@@ -145,6 +156,9 @@ public class ModGridStarterProvider implements DataProvider {
         defs.put("starter_street_lights", new GridBuildingDef(GridBuildingDef.Kind.STREET,
                 List.of(Zone.CITY_CORE, Zone.CITY), 10, 1,
                 Optional.of(id("grid/starter/street/lights")), List.of(), Optional.empty(), 0, 0));
+        defs.put("starter_terminal", new GridBuildingDef(GridBuildingDef.Kind.TERMINAL,
+                List.of(Zone.OUTSKIRTS, Zone.WAYPOINT), 10, 1,
+                Optional.of(id("grid/starter/terminal/platform")), List.of(), Optional.empty(), 0, 0));
         return defs;
     }
 

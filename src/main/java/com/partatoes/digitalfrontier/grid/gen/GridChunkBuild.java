@@ -13,6 +13,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -82,7 +83,8 @@ final class GridChunkBuild {
             case PLAZA -> GridBuildingDef.Kind.PLAZA;
             case STREET -> plan.streetX() != plan.streetZ() && roll(seed, chunkX, chunkZ, 1) < STREET_FURNITURE_CHANCE
                     ? GridBuildingDef.Kind.STREET : null;
-            case SITE, OPEN -> null;
+            case SITE -> plan.site() != null && plan.site().hasTerminal() ? GridBuildingDef.Kind.TERMINAL : null;
+            case OPEN -> null;
         };
         GridAssets.Candidate candidate = kind == null ? null : assets.pick(kind, 1, plan.zone(), roll(seed, chunkX, chunkZ, 0));
         if (candidate == null) {
@@ -160,6 +162,31 @@ final class GridChunkBuild {
             }
         }
         return FLOOR_Y;
+    }
+
+    /** World position of the first Arrival Pad in this chunk's stack, or null if its parts have none. */
+    @Nullable
+    BlockPos arrivalPad() {
+        int last = footprintSize - 1;
+        for (Layer layer : layers) {
+            BlockPos pad = layer.part().arrivalPad();
+            if (pad == null) {
+                continue;
+            }
+            // The forward version of the rotation partBlock undoes
+            int px = pad.getX();
+            int pz = pad.getZ();
+            int fx;
+            int fz;
+            switch (rotation) {
+                case CLOCKWISE_90 -> { fx = last - pz; fz = px; }
+                case CLOCKWISE_180 -> { fx = last - px; fz = last - pz; }
+                case COUNTERCLOCKWISE_90 -> { fx = pz; fz = last - px; }
+                default -> { fx = px; fz = pz; }
+            }
+            return new BlockPos(footprintX + fx, layer.bottomY() + pad.getY(), footprintZ + fz);
+        }
+        return null;
     }
 
     BlockState blockAt(int localX, int y, int localZ) {

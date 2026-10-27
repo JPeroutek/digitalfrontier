@@ -53,7 +53,9 @@ public record GridBuildingDef(
         /** Placed on plaza chunks (open squares in the city, and waypoints). */
         PLAZA("plaza"),
         /** Decorations placed on straight street chunks; authored for a street running along the X axis. */
-        STREET("street");
+        STREET("street"),
+        /** The building at an arrival terminal or waypoint; contains the Arrival Pad players arrive on. */
+        TERMINAL("terminal");
 
         public static final Codec<Kind> CODEC = StringIdentifiable.createCodec(Kind::values);
 

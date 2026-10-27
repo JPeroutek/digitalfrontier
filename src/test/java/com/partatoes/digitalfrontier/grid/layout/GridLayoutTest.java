@@ -82,6 +82,27 @@ class GridLayoutTest {
     }
 
     @Test
+    void terminalsAreTheMainArrivalAndTheWaypoints() {
+        GridLayout layout = new GridLayout(DEFAULT);
+        List<Site> terminals = layout.terminals();
+        assertEquals(1 + DEFAULT.waypointCount(), terminals.size());
+        assertEquals(GridLayout.MAIN_ARRIVAL_ID, terminals.getFirst().id());
+        assertEquals(terminals.size(), terminals.stream().map(Site::id).distinct().count(), "terminal ids are unique");
+        assertTrue(terminals.stream().allMatch(Site::hasTerminal));
+        assertTrue(layout.terminal(GridLayout.MAIN_ARRIVAL_ID).isPresent());
+        assertTrue(layout.terminal("stronghold_0").isEmpty(), "strongholds aren't terminals");
+    }
+
+    @Test
+    void nearestTerminalPicksTheClosestOne() {
+        GridLayout layout = new GridLayout(DEFAULT);
+        assertEquals(GridLayout.MAIN_ARRIVAL_ID, layout.nearestTerminal(0, 0).id());
+        for (Site terminal : layout.terminals()) {
+            assertEquals(terminal, layout.nearestTerminal(terminal.chunkX(), terminal.chunkZ()));
+        }
+    }
+
+    @Test
     void multiChunkBuildingsAreConsistentTwoByTwoGroups() {
         GridLayout layout = new GridLayout(DEFAULT);
         int groups = 0;

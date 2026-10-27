@@ -27,5 +27,6 @@ public class DigitalFrontierClient implements ClientModInitializer {
 		// Pattern blocks draw a transparent glow overlay over their base texture, which needs cutout rendering
 		ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.values().forEach(colorMapping ->
 				BlockRenderLayerMap.INSTANCE.putBlocks(RenderLayer.getCutout(), colorMapping.values().toArray(Block[]::new)));
+		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.ARRIVAL_PAD, RenderLayer.getCutout());
 	}
 }

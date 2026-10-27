@@ -9,6 +9,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.enums.BlockFace;
 import net.minecraft.client.data.*;
 import net.minecraft.state.property.Properties;
+import net.minecraft.util.DyeColor;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Direction;
 
@@ -65,6 +66,15 @@ public class ModModelProvider extends FabricModelProvider {
                 });
 
         
+        // Placeholder art borrowed from the pattern blocks until these get their own textures
+        Block padPattern = ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("thick_target").get(DyeColor.CYAN);
+        registerEmissiveCubeAll(blockStateModelGenerator, ModBlocks.ARRIVAL_PAD, padPattern);
+        Identifier laserModel = Models.CUBE_BOTTOM_TOP.upload(ModBlocks.DIGITIZING_LASER, new TextureMap()
+                .put(TextureKey.TOP, TextureMap.getId(ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("thick_ring").get(DyeColor.CYAN)))
+                .put(TextureKey.SIDE, TextureMap.getId(ModBlocks.GRIDSTONE_BRICKS_BLOCK))
+                .put(TextureKey.BOTTOM, TextureMap.getId(ModBlocks.GRIDSTONE_BLOCK)), blockStateModelGenerator.modelCollector);
+        blockStateModelGenerator.blockStateCollector.accept(BlockStateModelGenerator.createSingletonBlockState(ModBlocks.DIGITIZING_LASER, laserModel));
+
         blockStateModelGenerator.blockStateCollector.accept(
                 createFacingFacePoweredBlockStates(ModBlocks.LIGHT_BARRIER_EMITTER, ModelIds.getBlockModelId(ModBlocks.LIGHT_BARRIER_EMITTER), ModelIds.getBlockSubModelId(ModBlocks.LIGHT_BARRIER_EMITTER, "_powered"))
         );
@@ -75,9 +85,13 @@ public class ModModelProvider extends FabricModelProvider {
 
     // Expects the block's texture plus a <name>_glow texture holding only the pixels that should glow
     private static void registerEmissiveCubeAll(BlockStateModelGenerator blockStateModelGenerator, Block block) {
+        registerEmissiveCubeAll(blockStateModelGenerator, block, block);
+    }
+
+    private static void registerEmissiveCubeAll(BlockStateModelGenerator blockStateModelGenerator, Block block, Block textureSource) {
         TextureMap textures = new TextureMap()
-                .put(TextureKey.ALL, TextureMap.getId(block))
-                .put(GLOW, TextureMap.getSubId(block, "_glow"));
+                .put(TextureKey.ALL, TextureMap.getId(textureSource))
+                .put(GLOW, TextureMap.getSubId(textureSource, "_glow"));
         Identifier modelId = EMISSIVE_CUBE_ALL.upload(block, textures, blockStateModelGenerator.modelCollector);
         blockStateModelGenerator.blockStateCollector.accept(BlockStateModelGenerator.createSingletonBlockState(block, modelId));
     }
@@ -215,6 +229,8 @@ public class ModModelProvider extends FabricModelProvider {
 
         // Placeholder: borrow the vanilla snowball model until it has its own art
         itemModelGenerator.output.accept(ModItems.DIMENSION_TELEPORTER, ItemModels.basic(Identifier.ofVanilla("item/snowball")));
+        // Placeholder: the vanilla compass until the tuner has its own art
+        itemModelGenerator.output.accept(ModItems.LASER_TUNER, ItemModels.basic(Identifier.ofVanilla("item/compass_16")));
 
     }
 }

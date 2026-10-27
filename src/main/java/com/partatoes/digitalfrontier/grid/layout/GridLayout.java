@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * The macro map of one grid. A pure function of {@link GridLayoutSettings}: no world access, so every
@@ -31,6 +32,7 @@ public final class GridLayout {
     private final GridLayoutSettings settings;
     private final List<Site> sites;
     private final List<Site> waypoints;
+    private final List<Site> terminals;
     private final Map<Long, Site> sitesByChunk = new HashMap<>();
     private final CorruptionField corruption;
     private final double districtRotation;
@@ -62,6 +64,7 @@ public final class GridLayout {
 
         this.sites = List.copyOf(allSites);
         this.waypoints = List.copyOf(waypointSites);
+        this.terminals = sites.stream().filter(Site::hasTerminal).toList();
         for (Site site : sites) {
             sitesByChunk.put(chunkKey(site.chunkX(), site.chunkZ()), site);
         }
@@ -79,6 +82,25 @@ public final class GridLayout {
 
     public Site mainArrival() {
         return sites.getFirst();
+    }
+
+    /** Every site players can arrive at: the main terminal first, then the waypoints. */
+    public List<Site> terminals() {
+        return terminals;
+    }
+
+    public Optional<Site> terminal(String id) {
+        return terminals.stream().filter(site -> site.id().equals(id)).findFirst();
+    }
+
+    public Site nearestTerminal(int chunkX, int chunkZ) {
+        Site nearest = mainArrival();
+        for (Site terminal : terminals) {
+            if (terminal.distanceTo(chunkX, chunkZ) < nearest.distanceTo(chunkX, chunkZ)) {
+                nearest = terminal;
+            }
+        }
+        return nearest;
     }
 
     public Zone zoneAt(int chunkX, int chunkZ) {

@@ -1,5 +1,6 @@
 package com.partatoes.digitalfrontier.grid.parts;
 
+import com.partatoes.digitalfrontier.block.ModBlocks;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.datafixer.DataFixTypes;
@@ -9,6 +10,7 @@ import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtHelper;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.registry.Registries;
+import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
@@ -26,13 +28,16 @@ public final class GridPart {
     private final int sizeZ;
     private final BlockState[] palette;
     private final short[] blocks;
+    @Nullable
+    private final BlockPos arrivalPad;
 
-    private GridPart(int sizeX, int sizeY, int sizeZ, BlockState[] palette, short[] blocks) {
+    private GridPart(int sizeX, int sizeY, int sizeZ, BlockState[] palette, short[] blocks, @Nullable BlockPos arrivalPad) {
         this.sizeX = sizeX;
         this.sizeY = sizeY;
         this.sizeZ = sizeZ;
         this.palette = palette;
         this.blocks = blocks;
+        this.arrivalPad = arrivalPad;
     }
 
     public static GridPart fromNbt(NbtCompound nbt) {
@@ -55,6 +60,7 @@ public final class GridPart {
 
         short[] blocks = new short[sizeX * sizeY * sizeZ];
         Arrays.fill(blocks, VOID);
+        BlockPos arrivalPad = null;
         NbtList blockList = fixed.getList("blocks", NbtElement.COMPOUND_TYPE);
         for (int i = 0; i < blockList.size(); i++) {
             NbtCompound block = blockList.getCompound(i);
@@ -64,8 +70,17 @@ public final class GridPart {
             }
             NbtList pos = block.getList("pos", NbtElement.INT_TYPE);
             blocks[index(pos.getInt(0), pos.getInt(1), pos.getInt(2), sizeX, sizeZ)] = (short) stateIndex;
+            if (arrivalPad == null && palette[stateIndex].isOf(ModBlocks.ARRIVAL_PAD)) {
+                arrivalPad = new BlockPos(pos.getInt(0), pos.getInt(1), pos.getInt(2));
+            }
         }
-        return new GridPart(sizeX, sizeY, sizeZ, palette, blocks);
+        return new GridPart(sizeX, sizeY, sizeZ, palette, blocks, arrivalPad);
+    }
+
+    /** Template position of the first Arrival Pad in this part, if it has one. */
+    @Nullable
+    public BlockPos arrivalPad() {
+        return arrivalPad;
     }
 
     public int sizeX() {

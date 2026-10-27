@@ -48,6 +48,10 @@ public class ModItems {
     public static final Item DIMENSION_TELEPORTER = registerItem(DIMENSION_TELEPORTER_ID, new DimensionTeleporterItem(new Item.Settings()
             .maxCount(1)
             .registryKey(RegistryKey.of(RegistryKeys.ITEM, DIMENSION_TELEPORTER_ID))));
+    public static final Identifier LASER_TUNER_ID = Identifier.of(DigitalFrontier.MOD_ID, "laser_tuner");
+    public static final Item LASER_TUNER = registerItem(LASER_TUNER_ID, new Item(new Item.Settings()
+            .maxCount(1)
+            .registryKey(RegistryKey.of(RegistryKeys.ITEM, LASER_TUNER_ID))));
 
     private static Item registerItem(Identifier id, Item item) {
         return Registry.register(Registries.ITEM, id, item);

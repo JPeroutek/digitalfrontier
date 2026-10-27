@@ -41,6 +41,20 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add(ModBlocks.BOOSTER_BLOCK, "Boost Block");
         translationBuilder.add(ModBlocks.LIGHT_BARRIER, "Light Barrier");
         translationBuilder.add(ModBlocks.LIGHT_BARRIER_EMITTER, "Light Barrier Emitter");
+        translationBuilder.add(ModBlocks.ARRIVAL_PAD, "Arrival Pad");
+        translationBuilder.add(ModBlocks.DIGITIZING_LASER, "Digitizing Laser");
+        translationBuilder.add(ModItems.LASER_TUNER, "Laser Tuner");
+
+        // Grid terminals and arrival messages
+        translationBuilder.add("terminal.digitalfrontier.city_main", "City Terminal");
+        translationBuilder.add("terminal.digitalfrontier.waypoint", "Waypoint %s");
+        translationBuilder.add("message.digitalfrontier.digitizing", "Digitizing... destination: %s");
+        translationBuilder.add("message.digitalfrontier.arrived", "Arrived at %s");
+        translationBuilder.add("message.digitalfrontier.terminal_discovered", "Terminal discovered: %s");
+        translationBuilder.add("message.digitalfrontier.laser_tuned", "Laser tuned to %s (%s/%s)");
+        translationBuilder.add("message.digitalfrontier.scan_interrupted", "Scan interrupted: stay close to the laser");
+        translationBuilder.add("message.digitalfrontier.terminal_unreachable", "No signal from the grid terminal");
+        translationBuilder.add("message.digitalfrontier.laser_inside_grid", "The laser can't digitize from inside the grid");
 
         translationBuilder.add(RegistryKey.of(RegistryKeys.ITEM_GROUP, ModItemGroups.DIGITAL_FRONTIER_GROUP_ID), "Digital Frontier");
 
