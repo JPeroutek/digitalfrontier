@@ -113,6 +113,9 @@ public final class GridLayout {
         if (site != null) {
             return new ChunkPlan(zone, PlanType.SITE, 0, district, false, false, false, site, null, intensity, tier);
         }
+        if (isArrivalConnector(chunkX, chunkZ, zone)) {
+            return new ChunkPlan(zone, PlanType.STREET, 0, district, false, true, true, null, null, intensity, tier);
+        }
 
         long roll = GridRandom.hash(settings.gridSeed(), chunkX, chunkZ, SALT_PLAN);
         return switch (zone) {
@@ -142,6 +145,13 @@ public final class GridLayout {
             case WAYPOINT -> new ChunkPlan(zone, PlanType.PLAZA, 0, district, false, false, false, null, null, intensity, tier);
             case OUTLANDS, UNALLOCATED -> new ChunkPlan(zone, PlanType.OPEN, 0, district, false, false, false, null, null, intensity, tier);
         };
+    }
+
+    /** The avenue at x = 0 carries on past the city edge to the main arrival terminal. */
+    private boolean isArrivalConnector(int chunkX, int chunkZ, Zone zone) {
+        Site terminal = mainArrival();
+        return zone != Zone.CITY && zone != Zone.CITY_CORE
+                && chunkX == terminal.chunkX() && chunkZ > 0 && chunkZ < terminal.chunkZ();
     }
 
     /**

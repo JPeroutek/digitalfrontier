@@ -69,6 +69,19 @@ class GridLayoutTest {
     }
 
     @Test
+    void avenueConnectsTheCityToTheMainArrivalTerminal() {
+        GridLayout layout = new GridLayout(DEFAULT);
+        Site terminal = layout.mainArrival();
+        for (int z = 0; z < terminal.chunkZ(); z++) {
+            ChunkPlan plan = layout.planAt(terminal.chunkX(), z);
+            assertEquals(PlanType.STREET, plan.type(), "street at " + terminal.chunkX() + "," + z);
+            assertTrue(plan.streetZ(), "street along Z at " + terminal.chunkX() + "," + z);
+        }
+        ChunkPlan beside = layout.planAt(terminal.chunkX() + 1, DEFAULT.cityRadius() + 1);
+        assertNotEquals(PlanType.STREET, beside.type());
+    }
+
+    @Test
     void multiChunkBuildingsAreConsistentTwoByTwoGroups() {
         GridLayout layout = new GridLayout(DEFAULT);
         int groups = 0;
