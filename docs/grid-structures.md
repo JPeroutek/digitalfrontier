@@ -161,6 +161,19 @@ the world (Y 319).
     side of the lane are what make it narrow. The roadway is Z = 5..10 (lit at 5 and 10), with a sidewalk at
     Z = 4 and 11; fill Z = 0..3 and 12..15 with walls, planters, kiosks and the like, leaving gaps to reach the
     buildings behind. Without a lane part, the generator puts low walls there.
+- **`terminal`**: the building on an arrival terminal's chunk: the main terminal just outside the city (zone
+  `outskirts`) and the center of each waypoint (zone `waypoint`). Single chunk only. Place one
+  **Arrival Pad** (`digitalfrontier:arrival_pad`) where players should appear: they arrive standing on top of
+  it, facing the way they were facing. If a part has several pads, the first one found is used; if the
+  stack has none, players arrive in the middle of the chunk on top of whatever is there. Leave at least two
+  blocks of air above the pad.
+- **`portal`**: the building at a grid's Portal site, far out in the outlands (zone `outlands`). Single chunk
+  only. Any **Portal** block (`digitalfrontier:grid_portal`) in it sends a player who walks into it back to
+  their respawn point in the real world. Portal blocks have no collision, so make sure players can walk into
+  at least one at ground level. Make it tall and bright: players have to find it from a distance.
+- **`stronghold`**: the building at a stronghold site, at the heart of the grid's most corrupted territory
+  (usually zone `outlands`). Single chunk only; use `min_floors` to set its height, since the site asks for none.
+  Colors other than white aren't recolored, so the regime's red stays red.
 
 ## Street layout
 
@@ -181,13 +194,27 @@ laser; the default grid has all four):
 | Level | Height | Where |
 |---|---|---|
 | Skyroads | drive at Y 80 | a 16-wide deck over every boulevard, on pillars along the median; on-ramps climb a boulevard's outer lane, and the deck ramps down at the city edge |
-| Elevated rail | rails at Y 88 | over some one-chunk streets running north–south, with ladder-access stations at intersections |
-| Subway | rails at Y 48 | under some one-chunk streets running east–west, with ladder-access stations at intersections |
-| Skyways | Y 101, 107 or 113 | bridges across a street between two towers, at their floor heights; the towers get doorways |
+| Elevated rail | rails at Y 88 | over some one-chunk streets running north–south, with stations at intersections |
+| Subway | rails at Y 48 | under some one-chunk streets running east–west, with stations at intersections; plus an express line from just outside the city to each waypoint |
+| Skyways | Y 101, 107 or 113 (and sometimes a second, two floors higher) | bridges across a street between two towers, at their floor heights; the towers get doorways |
 
 The levels are placed over (and carved into) whatever building and street parts put there, so **leave the space
 clear**: in tall buildings, keep floors at 6-block intervals from Y 65 (so the floor plates skyways land on are at
-Y 100, 106, 112) and expect a 4-wide doorway in the middle of an outer wall at those heights.
+Y 100, 106, 112, 118, 124) and expect a 4-wide doorway in the middle of an outer wall at those heights.
+
+**Stations** have two spiral staircases (a 4×4 shaft around a lit pillar) in opposite corners of the chunk,
+(0..3, 0..3) and (12..15, 12..15), and glowing signs with a generated station name and its line: city lines are
+named by color ("Cyan Line"), express lines by their waypoint. Subway signs hang on the platform walls; elevated
+station signs stand on the platforms either side of the tracks.
+
+**Express lines** run at subway depth from a station just outside the city edge to a station beside their waypoint.
+Lines to waypoints on the axes run straight out; lines to diagonal waypoints run along a column two chunks off the
+Z axis, then turn (a curved corner) along the waypoint's row. They never meet each other or the city's lines.
+Their staircases climb to wherever the ground is, so express termini are always built in code.
+
+**Maintenance passages** open off about one in seven ordinary tunnel chunks: a small lit room behind a doorway in
+the tunnel wall. In unstable ground or worse, a corrupted program lurks in each one (one that fights back where
+the ground is corrupted).
 
 ### Authoring level pieces
 
@@ -204,28 +231,17 @@ there; use air to carve (tunnels, headroom).
 | `skyroad_ramp_lower` / `skyroad_ramp_upper` | Y 65 | the two chunks of an on-ramp in Z = 2..7, climbing half a block per block toward +X: from the street at the lower part's X = 0 to deck height (part Y 14) at the upper part's X = 14. Carve the deck railing (Z = 8, part Y 15) where the ramp joins it. |
 | `guideway` | Y 65 | tracks along X at Z = 6 and 9 on part Y 23 (Y 88), with supports |
 | `guideway_crossing` | Y 65 | the same, over an intersection: no supports in the crossing road |
-| `guideway_station` | Y 65 | a station over an intersection, with a way down to the street |
+| `guideway_station` | Y 65 | a station over an intersection, with a way down to the street; leave X = 7..8, Z = 2 and 13 at part Y 23 clear for the signs |
 | `subway` | Y 47 | the tunnel: floor at Y 0, tracks along X at Z = 6 and 9 on Y 1; carve it with air |
-| `subway_station` | Y 47 | a station under an intersection; part Y 17 is the street surface, where its way up comes out |
+| `subway_station` | Y 47 | a station under an intersection; part Y 17 is the street surface, where its way up comes out. Leave X = 7..8 at part Y 3 clear against both walls (Z = 1 and 14): the station signs go there |
+| `subway_corner` | Y 47 | a bend in an express line: tracks come in from the south (Z = 15) at X = 6 and 9 and leave east (X = 15) at Z = 6 and 9 |
+| `subway_passage` | Y 47 | a maintenance room beside a tunnel, toward Z = 0, with its doorway through the tunnel wall at Z = 3. It's placed before the tunnel, so its blocks win; it's mirrored for rooms on the other side |
 | `skyway` | the bridge's floor | a bridge across a road along X, so it runs along Z (Z = 0..15); walk on part Y 1 |
 
 Rails and other directional blocks turn with the part. White blocks take the district color as usual. Powered rails
 need their redstone; the starter pieces power rails every 8 blocks (X = 0 and 8). Where a piece has no template, the
 generator builds the starter shape in code, and the end ramps (where a deck comes down at the city edge) are always
 built in code.
-- **`terminal`**: the building on an arrival terminal's chunk: the main terminal just outside the city (zone
-  `outskirts`) and the center of each waypoint (zone `waypoint`). Single chunk only. Place one
-  **Arrival Pad** (`digitalfrontier:arrival_pad`) where players should appear: they arrive standing on top of
-  it, facing the way they were facing. If a part has several pads, the first one found is used; if the
-  stack has none, players arrive in the middle of the chunk on top of whatever is there. Leave at least two
-  blocks of air above the pad.
-- **`portal`**: the building at a grid's Portal site, far out in the outlands (zone `outlands`). Single chunk
-  only. Any **Portal** block (`digitalfrontier:grid_portal`) in it sends a player who walks into it back to
-  their respawn point in the real world. Portal blocks have no collision, so make sure players can walk into
-  at least one at ground level. Make it tall and bright: players have to find it from a distance.
-- **`stronghold`**: the building at a stronghold site, at the heart of the grid's most corrupted territory
-  (usually zone `outlands`). Single chunk only; use `min_floors` to set its height, since the site asks for none.
-  Colors other than white aren't recolored, so the regime's red stays red.
 
 ## Corruption
 
@@ -278,7 +294,7 @@ The mod ships a small generated placeholder set under `grid/starter/` (made in c
 | `starter_street_lights` | street | `grid/starter/street/lights` |
 | `starter_boulevard` | street (`road`: boulevard) | `grid/starter/street/boulevard_half` |
 | `starter_lane` | street (`road`: lane) | `grid/starter/street/lane` |
-| `starter_skyroad`, `starter_skyroad_junction`, `starter_skyroad_ramp_lower`, `starter_skyroad_ramp_upper`, `starter_guideway`, `starter_guideway_crossing`, `starter_guideway_station`, `starter_subway`, `starter_subway_station`, `starter_skyway` | the level kinds | `grid/starter/level/<kind>` |
+| `starter_skyroad`, `starter_skyroad_junction`, `starter_skyroad_ramp_lower`, `starter_skyroad_ramp_upper`, `starter_guideway`, `starter_guideway_crossing`, `starter_guideway_station`, `starter_subway`, `starter_subway_station`, `starter_subway_corner`, `starter_subway_passage`, `starter_skyway` | the level kinds | `grid/starter/level/<kind>` |
 | `starter_terminal` | terminal | `grid/starter/terminal/platform` (pad at 7, 0, 7) |
 | `starter_stronghold` | stronghold | `grid/starter/stronghold/base`, `floor`, `roof` (3–5 floors) |
 | `starter_portal` | portal | `grid/starter/portal/beam` (a 4×4 column of Portal blocks, 47 tall) |

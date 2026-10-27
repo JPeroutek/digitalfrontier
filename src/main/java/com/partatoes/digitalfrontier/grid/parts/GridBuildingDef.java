@@ -96,8 +96,18 @@ public record GridBuildingDef(
         GUIDEWAY_STATION("guideway_station", GridLayout.FLOOR_Y + 1),
         /** A subway tunnel, tracks along X; Y = 0 is the tunnel floor. Carve the tunnel with air. */
         SUBWAY("subway", 47),
-        /** A subway station under an intersection, with its way up to the street (Y = 17 is the street surface). */
+        /**
+         * A subway station under an intersection, with its way up to the street (Y = 17 is the street surface). Leave
+         * X = 7..8, Y = 3 clear on the walls at Z = 1 and 14: the station's name signs go there.
+         */
         SUBWAY_STATION("subway_station", 47),
+        /** A bend in an express subway line: in from the south (Z = 15), out to the east (X = 15). */
+        SUBWAY_CORNER("subway_corner", 47),
+        /**
+         * A maintenance room beside a subway tunnel, toward Z = 0, with a doorway through the tunnel wall at Z = 3.
+         * Placed before the tunnel, so its blocks win; mirrored for rooms on the other side.
+         */
+        SUBWAY_PASSAGE("subway_passage", 47),
         /** A skyway bridge across a road along X (so the bridge runs along Z); Y = 0 is its floor. */
         SKYWAY("skyway", -1);
 

@@ -2,12 +2,16 @@ package com.partatoes.digitalfrontier.grid.layout;
 
 import com.partatoes.digitalfrontier.grid.layout.StreetAxis.Road;
 import com.partatoes.digitalfrontier.grid.layout.StreetAxis.RoadClass;
+import net.minecraft.util.DyeColor;
+import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -56,7 +60,7 @@ public final class TransitLayout {
     private final Set<Long> railStations = new HashSet<>();
     private final Set<Long> subwayStations = new HashSet<>();
 
-    TransitLayout(GridLayoutSettings settings, StreetAxis xAxis, StreetAxis zAxis) {
+    TransitLayout(GridLayoutSettings settings, StreetAxis xAxis, StreetAxis zAxis, List<Site> waypoints) {
         this.settings = settings;
         this.xAxis = xAxis;
         this.zAxis = zAxis;
@@ -69,7 +73,133 @@ public final class TransitLayout {
         if (has(GridLevel.SUBWAY)) {
             subwayRows.addAll(pickLines(zAxis, 1));
             subwayRows.forEach(row -> addStations(subwayStations, row, xAxis, false));
+            for (int i = 0; i < waypoints.size(); i++) {
+                addExpressLine(i, waypoints.get(i));
+            }
         }
+    }
+
+    // ---- Express lines to the waypoints ----
+
+    /**
+     * One chunk of an express subway line: the sides of the chunk its tracks leave by (opposite sides for a
+     * straight, adjacent ones for a corner; a terminus station is straight, its tracks ending at the far wall).
+     *
+     * @param line which waypoint's line, counting from 0
+     */
+    public record ExpressPiece(Direction from, Direction to, boolean station, int line) {
+        public boolean corner() {
+            return from.getAxis() != to.getAxis();
+        }
+    }
+
+    private final Map<Long, ExpressPiece> express = new HashMap<>();
+
+    @Nullable
+    public ExpressPiece expressAt(int chunkX, int chunkZ) {
+        return express.get(key(chunkX, chunkZ));
+    }
+
+    /**
+     * Each waypoint gets its own line, from a station just outside the city to a station beside the waypoint. Lines
+     * to waypoints on the axes run straight along the axis; lines to diagonal waypoints run along a column two chunks
+     * off the Z axis, then turn along the waypoint's row. That way no two lines ever meet, and none enters the city,
+     * so they never cross the city's own subway lines at the same level.
+     */
+    private void addExpressLine(int line, Site waypoint) {
+        int wx = waypoint.chunkX();
+        int wz = waypoint.chunkZ();
+        int radius = settings.cityRadius();
+        List<int[]> path = new ArrayList<>();
+        if (wz == 0 || wx == 0) {
+            boolean alongX = wz == 0;
+            int sign = Integer.signum(alongX ? wx : wz);
+            for (int c = sign * (radius + 1); c != (alongX ? wx : wz); c += sign) {
+                path.add(alongX ? new int[]{c, 0} : new int[]{0, c});
+            }
+        } else {
+            int column = Integer.signum(wx) * 2;
+            int signZ = Integer.signum(wz);
+            int start = (int) Math.floor(Math.sqrt((double) radius * radius - column * column)) + 1;
+            for (int z = signZ * start; z != wz + signZ; z += signZ) {
+                path.add(new int[]{column, z});
+            }
+            int signX = Integer.signum(wx);
+            for (int x = column + signX; x != wx; x += signX) {
+                path.add(new int[]{x, wz});
+            }
+        }
+        if (path.size() < 2) {
+            return;
+        }
+        for (int i = 0; i < path.size(); i++) {
+            int[] here = path.get(i);
+            Direction toPrevious = i > 0 ? direction(here, path.get(i - 1)) : null;
+            Direction toNext = i < path.size() - 1 ? direction(here, path.get(i + 1)) : null;
+            boolean end = toPrevious == null || toNext == null;
+            Direction from = toPrevious != null ? toPrevious : toNext.getOpposite();
+            Direction to = toNext != null ? toNext : toPrevious.getOpposite();
+            express.put(key(here[0], here[1]), new ExpressPiece(from, to, end, line));
+        }
+    }
+
+    private static Direction direction(int[] from, int[] to) {
+        if (to[0] > from[0]) {
+            return Direction.EAST;
+        }
+        if (to[0] < from[0]) {
+            return Direction.WEST;
+        }
+        return to[1] > from[1] ? Direction.SOUTH : Direction.NORTH;
+    }
+
+    // ---- Stations: names and lines ----
+
+    private static final String[] NAME_FIRST = {"Kernel", "Vector", "Cipher", "Sector", "Lattice", "Beacon", "Binary",
+            "Cache", "Relay", "Daemon", "Pixel", "Quorum", "Halo", "Ion", "Signal", "Matrix", "Flux", "Syntax", "Proxy", "Echo"};
+    private static final String[] NAME_SECOND = {"Junction", "Gate", "Hub", "Exchange", "Terminal", "Plaza", "Spire",
+            "Loop", "Point", "Crossing", "Square", "Yard"};
+    private static final DyeColor[] LINE_COLORS = {DyeColor.CYAN, DyeColor.ORANGE, DyeColor.LIME, DyeColor.MAGENTA,
+            DyeColor.YELLOW, DyeColor.LIGHT_BLUE, DyeColor.PINK, DyeColor.PURPLE};
+    private static final int SALT_NAME = 6;
+
+    /**
+     * What a station's signs say: its name (made up from the seed), and its line: a color for city lines, a
+     * waypoint number for express lines.
+     *
+     * @param waypoint the waypoint an express line runs to (counting from 1), or 0 for a city line
+     */
+    public record StationInfo(String name, DyeColor color, int waypoint, boolean elevated) {
+    }
+
+    public StationInfo stationInfo(int chunkX, int chunkZ, boolean elevated) {
+        long hash = GridRandom.hash(seed, chunkX, chunkZ, SALT_NAME);
+        String name = NAME_FIRST[GridRandom.nextInt(hash, NAME_FIRST.length)] + " "
+                + NAME_SECOND[GridRandom.nextInt(hash >>> 24, NAME_SECOND.length)];
+        ExpressPiece piece = elevated ? null : expressAt(chunkX, chunkZ);
+        if (piece != null) {
+            return new StationInfo(name, LINE_COLORS[piece.line() % LINE_COLORS.length], piece.line() + 1, false);
+        }
+        // City lines are numbered along their axis, so neighbouring lines get different colors
+        List<Integer> lines = (elevated ? railColumns : subwayRows).stream().sorted().toList();
+        int index = Math.max(0, lines.indexOf(elevated ? chunkX : chunkZ));
+        return new StationInfo(name, LINE_COLORS[(index + (elevated ? 4 : 0)) % LINE_COLORS.length], 0, elevated);
+    }
+
+    // ---- Subway side passages ----
+
+    private static final int SALT_PASSAGE = 7;
+
+    /**
+     * Whether a straight subway chunk (city or express, not a station) has a maintenance passage off it, and on
+     * which side: 0 toward lower coordinates, 1 toward higher, -1 for none.
+     */
+    public int passageSide(int chunkX, int chunkZ) {
+        long hash = GridRandom.hash(seed, chunkX, chunkZ, SALT_PASSAGE);
+        if (GridRandom.unit(hash) >= 0.15) {
+            return -1;
+        }
+        return (int) (hash >>> 1 & 1);
     }
 
     public boolean has(GridLevel level) {
@@ -356,37 +486,40 @@ public final class TransitLayout {
     // ---- Skyways ----
 
     /**
-     * A skyway candidate on this chunk: a one-chunk street or lane (not an intersection, no rail over it) with city
-     * blocks on both sides. Whether the towers either side are tall enough is up to the caller, which knows their
-     * buildings.
+     * The skyway candidates on this chunk, lowest first: a one-chunk street or lane (not an intersection, no rail
+     * over it) with city blocks on both sides gets one about a third of the time, and some of those a second, two
+     * floors higher. Whether the towers either side are tall enough is up to the caller, which knows their buildings.
      */
-    @Nullable
-    public Skyway skywayAt(int chunkX, int chunkZ) {
+    public List<Skyway> skywaysAt(int chunkX, int chunkZ) {
         if (!has(GridLevel.SKYWAYS) || Math.hypot(chunkX, chunkZ) > settings.cityRadius() - 1) {
-            return null;
+            return List.of();
         }
         Road roadX = zAxis.roadAt(chunkZ);
         Road roadZ = xAxis.roadAt(chunkX);
         if ((roadX == null) == (roadZ == null)) {
-            return null;
+            return List.of();
         }
         Road road = roadX != null ? roadX : roadZ;
         boolean alongX = roadX != null;
         if (road.roadClass() == RoadClass.BOULEVARD || (!alongX && railColumns.contains(chunkX))) {
-            return null;
+            return List.of();
         }
         // The chunks either side, across the road, must be blocks
         StreetAxis acrossAxis = alongX ? zAxis : xAxis;
         int across = alongX ? chunkZ : chunkX;
         if (acrossAxis.roadAt(across - 1) != null || acrossAxis.roadAt(across + 1) != null) {
-            return null;
+            return List.of();
         }
         long hash = GridRandom.hash(seed, chunkX, chunkZ, SALT_SKYWAY);
         if (GridRandom.unit(hash) >= 0.3) {
-            return null;
+            return List.of();
         }
         int floor = 6 + GridRandom.nextInt(hash >>> 16, 3);
-        return new Skyway(alongX, GridLayout.FLOOR_Y + 1 + floor * GridLayout.FLOOR_HEIGHT);
+        Skyway first = new Skyway(alongX, GridLayout.FLOOR_Y + 1 + floor * GridLayout.FLOOR_HEIGHT);
+        if (GridRandom.unit(GridRandom.hash(seed, chunkX, chunkZ, SALT_SKYWAY + 100)) >= 0.4) {
+            return List.of(first);
+        }
+        return List.of(first, new Skyway(alongX, first.standY() + 2 * GridLayout.FLOOR_HEIGHT));
     }
 
     private static long key(int x, int z) {

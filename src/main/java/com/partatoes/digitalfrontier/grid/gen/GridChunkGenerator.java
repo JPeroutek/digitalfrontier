@@ -13,7 +13,14 @@ import com.partatoes.digitalfrontier.grid.layout.Zone;
 import net.minecraft.entity.SpawnReason;
 import com.partatoes.digitalfrontier.grid.parts.GridAssets;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.AbstractSignBlock;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.block.entity.SignText;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtOps;
+import net.minecraft.registry.Registries;
+import com.partatoes.digitalfrontier.entity.custom.CorruptedProgramEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.ChunkRegion;
@@ -86,7 +93,27 @@ public class GridChunkGenerator extends ChunkGenerator {
                 }
             }
         }
+        placeSigns(build, chunk);
         return CompletableFuture.completedFuture(chunk);
+    }
+
+    // Station signs need their text as block entities, loaded with the chunk (a chunk being generated has no world to
+    // update); skipped wherever corruption replaced the sign
+    private static void placeSigns(GridChunkBuild build, Chunk chunk) {
+        for (GridTransit.Sign sign : build.signs()) {
+            BlockPos pos = chunk.getPos().getStartPos().add(sign.localPos());
+            if (!(chunk.getBlockState(pos).getBlock() instanceof AbstractSignBlock)) {
+                continue;
+            }
+            NbtCompound nbt = new NbtCompound();
+            nbt.putString("id", Registries.BLOCK_ENTITY_TYPE.getId(BlockEntityType.SIGN).toString());
+            nbt.putInt("x", pos.getX());
+            nbt.putInt("y", pos.getY());
+            nbt.putInt("z", pos.getZ());
+            nbt.putBoolean("is_waxed", true);
+            SignText.CODEC.encodeStart(NbtOps.INSTANCE, sign.text()).ifSuccess(text -> nbt.put("front_text", text));
+            chunk.addPendingBlockEntityNbt(nbt);
+        }
     }
 
     @Override
@@ -184,6 +211,7 @@ public class GridChunkGenerator extends ChunkGenerator {
         ChunkPos chunkPos = region.getCenterPos();
         GridChunkBuild build = build(chunkPos.x, chunkPos.z);
         ChunkPlan plan = build.plan();
+        spawnInPassage(region, build, plan);
         boolean inhabited = plan.zone() == Zone.CITY_CORE || plan.zone() == Zone.CITY || plan.zone() == Zone.WAYPOINT;
         boolean open = plan.type() == PlanType.STREET || plan.type() == PlanType.PLAZA;
         if (!inhabited || !open || plan.tier().compareTo(CorruptionTier.LOW) > 0) {
@@ -207,5 +235,22 @@ public class GridChunkGenerator extends ChunkGenerator {
             program.setPersistent();
             region.spawnEntityAndPassengers(program);
         }
+    }
+
+    // Subway maintenance passages in unstable ground shelter a corrupted program, one that fights back where it's worse
+    private static void spawnInPassage(ChunkRegion region, GridChunkBuild build, ChunkPlan plan) {
+        BlockPos spot = build.passageSpot();
+        if (spot == null || plan.tier().compareTo(CorruptionTier.UNSTABLE) < 0) {
+            return;
+        }
+        CorruptedProgramEntity program = ModEntities.CORRUPTED_PROGRAM.create(region.toServerWorld(), SpawnReason.CHUNK_GENERATION);
+        if (program == null) {
+            return;
+        }
+        BlockPos pos = region.getCenterPos().getStartPos().add(spot);
+        program.setProvokable(plan.tier().compareTo(CorruptionTier.CORRUPTED) >= 0);
+        program.refreshPositionAndAngles(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, 0, 0);
+        program.setPersistent();
+        region.spawnEntityAndPassengers(program);
     }
 }

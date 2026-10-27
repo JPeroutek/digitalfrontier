@@ -105,6 +105,11 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add("screen.digitalfrontier.grid_tuning.street_style.uniform", "Uniform");
         translationBuilder.add("screen.digitalfrontier.grid_tuning.street_style.varied", "Varied");
         translationBuilder.add("screen.digitalfrontier.grid_tuning.levels", "Levels");
+        translationBuilder.add("sign.digitalfrontier.line", "Line");
+        translationBuilder.add("sign.digitalfrontier.subway", "Subway");
+        translationBuilder.add("sign.digitalfrontier.elevated", "Elevated");
+        translationBuilder.add("sign.digitalfrontier.express", "Express");
+        translationBuilder.add("sign.digitalfrontier.express_to", "to Waypoint %s");
         translationBuilder.add("screen.digitalfrontier.grid_tuning.levels.off", "Streets only");
         translationBuilder.add("screen.digitalfrontier.grid_tuning.levels.skyroads", "Skyroads");
         translationBuilder.add("screen.digitalfrontier.grid_tuning.levels.transit", "Rail and subway");

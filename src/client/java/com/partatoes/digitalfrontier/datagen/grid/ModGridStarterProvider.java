@@ -9,10 +9,10 @@ import com.partatoes.digitalfrontier.block.ModBlocks;
 import com.partatoes.digitalfrontier.grid.layout.StreetAxis.RoadClass;
 import com.partatoes.digitalfrontier.grid.layout.Zone;
 import com.partatoes.digitalfrontier.grid.parts.GridBuildingDef;
+import com.partatoes.digitalfrontier.grid.parts.SpiralStair;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.LadderBlock;
 import net.minecraft.block.PoweredRailBlock;
 import net.minecraft.block.RailBlock;
 import net.minecraft.block.SlabBlock;
@@ -22,9 +22,9 @@ import net.minecraft.data.DataOutput;
 import net.minecraft.data.DataProvider;
 import net.minecraft.data.DataWriter;
 import net.minecraft.nbt.NbtIo;
+import net.minecraft.util.BlockRotation;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Direction;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -217,17 +217,19 @@ public class ModGridStarterProvider implements DataProvider {
                 .box(8, 0, 0, 8, 20, 0, BRICKS).box(8, 0, 15, 8, 20, 15, BRICKS)
                 .box(8, 21, 0, 8, 21, 15, BRICKS));
         parts.put("grid/starter/level/guideway_crossing", guideway(new StarterPart(16, 26), 4, 11));
-        parts.put("grid/starter/level/guideway_station", guideway(new StarterPart(16, 26), 1, 14)
-                .box(0, 22, 1, 15, 22, 3, BRICKS).box(0, 22, 12, 15, 22, 14, BRICKS)
-                .box(1, 0, 0, 1, 22, 0, BRICKS).box(1, 0, 1, 1, 22, 1, ladder(Direction.SOUTH))
-                .box(14, 0, 15, 14, 22, 15, BRICKS).box(14, 0, 14, 14, 22, 14, ladder(Direction.NORTH))
-                .box(1, 23, 1, 1, 23, 1, AIR).box(14, 23, 14, 14, 23, 14, AIR));
+        StarterPart railStation = guideway(new StarterPart(16, 26), 1, 14)
+                .box(0, 22, 1, 15, 22, 3, BRICKS).box(0, 22, 12, 15, 22, 14, BRICKS);
+        // Placed turned clockwise, so the staircases land in the chunk's corners
+        stationStairs(railStation, 0, 22, BlockRotation.CLOCKWISE_90);
+        parts.put("grid/starter/level/guideway_station", railStation);
 
         // Subway: tracks along X at Z = 6 and 9, on the tunnel floor (Y 47, part Y 0)
         parts.put("grid/starter/level/subway", subway(new StarterPart(16, 8), 3, 12));
-        parts.put("grid/starter/level/subway_station", subway(new StarterPart(16, 18), 0, 15)
-                .box(1, 1, 1, 1, 17, 1, ladder(Direction.SOUTH)).box(14, 1, 14, 14, 17, 14, ladder(Direction.NORTH))
-                .box(2, 17, 1, 2, 17, 1, LIGHT).box(13, 17, 14, 13, 17, 14, LIGHT));
+        StarterPart subwayStation = subway(new StarterPart(16, 21), 0, 15);
+        stationStairs(subwayStation, 1, 16, BlockRotation.NONE);
+        parts.put("grid/starter/level/subway_station", subwayStation);
+        parts.put("grid/starter/level/subway_corner", subwayCorner());
+        parts.put("grid/starter/level/subway_passage", subwayPassage());
 
         // A skyway across a road along X, so the bridge runs along Z; part Y 0 is its floor
         parts.put("grid/starter/level/skyway", new StarterPart(16, 5)
@@ -298,8 +300,78 @@ public class ModGridStarterProvider implements DataProvider {
         }
     }
 
-    private static BlockState ladder(Direction facing) {
-        return Blocks.LADDER.getDefaultState().with(LadderBlock.FACING, facing);
+    /**
+     * A station's two spiral staircases, in the corners of the chunk it's placed in: (0..3, 0..3) and the opposite
+     * one. {@code placed} is how the generator turns the station, so the stairs are written turned back.
+     */
+    private static void stationStairs(StarterPart part, int bottomY, int rise, BlockRotation placed) {
+        boolean turned = placed == BlockRotation.CLOCKWISE_90;
+        BlockRotation back = turned ? BlockRotation.COUNTERCLOCKWISE_90 : BlockRotation.NONE;
+        for (int x = 0; x < 16; x++) {
+            for (int z = 0; z < 16; z++) {
+                // Where this part position ends up in the chunk
+                int chunkX = turned ? 15 - z : x;
+                int chunkZ = turned ? x : z;
+                for (int y = 0; y <= rise + 3; y++) {
+                    BlockState state = null;
+                    if (chunkX <= 3 && chunkZ <= 3) {
+                        state = SpiralStair.blockAt(chunkX, y, chunkZ, rise, LIGHT);
+                    } else if (chunkX >= 12 && chunkZ >= 12) {
+                        state = SpiralStair.blockAt(15 - chunkX, y, 15 - chunkZ, rise, LIGHT);
+                        state = state == null ? null : state.rotate(BlockRotation.CLOCKWISE_180);
+                    }
+                    if (state != null) {
+                        part.box(x, bottomY + y, z, x, bottomY + y, z, state.rotate(back));
+                    }
+                }
+            }
+        }
+    }
+
+    // In from the south (Z = 15), out to the east (X = 15); the outer track turns at (6, 6), the inner at (9, 9)
+    private static StarterPart subwayCorner() {
+        StarterPart part = new StarterPart(16, 8);
+        for (int x = 0; x < 16; x++) {
+            for (int z = 0; z < 16; z++) {
+                boolean inside = cornerInside(x, z);
+                boolean wall = false;
+                for (int dx = -1; dx <= 1 && !inside; dx++) {
+                    for (int dz = -1; dz <= 1; dz++) {
+                        wall |= cornerInside(x + dx, z + dz);
+                    }
+                }
+                if (!inside && !wall) {
+                    continue;
+                }
+                part.box(x, 0, z, x, 0, z, BRICKS).box(x, 7, z, x, 7, z, BRICKS)
+                        .box(x, 1, z, x, 6, z, inside ? AIR : BRICKS);
+                if (wall && Math.floorMod(x + z, 4) == 0) {
+                    part.box(x, 4, z, x, 4, z, LIGHT);
+                }
+            }
+        }
+        part.box(7, 7, 7, 8, 7, 8, LIGHT);
+        for (int track : new int[]{6, 9}) {
+            part.box(track, 1, track + 1, track, 1, 15, Blocks.RAIL.getDefaultState().with(RailBlock.SHAPE, RailShape.NORTH_SOUTH))
+                    .box(track + 1, 1, track, 15, 1, track, Blocks.RAIL.getDefaultState().with(RailBlock.SHAPE, RailShape.EAST_WEST))
+                    .box(track, 1, track, track, 1, track, Blocks.RAIL.getDefaultState().with(RailBlock.SHAPE, RailShape.SOUTH_EAST));
+        }
+        return part;
+    }
+
+    private static boolean cornerInside(int x, int z) {
+        return x >= 4 && x <= 15 && z >= 4 && z <= 15 && !(x >= 12 && z >= 12);
+    }
+
+    // A maintenance room in X = 4..11, Z = 1..2, behind a doorway in the tunnel wall (Z = 3)
+    private static StarterPart subwayPassage() {
+        return new StarterPart(16, 6)
+                .box(3, 0, 0, 12, 5, 2, BRICKS)
+                .box(4, 1, 1, 11, 4, 2, AIR)
+                .box(6, 5, 1, 6, 5, 2, LIGHT).box(9, 5, 1, 9, 5, 2, LIGHT)
+                .box(4, 1, 1, 5, 3, 1, BRICKS).box(10, 1, 1, 11, 3, 1, BRICKS)
+                .box(4, 2, 1, 5, 2, 1, LIGHT).box(10, 2, 1, 11, 2, 1, LIGHT)
+                .box(7, 1, 3, 8, 2, 3, AIR);
     }
 
     private static Map<String, GridBuildingDef> buildingDefs() {
@@ -351,15 +423,23 @@ public class ModGridStarterProvider implements DataProvider {
         level(defs, "guideway", GridBuildingDef.Kind.GUIDEWAY);
         level(defs, "guideway_crossing", GridBuildingDef.Kind.GUIDEWAY_CROSSING);
         level(defs, "guideway_station", GridBuildingDef.Kind.GUIDEWAY_STATION);
-        level(defs, "subway", GridBuildingDef.Kind.SUBWAY);
+        // Express lines run out beyond the city, so their tunnels are wanted everywhere
+        List<Zone> everywhere = List.of(Zone.CITY_CORE, Zone.CITY, Zone.OUTSKIRTS, Zone.WAYPOINT, Zone.OUTLANDS, Zone.UNALLOCATED);
+        level(defs, "subway", GridBuildingDef.Kind.SUBWAY, everywhere);
         level(defs, "subway_station", GridBuildingDef.Kind.SUBWAY_STATION);
+        level(defs, "subway_corner", GridBuildingDef.Kind.SUBWAY_CORNER, everywhere);
+        level(defs, "subway_passage", GridBuildingDef.Kind.SUBWAY_PASSAGE, everywhere);
         level(defs, "skyway", GridBuildingDef.Kind.SKYWAY);
         return defs;
     }
 
-    // The levels only run inside the city
+    // Most levels only run inside the city
     private static void level(Map<String, GridBuildingDef> defs, String name, GridBuildingDef.Kind kind) {
-        defs.put("starter_" + name, new GridBuildingDef(kind, List.of(Zone.CITY_CORE, Zone.CITY), 10, 1,
+        level(defs, name, kind, List.of(Zone.CITY_CORE, Zone.CITY));
+    }
+
+    private static void level(Map<String, GridBuildingDef> defs, String name, GridBuildingDef.Kind kind, List<Zone> zones) {
+        defs.put("starter_" + name, new GridBuildingDef(kind, zones, 10, 1,
                 Optional.of(id("grid/starter/level/" + name)), List.of(), Optional.empty(), 0, 0));
     }
 

@@ -143,14 +143,20 @@ class TransitLayoutTest {
     @Test
     void skywaysOnlyCrossSingleRoadsBetweenBlocks() {
         int skyways = 0;
+        int twoHigh = 0;
         for (long seed = 0; seed < 6; seed++) {
             GridLayout layout = new GridLayout(with(seed, Set.of(GridLevel.SKYWAYS)));
             for (int x = -35; x <= 35; x++) {
                 for (int z = -35; z <= 35; z++) {
-                    TransitLayout.Skyway skyway = layout.transit().skywayAt(x, z);
-                    if (skyway == null) {
+                    List<TransitLayout.Skyway> here = layout.transit().skywaysAt(x, z);
+                    if (here.size() == 2) {
+                        twoHigh++;
+                        assertEquals(here.get(0).standY() + 2 * GridLayout.FLOOR_HEIGHT, here.get(1).standY(), "two floors apart");
+                    }
+                    if (here.isEmpty()) {
                         continue;
                     }
+                    TransitLayout.Skyway skyway = here.get(0);
                     skyways++;
                     ChunkPlan plan = layout.planAt(x, z);
                     assertNotEquals(plan.streetX(), plan.streetZ(), "a single road");
@@ -162,6 +168,7 @@ class TransitLayoutTest {
             }
         }
         assertTrue(skyways > 0);
+        assertTrue(twoHigh > 0, "some streets have a second skyway");
     }
 
     @Test
@@ -205,6 +212,79 @@ class TransitLayoutTest {
             }
         }
         assertTrue(decks > 0 && ramps > 0);
+    }
+
+    @Test
+    void expressLinesRunFromTheCityEdgeToEachWaypointWithoutMeeting() {
+        for (long seed = 0; seed < 6; seed++) {
+            GridLayout layout = new GridLayout(with(seed, Set.of(GridLevel.SUBWAY)));
+            TransitLayout transit = layout.transit();
+            List<Site> waypoints = layout.sites().stream().filter(site -> site.type() == Site.Type.WAYPOINT).toList();
+            assertFalse(waypoints.isEmpty());
+            int reach = DEFAULT.waypointRingRadius() + 4;
+            int[] pieces = new int[waypoints.size()];
+            int[] stations = new int[waypoints.size()];
+            for (int x = -reach; x <= reach; x++) {
+                for (int z = -reach; z <= reach; z++) {
+                    TransitLayout.ExpressPiece piece = transit.expressAt(x, z);
+                    if (piece == null) {
+                        continue;
+                    }
+                    String where = "seed " + seed + " chunk " + x + "," + z;
+                    pieces[piece.line()]++;
+                    assertTrue(Math.hypot(x, z) > DEFAULT.cityRadius(), where + ": outside the city");
+                    assertFalse(transit.subway(x, z), where + ": never on a city line");
+                    // Each open side leads to the next piece of the same line
+                    int open = 0;
+                    for (var side : new net.minecraft.util.math.Direction[]{piece.from(), piece.to()}) {
+                        TransitLayout.ExpressPiece next = transit.expressAt(x + side.getOffsetX(), z + side.getOffsetZ());
+                        if (next != null) {
+                            assertEquals(piece.line(), next.line(), where + ": lines don't meet");
+                            assertTrue(next.from() == side.getOpposite() || next.to() == side.getOpposite(), where + ": joined up");
+                            open++;
+                        }
+                    }
+                    if (piece.station()) {
+                        stations[piece.line()]++;
+                        assertFalse(piece.corner(), where);
+                        assertEquals(1, open, where + ": a terminus has one way on");
+                    } else {
+                        assertEquals(2, open, where + ": the line carries on both ways");
+                    }
+                }
+            }
+            for (int line = 0; line < waypoints.size(); line++) {
+                Site waypoint = waypoints.get(line);
+                assertTrue(pieces[line] > 0, "seed " + seed + ": waypoint " + line + " has a line");
+                assertEquals(2, stations[line], "seed " + seed + ": a station at each end");
+                // One of the stations is right next to the waypoint
+                boolean beside = false;
+                for (var side : net.minecraft.util.math.Direction.Type.HORIZONTAL) {
+                    TransitLayout.ExpressPiece next = transit.expressAt(waypoint.chunkX() + side.getOffsetX(), waypoint.chunkZ() + side.getOffsetZ());
+                    beside |= next != null && next.station() && next.line() == line;
+                }
+                assertTrue(beside, "seed " + seed + ": waypoint " + line);
+            }
+        }
+    }
+
+    @Test
+    void passagesAndStationNames() {
+        TransitLayout transit = new GridLayout(with(3, Set.of(GridLevel.SUBWAY, GridLevel.ELEVATED_RAIL))).transit();
+        int passages = 0;
+        for (int x = -60; x <= 60; x++) {
+            for (int z = -60; z <= 60; z++) {
+                if (transit.passageSide(x, z) >= 0) {
+                    passages++;
+                }
+            }
+        }
+        double share = passages / (121.0 * 121.0);
+        assertTrue(share > 0.1 && share < 0.2, "about 15% of tunnel chunks get a passage: " + share);
+        TransitLayout.StationInfo info = transit.stationInfo(4, 7, false);
+        assertEquals(info, transit.stationInfo(4, 7, false), "names are stable");
+        assertTrue(info.name().contains(" "));
+        assertEquals(0, info.waypoint());
     }
 
     @Test

@@ -223,7 +223,8 @@ final class GridChunkBuild {
 
     private GridTransit.ChunkTransit transit() {
         if (transit == null) {
-            transit = GridTransit.forChunk(layout.transit(), assets, layout.settings().gridSeed(), plan, chunkX, chunkZ, this::skywayFits);
+            transit = GridTransit.forChunk(layout.transit(), assets, layout.settings().gridSeed(), plan, chunkX, chunkZ,
+                    this::skywayFits, (localX, localZ) -> column(localX, localZ).top());
         }
         return transit;
     }
@@ -252,14 +253,29 @@ final class GridChunkBuild {
         if (levels.elevatedRail()) {
             parts.add(levels.railStation() ? "elevated rail station" : "elevated rail");
         }
-        if (levels.subway()) {
-            parts.add(levels.subwayStation() ? "subway station" : "subway");
+        GridTransit.Tunnel tunnel = levels.tunnel();
+        if (tunnel != null) {
+            String line = tunnel.express() != null ? "express subway to waypoint " + (tunnel.express().line() + 1) : "subway";
+            parts.add(tunnel.station() ? line + " station" : tunnel.corner() ? line + " (corner)" : line);
+            if (tunnel.passage() >= 0) {
+                parts.add("maintenance passage");
+            }
         }
-        if (levels.skyway() != null) {
-            parts.add("skyway at Y " + levels.skyway().standY());
-        }
+        levels.skyways().forEach(skyway -> parts.add("skyway at Y " + skyway.standY()));
         levels.doors().forEach(door -> parts.add("skyway door at Y " + door.standY()));
         return String.join(", ", parts);
+    }
+
+    /** The station signs in this chunk, positions relative to the chunk. */
+    List<GridTransit.Sign> signs() {
+        GridTransit.ChunkTransit levels = transit();
+        return levels.any() ? GridTransit.signs(levels) : List.of();
+    }
+
+    /** Where something can stand in this chunk's subway maintenance passage, relative to the chunk; null if none. */
+    @Nullable
+    BlockPos passageSpot() {
+        return GridTransit.passageSpot(transit());
     }
 
     /** Lowest Y with a block in a column. Above the world bottom only in unallocated space. */

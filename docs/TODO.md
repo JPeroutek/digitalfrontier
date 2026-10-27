@@ -44,12 +44,13 @@ where, `GridTransit` places the templates and builds whatever has none in code).
   and station distinct (several definitions per kind are picked at random already).
 - **Templated end ramps.** Where a deck comes down at the city edge, the height changes partway through a chunk,
   so those stretches are still built in code.
-- **Out to the waypoints.** Rail and skyroads along the highways to the waypoints, with a station at each
-  terminal, so the network doubles as fast travel. Diagonal highways need a rail answer (vanilla rails can't run
-  diagonally).
+- **Skyroads to the waypoints.** Express subway lines reach every waypoint; skyroads out along the highways
+  don't yet. Diagonal highways would need a stepped deck or a dog-leg like the express lines.
+- **Express lines into the city.** Express termini stop just outside the city edge; passengers walk (or ride) in.
+  A transfer station joining an express line to a city line would make it one network.
 - **Trains.** A light-rail train entity instead of vanilla minecarts.
-- **Stations with names and stairs.** Stations are reached by ladders today; stairs or lifts, and signs naming
-  the station and line.
-- **Subway side passages** (like Lost Cities' corridors): maintenance rooms off the tunnels, a home for
-  corrupted programs at higher corruption tiers.
-- **Skyways at several heights** on one street, and skyways in grids with uniform streets' taller blocks.
+- **Lifts.** Station staircases climb 17–23 blocks (more at express termini in hilly ground); a lift would be kinder.
+- **Station names as data.** Names are made from two built-in word lists; a datapack could supply its own.
+- **Passage loot.** Maintenance passages are empty rooms apart from their programs; a chest of salvage would give
+  a reason to go looking.
+- **Skyways in uniform grids**, whose taller blocks would suit them.

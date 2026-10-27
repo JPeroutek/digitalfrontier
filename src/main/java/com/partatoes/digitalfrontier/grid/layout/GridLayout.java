@@ -95,7 +95,7 @@ public final class GridLayout {
         int extent = settings.cityRadius() + MultiChunk.SIZE + 2;
         this.xAxis = new StreetAxis(settings.streetStyle(), seed, SALT_STREETS_X, settings.blockSize(), extent);
         this.zAxis = new StreetAxis(settings.streetStyle(), seed, SALT_STREETS_Z, settings.blockSize(), extent);
-        this.transit = new TransitLayout(settings, xAxis, zAxis);
+        this.transit = new TransitLayout(settings, xAxis, zAxis, waypoints);
     }
 
     /** One stronghold up to 64% corruption (the default grid has 50%), two up to 84%, three above that. */
