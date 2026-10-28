@@ -21,6 +21,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.registry.Registries;
 import com.partatoes.digitalfrontier.entity.custom.CorruptedProgramEntity;
+import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.ChunkRegion;
@@ -34,6 +35,7 @@ import net.minecraft.world.gen.chunk.ChunkGenerator;
 import net.minecraft.world.gen.chunk.VerticalBlockSample;
 import net.minecraft.world.gen.noise.NoiseConfig;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -168,6 +170,20 @@ public class GridChunkGenerator extends ChunkGenerator {
             return pad.up();
         }
         return new BlockPos(terminal.chunkX() * 16 + 8, build.columnTop(8, 8) + 1, terminal.chunkZ() * 16 + 8);
+    }
+
+    /** Where each Portal's beam of light rises from: block bounds of the beam's foot, worked out from the layout alone. */
+    public List<BlockBox> portalBeams() {
+        List<BlockBox> beams = new ArrayList<>();
+        for (Site site : layout().sites()) {
+            if (site.type() == Site.Type.PORTAL) {
+                BlockBox beam = build(site.chunkX(), site.chunkZ()).portalBeam();
+                if (beam != null) {
+                    beams.add(beam);
+                }
+            }
+        }
+        return beams;
     }
 
     private GridChunkBuild build(int chunkX, int chunkZ) {

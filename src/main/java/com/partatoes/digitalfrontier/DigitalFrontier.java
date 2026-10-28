@@ -14,6 +14,7 @@ import com.partatoes.digitalfrontier.grid.stronghold.StrongholdManager;
 import com.partatoes.digitalfrontier.grid.tuning.GridTuningNetworking;
 import com.partatoes.digitalfrontier.grid.arrival.GridArrival;
 import com.partatoes.digitalfrontier.grid.exit.MemoryPaging;
+import com.partatoes.digitalfrontier.grid.exit.PortalBeams;
 import com.partatoes.digitalfrontier.item.ModFuelItems;
 import com.partatoes.digitalfrontier.item.ModItemGroups;
 import com.partatoes.digitalfrontier.item.ModItems;
@@ -56,6 +57,7 @@ public class DigitalFrontier implements ModInitializer {
 		GridRegistries.register();
 		GridArrival.register();
 		MemoryPaging.register();
+		PortalBeams.register();
 		GridManager.register();
 		GridCommands.register();
 		GridTuningNetworking.register();

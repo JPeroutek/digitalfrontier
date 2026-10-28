@@ -5,6 +5,7 @@ import com.partatoes.digitalfrontier.entity.vehicle.LightCycleModel;
 import com.partatoes.digitalfrontier.entity.vehicle.LightCycleRenderer;
 import com.partatoes.digitalfrontier.block.ModBlocks;
 import com.partatoes.digitalfrontier.entity.custom.LieutenantEntity;
+import com.partatoes.digitalfrontier.grid.PortalBeamRenderer;
 import com.partatoes.digitalfrontier.grid.stronghold.LieutenantDef;
 import com.partatoes.digitalfrontier.grid.tuning.GridTuning;
 import com.partatoes.digitalfrontier.grid.tuning.GridTuningNetworking;
@@ -43,6 +44,9 @@ public class DigitalFrontierClient implements ClientModInitializer {
 		BlockRenderLayerMap.INSTANCE.putBlocks(RenderLayer.getCutout(), ModBlocks.ARRIVAL_PAD, ModBlocks.GRID_PORTAL, ModBlocks.STATIC_BLOCK,
 				ModBlocks.STRONGHOLD_UPLINK);
 		BlockRenderLayerMap.INSTANCE.putBlocks(RenderLayer.getCutout(), ModBlocks.GLITCHED_GRIDSTONE.values().toArray(Block[]::new));
+
+		// The Portal's beam, seen from anywhere in the grid
+		PortalBeamRenderer.register();
 
 		// Grid Tuning Laser screen, opened by the server with the laser's current grid code
 		ClientPlayNetworking.registerGlobalReceiver(GridTuningNetworking.OpenScreenPayload.ID, (payload, context) ->

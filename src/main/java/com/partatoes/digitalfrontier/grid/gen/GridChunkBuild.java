@@ -1,5 +1,6 @@
 package com.partatoes.digitalfrontier.grid.gen;
 
+import com.partatoes.digitalfrontier.block.ModBlocks;
 import com.partatoes.digitalfrontier.grid.layout.ChunkPlan;
 import com.partatoes.digitalfrontier.grid.layout.GridLayout;
 import com.partatoes.digitalfrontier.grid.layout.GridRandom;
@@ -17,6 +18,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.BlockRotation;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
@@ -217,8 +219,46 @@ final class GridChunkBuild {
         if (layers.isEmpty()) {
             return FLOOR_Y + Math.max(plan.floors() * GridLayout.FLOOR_HEIGHT, GridTerrain.MAX_GROUND_RISE);
         }
+        return isPortal() ? MAX_Y : partsTop();
+    }
+
+    private int partsTop() {
         Layer top = layers.getLast();
         return top.bottomY() + top.part().sizeY() - 1;
+    }
+
+    // The way out of the grid: never corrupted, and its column of Grid Portal blocks goes on up to build height
+    private boolean isPortal() {
+        return plan.site() != null && plan.site().type() == Site.Type.PORTAL && !layers.isEmpty();
+    }
+
+    /**
+     * Where a Portal's beam of light rises from (drawn by the client, see {@code PortalBeams}): the column of Grid
+     * Portal blocks through the top row of the Portal building, as world block bounds, from the bottom of the column.
+     * Null if there are none.
+     */
+    @Nullable
+    BlockBox portalBeam() {
+        if (!isPortal()) {
+            return null;
+        }
+        Layer top = layers.getLast();
+        int y = partsTop();
+        BlockBox box = null;
+        for (int localX = 0; localX < 16; localX++) {
+            for (int localZ = 0; localZ < 16; localZ++) {
+                if (!partBlock(top, localX, y, localZ).isOf(ModBlocks.GRID_PORTAL)) {
+                    continue;
+                }
+                int bottom = y;
+                while (bottom > top.bottomY() && partBlock(top, localX, bottom - 1, localZ).isOf(ModBlocks.GRID_PORTAL)) {
+                    bottom--;
+                }
+                BlockPos pos = new BlockPos(chunkX * 16 + localX, bottom, chunkZ * 16 + localZ);
+                box = box == null ? new BlockBox(pos) : box.encompass(pos);
+            }
+        }
+        return box;
     }
 
     private GridTransit.ChunkTransit transit() {
@@ -332,7 +372,7 @@ final class GridChunkBuild {
     }
 
     BlockState blockAt(int localX, int y, int localZ) {
-        if (!corrupted()) {
+        if (isPortal() || !corrupted()) {
             return uncorruptedBlockAt(localX, y, localZ);
         }
         GridTransit.ChunkTransit levels = transit();
@@ -395,6 +435,13 @@ final class GridChunkBuild {
         for (Layer layer : layers) {
             if (layer.contains(y)) {
                 return partBlock(layer, localX, y, localZ);
+            }
+        }
+        if (isPortal() && y > partsTop()) {
+            // Grid Portal blocks in the top row of the building go on up
+            BlockState top = partBlock(layers.getLast(), localX, partsTop(), localZ);
+            if (top.isOf(ModBlocks.GRID_PORTAL)) {
+                return top;
             }
         }
         return Blocks.AIR.getDefaultState();
