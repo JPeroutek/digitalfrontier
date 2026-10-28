@@ -1,0 +1,301 @@
+package com.partatoes.digitalfrontier.grid.layout;
+
+import com.mojang.serialization.JsonOps;
+import com.partatoes.digitalfrontier.grid.GridKey;
+import com.partatoes.digitalfrontier.grid.layout.StreetAxis.RoadClass;
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class TransitLayoutTest {
+    private static final GridLayoutSettings DEFAULT = GridLayoutSettings.DEFAULT;
+
+    private static GridLayoutSettings with(long seed, Set<GridLevel> levels) {
+        GridLayoutSettings d = DEFAULT;
+        return new GridLayoutSettings(seed, d.corruption(), d.coreRadius(), d.cityRadius(), d.blockSize(), d.outskirtsRadius(),
+                d.waypointRingRadius(), d.waypointCount(), d.outlandsRadius(), d.districtColors(), d.streetStyle(), levels);
+    }
+
+    // Every boulevard line through the city, as {first row/column, along X?}
+    private static List<int[]> boulevards(GridLayout layout) {
+        List<int[]> lines = new ArrayList<>();
+        for (int c = -45; c <= 45; c++) {
+            ChunkPlan alongX = layout.planAt(30, c);
+            if (alongX.roadX() != null && alongX.roadX().roadClass() == RoadClass.BOULEVARD && alongX.roadX().half() == 0) {
+                lines.add(new int[]{c, 1});
+            }
+            ChunkPlan alongZ = layout.planAt(c, 30);
+            if (alongZ.roadZ() != null && alongZ.roadZ().roadClass() == RoadClass.BOULEVARD && alongZ.roadZ().half() == 0) {
+                lines.add(new int[]{c, 0});
+            }
+        }
+        return lines;
+    }
+
+    @Test
+    void skyroadDecksRunTheLengthOfEveryBoulevard() {
+        for (long seed = 0; seed < 6; seed++) {
+            GridLayout layout = new GridLayout(with(seed, Set.of(GridLevel.SKYROADS)));
+            TransitLayout transit = layout.transit();
+            List<int[]> lines = boulevards(layout);
+            assertFalse(lines.isEmpty(), "seed " + seed + " has boulevards (at least the central ones)");
+            for (int[] line : lines) {
+                // Across the line, the median sits between the two rows; check the blocks either side of it
+                int median = (line[0] + 1) * 16;
+                for (int along = -16 * 20; along < 16 * 20; along++) {
+                    int level0 = line[1] == 1 ? transit.deckLevel(along, median - 1) : transit.deckLevel(median - 1, along);
+                    int level1 = line[1] == 1 ? transit.deckLevel(along, median) : transit.deckLevel(median, along);
+                    String where = "seed " + seed + ", line " + line[0] + (line[1] == 1 ? " along X" : " along Z") + " at " + along;
+                    if (Math.hypot(along / 16.0, line[0]) < DEFAULT.cityRadius() - 4) {
+                        assertEquals(TransitLayout.DECK_LEVEL, level0, where);
+                        assertEquals(TransitLayout.DECK_LEVEL, level1, where);
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    void decksRampDownToTheStreetAtTheCityEdge() {
+        GridLayout layout = new GridLayout(with(0, Set.of(GridLevel.SKYROADS)));
+        TransitLayout transit = layout.transit();
+        // The central boulevard along X has its median at block row 0
+        int previous = TransitLayout.DECK_LEVEL;
+        int along = 0;
+        while (transit.deckLevel(along, 0) >= 0) {
+            int level = transit.deckLevel(along, 0);
+            assertTrue(previous - level <= 1, "the ramp descends half a block per block at " + along);
+            previous = level;
+            along++;
+        }
+        assertEquals(0, previous, "the deck reaches the street");
+        assertTrue(Math.hypot(along / 16.0, 0) <= DEFAULT.cityRadius() + 1, "and ends at the city edge");
+    }
+
+    @Test
+    void onRampsClimbTwoChunksOfABlockStretchAndNeverAnIntersection() {
+        int ramps = 0;
+        for (long seed = 0; seed < 6; seed++) {
+            GridLayout layout = new GridLayout(with(seed, Set.of(GridLevel.SKYROADS)));
+            TransitLayout transit = layout.transit();
+            for (int x = -30 * 16; x < 30 * 16; x++) {
+                for (int z = -30 * 16; z < 30 * 16; z += 3) {
+                    int level = transit.rampLevel(x, z);
+                    if (level < 0) {
+                        continue;
+                    }
+                    ramps++;
+                    ChunkPlan plan = layout.planAt(x >> 4, z >> 4);
+                    String where = "seed " + seed + " at " + x + "," + z;
+                    assertEquals(PlanType.STREET, plan.type(), where);
+                    assertFalse(plan.streetX() && plan.streetZ(), where + ": ramps aren't on intersections");
+                    assertTrue(transit.deckLevel(x, z) < 0, where + ": ramps run beside the deck, not on it");
+                    assertTrue(level <= TransitLayout.DECK_LEVEL, where);
+                }
+            }
+        }
+        assertTrue(ramps > 0, "some on-ramps exist");
+    }
+
+    @Test
+    void railRunsAlongZAndSubwayAlongXWithSpacedStations() {
+        for (long seed = 0; seed < 6; seed++) {
+            GridLayout layout = new GridLayout(with(seed, Set.of(GridLevel.ELEVATED_RAIL, GridLevel.SUBWAY)));
+            TransitLayout transit = layout.transit();
+            List<Integer> railColumns = new ArrayList<>();
+            List<Integer> subwayRows = new ArrayList<>();
+            for (int c = -40; c <= 40; c++) {
+                if (transit.elevatedRail(c, 0) || transit.elevatedRail(c, 5)) {
+                    railColumns.add(c);
+                    ChunkPlan plan = layout.planAt(c, 7);
+                    assertNotNull(plan.roadZ(), "seed " + seed + ": rail column " + c + " is a road along Z");
+                    assertEquals(RoadClass.STREET, plan.roadZ().roadClass());
+                }
+                if (transit.subway(0, c) || transit.subway(5, c)) {
+                    subwayRows.add(c);
+                    ChunkPlan plan = layout.planAt(7, c);
+                    assertNotNull(plan.roadX(), "seed " + seed + ": subway row " + c + " is a road along X");
+                    assertEquals(RoadClass.STREET, plan.roadX().roadClass());
+                }
+            }
+            assertFalse(railColumns.isEmpty() && subwayRows.isEmpty(), "seed " + seed + " has some rail");
+            for (int i = 1; i < railColumns.size(); i++) {
+                assertTrue(railColumns.get(i) - railColumns.get(i - 1) >= TransitLayout.MIN_LINE_SPACING, "seed " + seed);
+            }
+            for (int column : railColumns) {
+                int last = Integer.MIN_VALUE / 2;
+                for (int z = -40; z <= 40; z++) {
+                    if (transit.railStation(column, z)) {
+                        assertTrue(layout.planAt(column, z).streetX(), "seed " + seed + ": stations are at intersections");
+                        assertTrue(z - last >= TransitLayout.MIN_STATION_SPACING, "seed " + seed + ": stations are spaced");
+                        last = z;
+                    }
+                }
+                assertTrue(last > Integer.MIN_VALUE / 2, "seed " + seed + ": rail column " + column + " has a station");
+            }
+        }
+    }
+
+    @Test
+    void skywaysOnlyCrossSingleRoadsBetweenBlocks() {
+        int skyways = 0;
+        int twoHigh = 0;
+        for (long seed = 0; seed < 6; seed++) {
+            GridLayout layout = new GridLayout(with(seed, Set.of(GridLevel.SKYWAYS)));
+            for (int x = -35; x <= 35; x++) {
+                for (int z = -35; z <= 35; z++) {
+                    List<TransitLayout.Skyway> here = layout.transit().skywaysAt(x, z);
+                    if (here.size() == 2) {
+                        twoHigh++;
+                        assertEquals(here.get(0).standY() + 2 * GridLayout.FLOOR_HEIGHT, here.get(1).standY(), "two floors apart");
+                    }
+                    if (here.isEmpty()) {
+                        continue;
+                    }
+                    TransitLayout.Skyway skyway = here.get(0);
+                    skyways++;
+                    ChunkPlan plan = layout.planAt(x, z);
+                    assertNotEquals(plan.streetX(), plan.streetZ(), "a single road");
+                    assertEquals(skyway.roadAlongX(), plan.streetX());
+                    ChunkPlan side = skyway.roadAlongX() ? layout.planAt(x, z + 1) : layout.planAt(x + 1, z);
+                    assertNotEquals(PlanType.STREET, side.type(), "the bridge lands on a block, not a road");
+                    assertTrue(skyway.standY() >= 101 && (skyway.standY() - 65) % GridLayout.FLOOR_HEIGHT == 0);
+                }
+            }
+        }
+        assertTrue(skyways > 0);
+        assertTrue(twoHigh > 0, "some streets have a second skyway");
+    }
+
+    @Test
+    void templatePiecesAgreeWithTheBlockGeometry() {
+        int decks = 0;
+        int ramps = 0;
+        for (long seed = 0; seed < 4; seed++) {
+            TransitLayout transit = new GridLayout(with(seed, Set.of(GridLevel.SKYROADS))).transit();
+            for (int cx = -38; cx <= 38; cx++) {
+                for (int cz = -38; cz <= 38; cz++) {
+                    String where = "seed " + seed + " chunk " + cx + "," + cz;
+                    TransitLayout.DeckPiece deck = transit.deckPiece(cx, cz);
+                    if (deck != null) {
+                        decks++;
+                        // A whole piece: every deck block of the chunk is at full height
+                        for (int i = 0; i < 16; i++) {
+                            for (int j = 0; j < 16; j++) {
+                                int level = transit.deckLevel(cx * 16 + i, cz * 16 + j);
+                                assertTrue(level < 0 || level == TransitLayout.DECK_LEVEL, where);
+                            }
+                        }
+                        if (deck.halfX() >= 0) {
+                            int bandZ = cz * 16 + (deck.halfX() == 0 ? 15 : 0);
+                            assertEquals(TransitLayout.DECK_LEVEL, transit.deckLevel(cx * 16 + 3, bandZ), where);
+                        }
+                    }
+                    TransitLayout.RampPiece ramp = transit.rampPiece(cx, cz);
+                    if (ramp != null) {
+                        ramps++;
+                        // Ends of the chunk along the line, in the ramp's lane
+                        int lane = ramp.half() == 0 ? 4 : 11;
+                        int low = ramp.alongX()
+                                ? transit.rampLevel(cx * 16, cz * 16 + lane) : transit.rampLevel(cx * 16 + lane, cz * 16);
+                        int high = ramp.alongX()
+                                ? transit.rampLevel(cx * 16 + 15, cz * 16 + lane) : transit.rampLevel(cx * 16 + lane, cz * 16 + 15);
+                        assertTrue(low >= 0 && high >= 0, where);
+                        assertEquals(ramp.risingPositive(), high > low, where + ": climbing direction");
+                        assertEquals(ramp.upper(), Math.max(low, high) >= 16, where + ": upper chunk");
+                    }
+                }
+            }
+        }
+        assertTrue(decks > 0 && ramps > 0);
+    }
+
+    @Test
+    void expressLinesRunFromTheCityEdgeToEachWaypointWithoutMeeting() {
+        for (long seed = 0; seed < 6; seed++) {
+            GridLayout layout = new GridLayout(with(seed, Set.of(GridLevel.SUBWAY)));
+            TransitLayout transit = layout.transit();
+            List<Site> waypoints = layout.sites().stream().filter(site -> site.type() == Site.Type.WAYPOINT).toList();
+            assertFalse(waypoints.isEmpty());
+            int reach = DEFAULT.waypointRingRadius() + 4;
+            int[] pieces = new int[waypoints.size()];
+            int[] stations = new int[waypoints.size()];
+            for (int x = -reach; x <= reach; x++) {
+                for (int z = -reach; z <= reach; z++) {
+                    TransitLayout.ExpressPiece piece = transit.expressAt(x, z);
+                    if (piece == null) {
+                        continue;
+                    }
+                    String where = "seed " + seed + " chunk " + x + "," + z;
+                    pieces[piece.line()]++;
+                    assertTrue(Math.hypot(x, z) > DEFAULT.cityRadius(), where + ": outside the city");
+                    assertFalse(transit.subway(x, z), where + ": never on a city line");
+                    // Each open side leads to the next piece of the same line
+                    int open = 0;
+                    for (var side : new net.minecraft.util.math.Direction[]{piece.from(), piece.to()}) {
+                        TransitLayout.ExpressPiece next = transit.expressAt(x + side.getOffsetX(), z + side.getOffsetZ());
+                        if (next != null) {
+                            assertEquals(piece.line(), next.line(), where + ": lines don't meet");
+                            assertTrue(next.from() == side.getOpposite() || next.to() == side.getOpposite(), where + ": joined up");
+                            open++;
+                        }
+                    }
+                    if (piece.station()) {
+                        stations[piece.line()]++;
+                        assertFalse(piece.corner(), where);
+                        assertEquals(1, open, where + ": a terminus has one way on");
+                    } else {
+                        assertEquals(2, open, where + ": the line carries on both ways");
+                    }
+                }
+            }
+            for (int line = 0; line < waypoints.size(); line++) {
+                Site waypoint = waypoints.get(line);
+                assertTrue(pieces[line] > 0, "seed " + seed + ": waypoint " + line + " has a line");
+                assertEquals(2, stations[line], "seed " + seed + ": a station at each end");
+                // One of the stations is right next to the waypoint
+                boolean beside = false;
+                for (var side : net.minecraft.util.math.Direction.Type.HORIZONTAL) {
+                    TransitLayout.ExpressPiece next = transit.expressAt(waypoint.chunkX() + side.getOffsetX(), waypoint.chunkZ() + side.getOffsetZ());
+                    beside |= next != null && next.station() && next.line() == line;
+                }
+                assertTrue(beside, "seed " + seed + ": waypoint " + line);
+            }
+        }
+    }
+
+    @Test
+    void passagesAndStationNames() {
+        TransitLayout transit = new GridLayout(with(3, Set.of(GridLevel.SUBWAY, GridLevel.ELEVATED_RAIL))).transit();
+        int passages = 0;
+        for (int x = -60; x <= 60; x++) {
+            for (int z = -60; z <= 60; z++) {
+                if (transit.passageSide(x, z) >= 0) {
+                    passages++;
+                }
+            }
+        }
+        double share = passages / (121.0 * 121.0);
+        assertTrue(share > 0.1 && share < 0.2, "about 15% of tunnel chunks get a passage: " + share);
+        TransitLayout.StationInfo info = transit.stationInfo(4, 7, false);
+        assertEquals(info, transit.stationInfo(4, 7, false), "names are stable");
+        assertTrue(info.name().contains(" "));
+        assertEquals(0, info.waypoint());
+    }
+
+    @Test
+    void noLevelsMeansNothingAndOldGridsKeepTheirIds() {
+        GridLayout layout = new GridLayout(with(0, Set.of()));
+        for (int x = -400; x < 400; x += 7) {
+            assertEquals(-1, layout.transit().deckLevel(x, 0));
+            assertEquals(-1, layout.transit().rampLevel(x, -5));
+        }
+        GridLayoutSettings none = with(42, Set.of());
+        assertFalse(GridLayoutSettings.CODEC.encodeStart(JsonOps.INSTANCE, none).getOrThrow().getAsJsonObject().has("levels"));
+        assertNotEquals(GridKey.of(none), GridKey.of(with(42, Set.of(GridLevel.SUBWAY))));
+    }
+}

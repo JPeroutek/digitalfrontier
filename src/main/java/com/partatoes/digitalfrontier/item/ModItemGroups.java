@@ -11,7 +11,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 public class ModItemGroups {
-    public static final ItemGroup DIGITAL_FRONTIER_GROUP = Registry.register(Registries.ITEM_GROUP, Identifier.of(DigitalFrontier.MOD_ID, "digitalfrontier"),
+    public static final Identifier DIGITAL_FRONTIER_GROUP_ID = Identifier.of(DigitalFrontier.MOD_ID, "digitalfrontier");
+    public static final ItemGroup DIGITAL_FRONTIER_GROUP = Registry.register(Registries.ITEM_GROUP, DIGITAL_FRONTIER_GROUP_ID,
             FabricItemGroup.builder()
                     .displayName(Text.translatable("itemgroup.digitalfrontier"))
                     .icon(() -> new ItemStack(ModItems.BINARY_1))
@@ -24,19 +25,24 @@ public class ModItemGroups {
                         entries.add(ModItems.LUMINANCE_ORE_DETECTOR);
                         entries.add(ModItems.BYTE);
                         entries.add(ModItems.LIGHTCYCLE_BATON);
+                        entries.add(ModItems.DIMENSION_TELEPORTER);
+                        entries.add(ModItems.LASER_TUNER);
+                        entries.add(ModBlocks.DIGITIZING_LASER);
+                        entries.add(ModBlocks.GRID_TUNING_LASER);
+                        entries.add(ModBlocks.ARRIVAL_PAD);
+                        entries.add(ModItems.ESCAPE_KEY);
+                        entries.add(ModItems.MEMORY_PAGING);
+                        entries.add(ModItems.CORE_DUMP);
+                        entries.add(ModBlocks.GRID_PORTAL);
 
                         entries.add(ModBlocks.PIXEL_BLOCK);
                         entries.add(ModBlocks.PIXEL_LAMP);
                         entries.add(ModBlocks.GRIDSTONE_BLOCK);
                         entries.add(ModBlocks.CRACKED_GRIDSTONE_BLOCK);
                         entries.add(ModBlocks.GRIDSTONE_BRICKS_BLOCK);
-                        entries.add(ModBlocks.LIME_GRIDSTONE_BLOCK);
-                        entries.add(ModBlocks.BLUE_GRIDSTONE_BLOCK);
-                        entries.add(ModBlocks.RED_GRIDSTONE_BLOCK);
-                        entries.add(ModBlocks.WHITE_GRIDSTONE_BLOCK);
-                        entries.add(ModBlocks.ORANGE_GRIDSTONE_BLOCK);
                         entries.add(ModBlocks.LUMINANCE_ORE);
                         entries.add(ModBlocks.BOOSTER_BLOCK);
+                        entries.add(ModBlocks.KEYBOARD_BLOCK);
 
                         entries.add(ModBlocks.GRIDSTONE_STAIRS);
                         entries.add(ModBlocks.GRIDSTONE_SLAB);
@@ -50,6 +56,14 @@ public class ModItemGroups {
                         entries.add(ModBlocks.GRIDSTONE_BRICKS_STAIRS);
                         entries.add(ModBlocks.GRIDSTONE_BRICKS_SLAB);
                         entries.add(ModBlocks.GRIDSTONE_BRICKS_WALL);
+                        entries.add(ModBlocks.LIGHT_BARRIER_EMITTER);
+
+                        ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.values()
+                                .forEach(colorMapping -> colorMapping.values().forEach(entries::add));
+
+                        entries.add(ModBlocks.STATIC_BLOCK);
+                        entries.add(ModBlocks.STRONGHOLD_UPLINK);
+                        ModBlocks.GLITCHED_GRIDSTONE.values().forEach(entries::add);
                     })
                     .build());
 

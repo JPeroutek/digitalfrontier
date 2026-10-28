@@ -29,7 +29,8 @@ public class ModConfiguredFeatures {
         RuleTest endReplacables = new BlockMatchRuleTest(Blocks.END_STONE);
 
         List<OreFeatureConfig.Target> overworldLuminanceOres =
-                List.of(OreFeatureConfig.createTarget(stoneReplacables, ModBlocks.LUMINANCE_ORE.getDefaultState()));
+                List.of(OreFeatureConfig.createTarget(stoneReplacables, ModBlocks.LUMINANCE_ORE.getDefaultState()),
+                        OreFeatureConfig.createTarget(deepslateReplacables, ModBlocks.LUMINANCE_ORE.getDefaultState()));
 
         register(context, LUMINANCE_ORE_KEY, Feature.ORE, new OreFeatureConfig(overworldLuminanceOres, 10));
     }

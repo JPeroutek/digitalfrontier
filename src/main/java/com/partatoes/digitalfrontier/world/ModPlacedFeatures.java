@@ -24,7 +24,7 @@ public class ModPlacedFeatures {
                 configuredFeatureRegistryEntryLookup.getOrThrow(
                         ModConfiguredFeatures.LUMINANCE_ORE_KEY),
                         ModOrePlacement.modifiersWithCount(5,
-                                HeightRangePlacementModifier.uniform(YOffset.fixed(-80), YOffset.fixed(20))));
+                                HeightRangePlacementModifier.uniform(YOffset.getBottom(), YOffset.fixed(20))));
     }
 
     public static RegistryKey<PlacedFeature> registerKey(String name) {

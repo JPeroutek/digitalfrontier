@@ -21,11 +21,6 @@ public class ModBlockTagProvider extends FabricTagProvider.BlockTagProvider {
                 .add(ModBlocks.GRIDSTONE_BLOCK)
                 .add(ModBlocks.CRACKED_GRIDSTONE_BLOCK)
                 .add(ModBlocks.GRIDSTONE_BRICKS_BLOCK)
-                .add(ModBlocks.LIME_GRIDSTONE_BLOCK)
-                .add(ModBlocks.BLUE_GRIDSTONE_BLOCK)
-                .add(ModBlocks.RED_GRIDSTONE_BLOCK)
-                .add(ModBlocks.WHITE_GRIDSTONE_BLOCK)
-                .add(ModBlocks.ORANGE_GRIDSTONE_BLOCK)
                 .add(ModBlocks.LUMINANCE_ORE)
                 .add(ModBlocks.BOOSTER_BLOCK)
                 .add(ModBlocks.GRIDSTONE_STAIRS)
@@ -41,15 +36,13 @@ public class ModBlockTagProvider extends FabricTagProvider.BlockTagProvider {
                 .add(ModBlocks.LUMINANCE_ORE)
                 .add(ModBlocks.GRIDSTONE_WALL);
 
-        getOrCreateTagBuilder(BlockTags.PICKAXE_MINEABLE)
+        FabricTagBuilder pickaxeMineable = getOrCreateTagBuilder(BlockTags.PICKAXE_MINEABLE);
+        ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.values()
+                .forEach(colorMapping -> colorMapping.values().forEach(pickaxeMineable::add));
+        pickaxeMineable
                 .add(ModBlocks.GRIDSTONE_BLOCK)
                 .add(ModBlocks.CRACKED_GRIDSTONE_BLOCK)
                 .add(ModBlocks.GRIDSTONE_BRICKS_BLOCK)
-                .add(ModBlocks.LIME_GRIDSTONE_BLOCK)
-                .add(ModBlocks.BLUE_GRIDSTONE_BLOCK)
-                .add(ModBlocks.RED_GRIDSTONE_BLOCK)
-                .add(ModBlocks.WHITE_GRIDSTONE_BLOCK)
-                .add(ModBlocks.ORANGE_GRIDSTONE_BLOCK)
                 .add(ModBlocks.LUMINANCE_ORE)
                 .add(ModBlocks.BOOSTER_BLOCK)
                 .add(ModBlocks.GRIDSTONE_STAIRS)
@@ -61,7 +54,11 @@ public class ModBlockTagProvider extends FabricTagProvider.BlockTagProvider {
                 .add(ModBlocks.GRIDSTONE_BRICKS_STAIRS)
                 .add(ModBlocks.GRIDSTONE_BRICKS_SLAB)
                 .add(ModBlocks.GRIDSTONE_BRICKS_WALL)
-                .add(ModBlocks.GRIDSTONE_PRESSURE_PLATE);
+                .add(ModBlocks.GRIDSTONE_PRESSURE_PLATE)
+                .add(ModBlocks.ARRIVAL_PAD)
+                .add(ModBlocks.DIGITIZING_LASER)
+                .add(ModBlocks.GRID_TUNING_LASER)
+                .add(ModBlocks.STRONGHOLD_UPLINK);
 
         getOrCreateTagBuilder(BlockTags.NEEDS_IRON_TOOL)
                 .add(ModBlocks.LUMINANCE_ORE);

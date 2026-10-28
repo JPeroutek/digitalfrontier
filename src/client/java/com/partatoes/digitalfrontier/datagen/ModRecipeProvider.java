@@ -83,6 +83,74 @@ public class ModRecipeProvider extends FabricRecipeProvider {
                         .criterion(hasItem(ModItems.BINARY_1), conditionsFromItem(ModItems.BINARY_1))
                         .offerTo(exporter);
 
+                // The way into the grid is meant to be a mid/late-game build
+                createShaped(RecipeCategory.TRANSPORTATION, ModBlocks.DIGITIZING_LASER, 1)
+                        .pattern("LDL")
+                        .pattern("PEP")
+                        .pattern("III")
+                        .input('L', ModItems.LUMINESSENCE)
+                        .input('D', Items.DIAMOND)
+                        .input('P', ModBlocks.PIXEL_BLOCK)
+                        .input('E', Items.ENDER_EYE)
+                        .input('I', Items.IRON_BLOCK)
+                        .criterion(hasItem(ModItems.LUMINESSENCE), conditionsFromItem(ModItems.LUMINESSENCE))
+                        .offerTo(exporter);
+
+                // Tuning into other grids is end-game: a nether star and netherite on top of the laser
+                createShaped(RecipeCategory.TRANSPORTATION, ModBlocks.GRID_TUNING_LASER, 1)
+                        .pattern(" S ")
+                        .pattern("DLD")
+                        .pattern("NPN")
+                        .input('S', Items.NETHER_STAR)
+                        .input('D', Items.DIAMOND)
+                        .input('L', ModBlocks.DIGITIZING_LASER)
+                        .input('N', Items.NETHERITE_INGOT)
+                        .input('P', ModBlocks.PIXEL_BLOCK)
+                        .criterion(hasItem(ModBlocks.DIGITIZING_LASER), conditionsFromItem(ModBlocks.DIGITIZING_LASER))
+                        .offerTo(exporter);
+
+                createShaped(RecipeCategory.TOOLS, ModItems.LASER_TUNER, 1)
+                        .pattern(" L ")
+                        .pattern("ICI")
+                        .input('L', ModItems.LUMINESSENCE)
+                        .input('I', Items.IRON_INGOT)
+                        .input('C', Items.COMPASS)
+                        .criterion(hasItem(ModBlocks.DIGITIZING_LASER), conditionsFromItem(ModBlocks.DIGITIZING_LASER))
+                        .offerTo(exporter);
+
+                // Rare by design: built around an echo shard (ancient cities) and a totem of undying (raids, mansions)
+                createShaped(RecipeCategory.TOOLS, ModItems.ESCAPE_KEY, 1)
+                        .pattern("PDP")
+                        .pattern("DSD")
+                        .pattern("PDP")
+                        .input('P', Items.ENDER_PEARL)
+                        .input('D', Items.DIAMOND)
+                        .input('S', Items.ECHO_SHARD)
+                        .criterion(hasItem(Items.ECHO_SHARD), conditionsFromItem(Items.ECHO_SHARD))
+                        .offerTo(exporter);
+
+                createShaped(RecipeCategory.TOOLS, ModItems.MEMORY_PAGING, 1)
+                        .pattern("BLB")
+                        .pattern("LTL")
+                        .pattern("BLB")
+                        .input('B', ModItems.BYTE)
+                        .input('L', ModItems.LUMINESSENCE)
+                        .input('T', Items.TOTEM_OF_UNDYING)
+                        .criterion(hasItem(Items.TOTEM_OF_UNDYING), conditionsFromItem(Items.TOTEM_OF_UNDYING))
+                        .offerTo(exporter);
+
+                // Memory Paging that keeps the inventory: a step further into the late game
+                createShaped(RecipeCategory.TOOLS, ModItems.CORE_DUMP, 1)
+                        .pattern("ENE")
+                        .pattern("LML")
+                        .pattern("ENE")
+                        .input('E', Items.ECHO_SHARD)
+                        .input('N', Items.NETHERITE_INGOT)
+                        .input('L', ModItems.LUMINESSENCE)
+                        .input('M', ModItems.MEMORY_PAGING)
+                        .criterion(hasItem(ModItems.MEMORY_PAGING), conditionsFromItem(ModItems.MEMORY_PAGING))
+                        .offerTo(exporter);
+
                 offerSlabRecipe(RecipeCategory.BUILDING_BLOCKS, ModBlocks.CRACKED_GRIDSTONE_SLAB, ModBlocks.CRACKED_GRIDSTONE_BLOCK);
                 offerWallRecipe(RecipeCategory.BUILDING_BLOCKS, ModBlocks.CRACKED_GRIDSTONE_WALL, ModBlocks.CRACKED_GRIDSTONE_BLOCK);
                 createShaped(RecipeCategory.BUILDING_BLOCKS, ModBlocks.CRACKED_GRIDSTONE_STAIRS, 4)

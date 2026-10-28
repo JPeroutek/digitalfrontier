@@ -18,11 +18,6 @@ public class ModLootTableProvider extends FabricBlockLootTableProvider {
         // Self-dropping blocks
         addDrop(ModBlocks.CRACKED_GRIDSTONE_BLOCK);
         addDrop(ModBlocks.GRIDSTONE_BRICKS_BLOCK);
-        addDrop(ModBlocks.LIME_GRIDSTONE_BLOCK);
-        addDrop(ModBlocks.BLUE_GRIDSTONE_BLOCK);
-        addDrop(ModBlocks.RED_GRIDSTONE_BLOCK);
-        addDrop(ModBlocks.WHITE_GRIDSTONE_BLOCK);
-        addDrop(ModBlocks.ORANGE_GRIDSTONE_BLOCK);
         addDrop(ModBlocks.PIXEL_LAMP);
         addDrop(ModBlocks.BOOSTER_BLOCK);
         addDrop(ModBlocks.KEYBOARD_BLOCK);
@@ -39,6 +34,15 @@ public class ModLootTableProvider extends FabricBlockLootTableProvider {
         addDrop(ModBlocks.GRIDSTONE_BRICKS_STAIRS);
         addDrop(ModBlocks.GRIDSTONE_BRICKS_WALL);
         addDrop(ModBlocks.GRIDSTONE_BRICKS_SLAB, slabDrops(ModBlocks.GRIDSTONE_BRICKS_SLAB));
+
+        addDrop(ModBlocks.LIGHT_BARRIER_EMITTER);
+        addDrop(ModBlocks.ARRIVAL_PAD);
+        addDrop(ModBlocks.DIGITIZING_LASER);
+        addDrop(ModBlocks.GRID_TUNING_LASER);
+        addDrop(ModBlocks.STRONGHOLD_UPLINK);
+
+        ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.values()
+                .forEach(colorMapping -> colorMapping.values().forEach(this::addDrop));
 
         // Blocks that drop others if not using silk
         addDrop(ModBlocks.GRIDSTONE_BLOCK, drops(ModBlocks.GRIDSTONE_BLOCK, ModBlocks.CRACKED_GRIDSTONE_BLOCK));
