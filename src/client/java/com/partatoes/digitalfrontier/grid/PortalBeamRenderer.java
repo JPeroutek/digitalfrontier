@@ -1,5 +1,6 @@
 package com.partatoes.digitalfrontier.grid;
 
+import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.partatoes.digitalfrontier.grid.exit.PortalBeams;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -7,9 +8,9 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.Fog;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.BeaconBlockEntityRenderer;
+import net.minecraft.client.render.fog.FogRenderer;
 import net.minecraft.client.util.BufferAllocator;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
@@ -74,8 +75,8 @@ public final class PortalBeamRenderer {
             matrices.pop();
         }
 
-        Fog fog = RenderSystem.getShaderFog();
-        RenderSystem.setShaderFog(Fog.DUMMY);
+        GpuBufferSlice fog = RenderSystem.getShaderFog();
+        RenderSystem.setShaderFog(MinecraftClient.getInstance().gameRenderer.fogRenderer.getFogBuffer(FogRenderer.FogType.NONE));
         BUFFERS.draw();
         RenderSystem.setShaderFog(fog);
     }

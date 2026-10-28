@@ -13,6 +13,7 @@ import net.minecraft.world.dimension.DimensionOptions;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.dimension.DimensionTypes;
 
+import java.util.Optional;
 import java.util.OptionalLong;
 
 public class ModDimensions {
@@ -44,7 +45,8 @@ public class ModDimensions {
                 384, // logicalHeight
                 BlockTags.INFINIBURN_OVERWORLD,
                 DimensionTypes.THE_END_ID, // effects
-                0.0f, // ambientLight
+.0f, // ambientLight
+                Optional.empty(), // cloudHeight: no clouds over the grid
                 new DimensionType.MonsterSettings(true, false, ConstantIntProvider.create(0), 0)));
     }
 }

@@ -5,10 +5,9 @@ import com.partatoes.digitalfrontier.grid.arrival.TerminalRef;
 import com.partatoes.digitalfrontier.world.ModDimensions;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtOps;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -68,7 +67,7 @@ public class DigitizingLaserBlockEntity extends BlockEntity {
     public void startScan(ServerPlayerEntity player) {
         scanning = player.getUuid();
         scanTicks = 0;
-        player.getServerWorld().playSound(null, pos, SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.BLOCKS, 1.0f, 1.2f);
+        player.getWorld().playSound(null, pos, SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.BLOCKS, 1.0f, 1.2f);
     }
 
     public static void tick(World world, BlockPos pos, BlockState state, DigitizingLaserBlockEntity laser) {
@@ -77,7 +76,7 @@ public class DigitizingLaserBlockEntity extends BlockEntity {
         }
         ServerPlayerEntity player = serverWorld.getServer().getPlayerManager().getPlayer(laser.scanning);
         Vec3d emitter = Vec3d.ofCenter(pos).add(0, 0.5, 0);
-        if (player == null || player.getServerWorld() != serverWorld || !player.isAlive()
+        if (player == null || player.getWorld() != serverWorld || !player.isAlive()
                 || player.squaredDistanceTo(emitter) > MAX_RANGE * MAX_RANGE) {
             laser.scanning = null;
             if (player != null) {
@@ -116,18 +115,14 @@ public class DigitizingLaserBlockEntity extends BlockEntity {
     }
 
     @Override
-    protected void writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
-        super.writeNbt(nbt, registries);
-        if (link != null) {
-            TerminalRef.CODEC.encodeStart(NbtOps.INSTANCE, link).ifSuccess(encoded -> nbt.put(LINK_KEY, encoded));
-        }
+    protected void writeData(WriteView view) {
+        super.writeData(view);
+        view.putNullable(LINK_KEY, TerminalRef.CODEC, link);
     }
 
     @Override
-    protected void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
-        super.readNbt(nbt, registries);
-        link = nbt.contains(LINK_KEY)
-                ? TerminalRef.CODEC.parse(NbtOps.INSTANCE, nbt.get(LINK_KEY)).result().orElse(null)
-                : null;
+    protected void readData(ReadView view) {
+        super.readData(view);
+        link = view.read(LINK_KEY, TerminalRef.CODEC).orElse(null);
     }
 }

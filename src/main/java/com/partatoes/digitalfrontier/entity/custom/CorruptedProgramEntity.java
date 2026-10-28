@@ -14,7 +14,8 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
@@ -191,17 +192,17 @@ public class CorruptedProgramEntity extends PathAwareEntity {
     }
 
     @Override
-    public void writeCustomDataToNbt(NbtCompound nbt) {
-        super.writeCustomDataToNbt(nbt);
-        nbt.putInt("Quirks", quirks);
-        nbt.putBoolean("Provokable", provokable);
+    protected void writeCustomData(WriteView view) {
+        super.writeCustomData(view);
+        view.putInt("Quirks", quirks);
+        view.putBoolean("Provokable", provokable);
     }
 
     @Override
-    public void readCustomDataFromNbt(NbtCompound nbt) {
-        super.readCustomDataFromNbt(nbt);
-        quirks = nbt.getInt("Quirks", 0);
-        provokable = nbt.getBoolean("Provokable", false);
+    protected void readCustomData(ReadView view) {
+        super.readCustomData(view);
+        quirks = view.getInt("Quirks", 0);
+        provokable = view.getBoolean("Provokable", false);
     }
 
     @Nullable

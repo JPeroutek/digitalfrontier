@@ -4,6 +4,8 @@ import com.partatoes.digitalfrontier.block.ModBlocks;
 import com.partatoes.digitalfrontier.tag.ModTags;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider;
+import net.minecraft.block.Block;
+import net.minecraft.data.tag.ProvidedTagBuilder;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.tag.BlockTags;
 
@@ -17,7 +19,7 @@ public class ModBlockTagProvider extends FabricTagProvider.BlockTagProvider {
 
     @Override
     protected void configure(RegistryWrapper.WrapperLookup arg) {
-        getOrCreateTagBuilder(ModTags.Blocks.GRID_BLOCK)
+        valueLookupBuilder(ModTags.Blocks.GRID_BLOCK)
                 .add(ModBlocks.GRIDSTONE_BLOCK)
                 .add(ModBlocks.CRACKED_GRIDSTONE_BLOCK)
                 .add(ModBlocks.GRIDSTONE_BRICKS_BLOCK)
@@ -36,7 +38,7 @@ public class ModBlockTagProvider extends FabricTagProvider.BlockTagProvider {
                 .add(ModBlocks.LUMINANCE_ORE)
                 .add(ModBlocks.GRIDSTONE_WALL);
 
-        FabricTagBuilder pickaxeMineable = getOrCreateTagBuilder(BlockTags.PICKAXE_MINEABLE);
+        ProvidedTagBuilder<Block, Block> pickaxeMineable = valueLookupBuilder(BlockTags.PICKAXE_MINEABLE);
         ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.values()
                 .forEach(colorMapping -> colorMapping.values().forEach(pickaxeMineable::add));
         pickaxeMineable
@@ -60,10 +62,10 @@ public class ModBlockTagProvider extends FabricTagProvider.BlockTagProvider {
                 .add(ModBlocks.GRID_TUNING_LASER)
                 .add(ModBlocks.STRONGHOLD_UPLINK);
 
-        getOrCreateTagBuilder(BlockTags.NEEDS_IRON_TOOL)
+        valueLookupBuilder(BlockTags.NEEDS_IRON_TOOL)
                 .add(ModBlocks.LUMINANCE_ORE);
 
-        getOrCreateTagBuilder(BlockTags.WALLS)
+        valueLookupBuilder(BlockTags.WALLS)
                 .add(ModBlocks.GRIDSTONE_WALL)
                 .add(ModBlocks.CRACKED_GRIDSTONE_WALL)
                 .add(ModBlocks.GRIDSTONE_BRICKS_WALL);

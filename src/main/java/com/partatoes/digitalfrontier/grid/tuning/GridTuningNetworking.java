@@ -78,7 +78,7 @@ public final class GridTuningNetworking {
     }
 
     private static void tune(ServerPlayerEntity player, TunePayload payload) {
-        ServerWorld world = player.getServerWorld();
+        ServerWorld world = player.getWorld();
         BlockPos pos = payload.pos();
         if (!(world.getBlockState(pos).getBlock() instanceof DigitizingLaserBlock block) || !block.isTunable()
                 || !(world.getBlockEntity(pos) instanceof DigitizingLaserBlockEntity laser)

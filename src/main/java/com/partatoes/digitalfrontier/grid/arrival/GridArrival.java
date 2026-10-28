@@ -85,7 +85,7 @@ public final class GridArrival {
 
     /** Everything that happens once a player is standing at a terminal: sound, message and their memory of it. */
     public static void recordArrival(ServerPlayerEntity player, TerminalRef ref, Text message) {
-        player.getServerWorld().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BLOCK_BEACON_ACTIVATE,
+        player.getWorld().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BLOCK_BEACON_ACTIVATE,
                 SoundCategory.PLAYERS, 1.0f, 1.5f);
         GridMemory memory = player.getAttachedOrCreate(GridMemory.TYPE);
         player.setAttached(GridMemory.TYPE, memory.withArrival(ref));
@@ -105,7 +105,7 @@ public final class GridArrival {
     }
 
     private static void discoverNearby(ServerPlayerEntity player) {
-        ServerWorld world = player.getServerWorld();
+        ServerWorld world = player.getWorld();
         if (!ModDimensions.isGrid(world) || player.isSpectator()) {
             return;
         }
