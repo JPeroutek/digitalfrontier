@@ -30,7 +30,6 @@ import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.loot.context.LootContextTypes;
 import net.minecraft.loot.context.LootWorldContext;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtHelper;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -199,6 +198,7 @@ public class LieutenantEntity extends HostileEntity {
                 .add(LootContextParameters.DAMAGE_SOURCE, source)
                 .addOptional(LootContextParameters.ATTACKING_ENTITY, source.getAttacker())
                 .addOptional(LootContextParameters.DIRECT_ATTACKING_ENTITY, source.getSource());
+        PlayerEntity attackingPlayer = getAttackingPlayer();
         if (causedByPlayer && attackingPlayer != null) {
             context = context.add(LootContextParameters.LAST_DAMAGE_PLAYER, attackingPlayer).luck(attackingPlayer.getLuck());
         }
@@ -228,22 +228,22 @@ public class LieutenantEntity extends HostileEntity {
             nbt.putString("Stronghold", strongholdId);
         }
         nbt.putString("Archetype", archetype.asString());
-        nbt.put("Home", NbtHelper.fromBlockPos(home));
+        nbt.put("Home", BlockPos.CODEC, home);
         nbt.putString("Texture", dataTracker.get(TEXTURE));
     }
 
     @Override
     public void readCustomDataFromNbt(NbtCompound nbt) {
         super.readCustomDataFromNbt(nbt);
-        lieutenantId = nbt.contains("Lieutenant") ? Identifier.tryParse(nbt.getString("Lieutenant")) : null;
-        strongholdId = nbt.contains("Stronghold") ? nbt.getString("Stronghold") : null;
+        lieutenantId = nbt.getString("Lieutenant").map(Identifier::tryParse).orElse(null);
+        strongholdId = nbt.getString("Stronghold").orElse(null);
         for (LieutenantDef.Archetype candidate : LieutenantDef.Archetype.values()) {
-            if (candidate.asString().equals(nbt.getString("Archetype"))) {
+            if (candidate.asString().equals(nbt.getString("Archetype", ""))) {
                 archetype = candidate;
             }
         }
-        NbtHelper.toBlockPos(nbt, "Home").ifPresent(pos -> home = pos);
-        dataTracker.set(TEXTURE, nbt.getString("Texture"));
+        nbt.get("Home", BlockPos.CODEC).ifPresent(pos -> home = pos);
+        dataTracker.set(TEXTURE, nbt.getString("Texture", ""));
         if (hasCustomName()) {
             bossBar.setName(getDisplayName());
         }

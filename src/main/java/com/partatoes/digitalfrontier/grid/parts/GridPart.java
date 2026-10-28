@@ -6,7 +6,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.datafixer.DataFixTypes;
 import net.minecraft.datafixer.Schemas;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtHelper;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.registry.Registries;
@@ -44,34 +43,34 @@ public final class GridPart {
         // Upgrade templates saved by older Minecraft versions, as the vanilla structure loader does
         NbtCompound fixed = DataFixTypes.STRUCTURE.update(Schemas.getFixer(), nbt, NbtHelper.getDataVersion(nbt, 500));
 
-        NbtList size = fixed.getList("size", NbtElement.INT_TYPE);
-        int sizeX = size.getInt(0);
-        int sizeY = size.getInt(1);
-        int sizeZ = size.getInt(2);
+        NbtList size = fixed.getListOrEmpty("size");
+        int sizeX = size.getInt(0, 0);
+        int sizeY = size.getInt(1, 0);
+        int sizeZ = size.getInt(2, 0);
 
         // Templates saved with several palettes (rare; e.g. shipwrecks) use the first one
-        NbtList paletteNbt = fixed.contains("palettes", NbtElement.LIST_TYPE)
-                ? fixed.getList("palettes", NbtElement.LIST_TYPE).getList(0)
-                : fixed.getList("palette", NbtElement.COMPOUND_TYPE);
+        NbtList paletteNbt = fixed.contains("palettes")
+                ? fixed.getListOrEmpty("palettes").getListOrEmpty(0)
+                : fixed.getListOrEmpty("palette");
         BlockState[] palette = new BlockState[paletteNbt.size()];
         for (int i = 0; i < palette.length; i++) {
-            palette[i] = NbtHelper.toBlockState(Registries.BLOCK, paletteNbt.getCompound(i));
+            palette[i] = NbtHelper.toBlockState(Registries.BLOCK, paletteNbt.getCompoundOrEmpty(i));
         }
 
         short[] blocks = new short[sizeX * sizeY * sizeZ];
         Arrays.fill(blocks, VOID);
         BlockPos arrivalPad = null;
-        NbtList blockList = fixed.getList("blocks", NbtElement.COMPOUND_TYPE);
+        NbtList blockList = fixed.getListOrEmpty("blocks");
         for (int i = 0; i < blockList.size(); i++) {
-            NbtCompound block = blockList.getCompound(i);
-            int stateIndex = block.getInt("state");
+            NbtCompound block = blockList.getCompoundOrEmpty(i);
+            int stateIndex = block.getInt("state", 0);
             if (palette[stateIndex].isOf(Blocks.STRUCTURE_VOID)) {
                 continue;
             }
-            NbtList pos = block.getList("pos", NbtElement.INT_TYPE);
-            blocks[index(pos.getInt(0), pos.getInt(1), pos.getInt(2), sizeX, sizeZ)] = (short) stateIndex;
+            NbtList pos = block.getListOrEmpty("pos");
+            blocks[index(pos.getInt(0, 0), pos.getInt(1, 0), pos.getInt(2, 0), sizeX, sizeZ)] = (short) stateIndex;
             if (arrivalPad == null && palette[stateIndex].isOf(ModBlocks.ARRIVAL_PAD)) {
-                arrivalPad = new BlockPos(pos.getInt(0), pos.getInt(1), pos.getInt(2));
+                arrivalPad = new BlockPos(pos.getInt(0, 0), pos.getInt(1, 0), pos.getInt(2, 0));
             }
         }
         return new GridPart(sizeX, sizeY, sizeZ, palette, blocks, arrivalPad);

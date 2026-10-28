@@ -89,7 +89,7 @@ public class GridChunkGenerator extends ChunkGenerator {
                     if (state.isAir()) {
                         continue;
                     }
-                    chunk.setBlockState(pos.set(chunkPos.getStartX() + localX, y, chunkPos.getStartZ() + localZ), state, false);
+                    chunk.setBlockState(pos.set(chunkPos.getStartX() + localX, y, chunkPos.getStartZ() + localZ), state, 0);
                     oceanFloor.trackUpdate(localX, y, localZ, state);
                     worldSurface.trackUpdate(localX, y, localZ, state);
                 }

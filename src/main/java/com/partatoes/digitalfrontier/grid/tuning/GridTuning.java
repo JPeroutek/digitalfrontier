@@ -92,7 +92,7 @@ public record GridTuning(long seed, int corruptionPercent, int cityRadius, int b
                 .put((byte) blockSize)
                 .put((byte) waypointCount)
                 .put((byte) districtColors.size());
-        districtColors.forEach(color -> buffer.put((byte) color.getId()));
+        districtColors.forEach(color -> buffer.put((byte) color.getIndex()));
         buffer.put((byte) streetStyle.ordinal());
         buffer.put((byte) levels.ordinal());
         return V3_PREFIX + Base64.getUrlEncoder().withoutPadding().encodeToString(buffer.array());
@@ -131,7 +131,7 @@ public record GridTuning(long seed, int corruptionPercent, int cityRadius, int b
                 if (id < 0 || id >= DyeColor.values().length) {
                     return Optional.empty();
                 }
-                colors.add(DyeColor.byId(id));
+                colors.add(DyeColor.byIndex(id));
             }
             // Version 1 codes predate street styles: their grids have uniform streets
             StreetStyle style = StreetStyle.UNIFORM;

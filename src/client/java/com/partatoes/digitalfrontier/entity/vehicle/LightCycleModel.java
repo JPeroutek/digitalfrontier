@@ -23,12 +23,12 @@ public class LightCycleModel<T extends EntityRenderState> extends EntityModel<T>
 	public static TexturedModelData getTexturedModelData() {
 		ModelData modelData = new ModelData();
 		ModelPartData modelPartData = modelData.getRoot();
-		ModelPartData LightCycle = modelPartData.addChild("LightCycle", ModelPartBuilder.create(), ModelTransform.pivot(0.0F, 24.0F, 0.0F));
+		ModelPartData LightCycle = modelPartData.addChild("LightCycle", ModelPartBuilder.create(), ModelTransform.origin(0.0F, 24.0F, 0.0F));
 
 		ModelPartData FrontTire = LightCycle.addChild("FrontTire", ModelPartBuilder.create().uv(40, 12).cuboid(-8.0F, -16.0F, -28.0F, 16.0F, 16.0F, 4.0F, new Dilation(0.0F))
 				.uv(0, 32).cuboid(-8.0F, -4.0F, -24.0F, 16.0F, 4.0F, 8.0F, new Dilation(0.0F))
 				.uv(0, 0).cuboid(-8.0F, -16.0F, -24.0F, 16.0F, 4.0F, 8.0F, new Dilation(0.0F))
-				.uv(0, 12).cuboid(-8.0F, -16.0F, -16.0F, 16.0F, 16.0F, 4.0F, new Dilation(0.0F)), ModelTransform.pivot(0.0F, 0.0F, 0.0F));
+				.uv(0, 12).cuboid(-8.0F, -16.0F, -16.0F, 16.0F, 16.0F, 4.0F, new Dilation(0.0F)), ModelTransform.origin(0.0F, 0.0F, 0.0F));
 
 		ModelPartData MainBody = LightCycle.addChild("MainBody", ModelPartBuilder.create().uv(56, 8).cuboid(-6.0F, -14.0F, -12.0F, 12.0F, 12.0F, 24.0F, new Dilation(0.0F))
 				.uv(40, 0).cuboid(-5.0F, -16.0F, 11.0F, 10.0F, 2.0F, 1.0F, new Dilation(0.0F))
@@ -37,12 +37,12 @@ public class LightCycleModel<T extends EntityRenderState> extends EntityModel<T>
 				.uv(0, 0).cuboid(3.0F, -18.0F, -8.0F, 1.0F, 2.0F, 1.0F, new Dilation(0.0F))
 				.uv(0, 0).cuboid(-4.0F, -18.0F, -8.0F, 1.0F, 2.0F, 1.0F, new Dilation(0.0F))
 				.uv(84, 1).cuboid(4.0F, -18.0F, -8.0F, 5.0F, 1.0F, 1.0F, new Dilation(0.0F))
-				.uv(90, 4).cuboid(-9.0F, -18.0F, -8.0F, 5.0F, 1.0F, 1.0F, new Dilation(0.0F)), ModelTransform.pivot(0.0F, 0.0F, 0.0F));
+				.uv(90, 4).cuboid(-9.0F, -18.0F, -8.0F, 5.0F, 1.0F, 1.0F, new Dilation(0.0F)), ModelTransform.origin(0.0F, 0.0F, 0.0F));
 
 		ModelPartData RearTire = LightCycle.addChild("RearTire", ModelPartBuilder.create().uv(0, 45).cuboid(-8.0F, -16.0F, 12.0F, 16.0F, 16.0F, 4.0F, new Dilation(0.0F))
 				.uv(40, 56).cuboid(-8.0F, -16.0F, 24.0F, 16.0F, 16.0F, 4.0F, new Dilation(0.0F))
 				.uv(40, 44).cuboid(-8.0F, -4.0F, 16.0F, 16.0F, 4.0F, 8.0F, new Dilation(0.0F))
-				.uv(80, 49).cuboid(-8.0F, -16.0F, 16.0F, 16.0F, 4.0F, 8.0F, new Dilation(0.0F)), ModelTransform.pivot(0.0F, 0.0F, 0.0F));
+				.uv(80, 49).cuboid(-8.0F, -16.0F, 16.0F, 16.0F, 4.0F, 8.0F, new Dilation(0.0F)), ModelTransform.origin(0.0F, 0.0F, 0.0F));
 		return TexturedModelData.of(modelData, 128, 128);
 	}
 

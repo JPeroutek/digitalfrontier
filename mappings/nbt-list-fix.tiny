@@ -1,0 +1,4 @@
+tiny	2	0	intermediary	named
+c	net/minecraft/class_2499	net/minecraft/nbt/NbtList
+	m	(I)Lnet/minecraft/class_2520;	method_10534	method_10534
+	m	(I)Lnet/minecraft/class_2520;	method_10536	method_10536

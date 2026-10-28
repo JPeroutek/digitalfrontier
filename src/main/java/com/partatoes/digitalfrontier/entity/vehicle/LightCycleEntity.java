@@ -8,6 +8,7 @@ package com.partatoes.digitalfrontier.entity.vehicle;
 import com.partatoes.digitalfrontier.item.ModItems;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.PositionInterpolator;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.MovementType;
@@ -33,13 +34,8 @@ public class LightCycleEntity extends VehicleEntity {
 
     // Velocity and positions
     private float yawVelocity;
-    private double x;
-    private double y;
-    private double z;
-    private double pitch;
-    private double roll;
-    private double yaw;
-    private int lerpTicks;
+    // Smooths the position updates from the server, as for boats
+    private final PositionInterpolator interpolator = new PositionInterpolator(this, 3);
 
     public LightCycleEntity(EntityType<? extends  LightCycleEntity> entityType, World world) {
         super(entityType, world);
@@ -69,7 +65,7 @@ public class LightCycleEntity extends VehicleEntity {
         passenger.setBodyYaw(this.getYaw());
         float f = MathHelper.wrapDegrees(passenger.getYaw() - this.getYaw());
         float g = MathHelper.clamp(f, -105.0F, 105.0F);
-        passenger.prevYaw += g - f;
+        passenger.lastYaw += g - f;
         passenger.setYaw(passenger.getYaw() + g - f);
         passenger.setHeadYaw(passenger.getYaw());
     }
@@ -167,20 +163,8 @@ public class LightCycleEntity extends VehicleEntity {
     }
 
     @Override
-    public void updateTrackedPositionAndAngles(double x, double y, double z, float yaw, float pitch, int interpolationSteps) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        this.yaw = yaw;
-        this.pitch = pitch;
-        this.lerpTicks = interpolationSteps;
-    }
-
-    private void updatePositionAndRotation() {
-        if (this.lerpTicks > 0) {
-            this.lerpPosAndRotation(this.lerpTicks, this.x, this.y, this.z, this.yaw, this.pitch);
-            --this.lerpTicks;
-        }
+    public PositionInterpolator getInterpolator() {
+        return interpolator;
     }
 
     @Override
@@ -194,7 +178,7 @@ public class LightCycleEntity extends VehicleEntity {
         }
 
         super.tick();
-        this.updatePositionAndRotation();
+        this.interpolator.tick();
         if (this.isLogicalSideForUpdatingMovement()) {
             this.updateVelocity();
 

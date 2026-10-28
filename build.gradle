@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.9-SNAPSHOT'
+	id 'fabric-loom' version '1.10-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -54,16 +54,16 @@ repositories {
 			includeGroup "io.wispforest"
 		}
 	}
-	// XaeroLib, taken out of Xaero's Minimap (see dependencies)
+	// Libraries taken out of the testing mods that bundle them (see nestedLib below)
 	exclusiveContent {
 		forRepository {
 			flatDir {
-				name = "XaeroLib"
-				dirs file("build/xaerolib")
+				name = "NestedLibs"
+				dirs file("build/nestedlibs")
 			}
 		}
 		filter {
-			includeGroup "xaero"
+			includeGroup "nested"
 		}
 	}
 }
@@ -87,12 +87,32 @@ fabricApi {
 	}
 }
 
-def xaero_minimap = "fabric-1.21.4-26.5.0"
+def xaero_minimap = "fabric-1.21.5-26.5.0"
+
+// Loom strips the jars a dev dependency bundles, so a library a testing mod needs but that isn't published anywhere is
+// taken out of the mod's jar into build/nestedlibs, and added as a module (not files(), so Loom remaps the mod against it)
+delete "build/nestedlibs"
+def nestedLib = { String mod, String name ->
+	copy {
+		from zipTree(configurations.detachedConfiguration(dependencies.create(mod)).singleFile)
+		include "META-INF/jars/${name}-*.jar"
+		eachFile { path = it.name }
+		includeEmptyDirs = false
+		into "build/nestedlibs"
+	}
+	def jar = file("build/nestedlibs").list().find { it.startsWith("${name}-") }
+	return "nested:${name}:${jar.substring(name.length() + 1, jar.length() - ".jar".length())}"
+}
 
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	// Yarn names NbtList's get(int) and remove(int), but Loom leaves them unnamed in the game jar (they clash with the
+	// bridge methods) while still renaming calls in remapped mods, which then crash (Xaero's World Map). Keep both unnamed
+	mappings loom.layered {
+		mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+		mappings file("mappings/nbt-list-fix.tiny")
+	}
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
@@ -109,35 +129,27 @@ dependencies {
 
 	// For testing purposes...
 	// Release jar from Modrinth bundles worldedit-core; the EngineHub SNAPSHOTs drift out of sync with each other
-	modLocalRuntime "maven.modrinth:worldedit:7.3.11"
+	modLocalRuntime "maven.modrinth:worldedit:7.3.14"
+	// It bundles the WorldEdit CUI protocol, published nowhere
+	modLocalRuntime nestedLib("maven.modrinth:worldedit:7.3.14", "worldeditcui-protocol-fabric")
 	// Maps (handy for checking grid layouts), block/entity tooltips, and recipe/item lookup
 	modLocalRuntime "maven.modrinth:xaeros-minimap:${xaero_minimap}"
-	modLocalRuntime "maven.modrinth:xaeros-world-map:fabric-1.21.4-1.46.0"
-	// Both need XaeroLib, which they bundle but Loom strips from dev dependencies, and which isn't published for Fabric:
-	// take it out of the minimap jar. It must be a module (not files()) so Loom remaps the maps against it
-	delete "build/xaerolib"
-	copy {
-		from zipTree(configurations.detachedConfiguration(dependencies.create("maven.modrinth:xaeros-minimap:${xaero_minimap}")).singleFile)
-		include "META-INF/jars/xaerolib-*.jar"
-		eachFile { path = name }
-		includeEmptyDirs = false
-		into "build/xaerolib"
-	}
-	def xaeroLib = (file("build/xaerolib").list().find { it.startsWith("xaerolib-") } =~ /^(xaerolib-.+)-([^-]+)\.jar$/)[0]
-	modLocalRuntime "xaero:${xaeroLib[1]}:${xaeroLib[2]}"
-	modLocalRuntime "maven.modrinth:jade:17.2.2+fabric"
-	// REI rather than JEI or EMI, which have no Fabric build for 1.21.4; from its own maven, which brings its dependencies
-	modLocalRuntime "me.shedaniel:RoughlyEnoughItems-fabric:18.0.815"
+	modLocalRuntime "maven.modrinth:xaeros-world-map:fabric-1.21.5-1.46.0"
+	// Both need XaeroLib, which they bundle and which isn't published for Fabric
+	modLocalRuntime nestedLib("maven.modrinth:xaeros-minimap:${xaero_minimap}", "xaerolib")
+	modLocalRuntime "maven.modrinth:jade:18.2.0+fabric"
+	// REI rather than JEI or EMI, which have no Fabric build for 1.21.5; from its own maven, which brings its dependencies
+	modLocalRuntime "me.shedaniel:RoughlyEnoughItems-fabric:19.0.809"
 	// Sodium for frame rate
-	modLocalRuntime "maven.modrinth:sodium:mc1.21.4-0.6.13-fabric"
+	modLocalRuntime "maven.modrinth:sodium:mc1.21.5-0.6.13-fabric"
 	// Distant Horizons and Chunky crash together (DH calls into Chunky before Chunky has started), so it's one or the
 	// other: Distant Horizons to see far out (the derelict sectors from the city), or with -Ppregen, Chunky to
 	// pregenerate chunks, e.g. /chunky world digitalfrontier:default, /chunky radius 3000, /chunky start.
-	// Both by version id: DH 3.3.3-1.21.4; Chunky 1.4.27, a number its Fabric, Forge and NeoForge builds share
+	// Both by version id: DH 3.3.3-1.21.5; Chunky 1.4.36, a number its Fabric, Forge and NeoForge builds share
 	if (project.hasProperty("pregen")) {
-		modLocalRuntime "maven.modrinth:chunky:VkAgASL1"
+		modLocalRuntime "maven.modrinth:chunky:mhLtMoLk"
 	} else {
-		modLocalRuntime "maven.modrinth:distanthorizons:SSfzA0Av"
+		modLocalRuntime "maven.modrinth:distanthorizons:Lb7ygvfg"
 	}
 
 	// Runs JUnit tests inside Fabric Loader so Minecraft classes are available

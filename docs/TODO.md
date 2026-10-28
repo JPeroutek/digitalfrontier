@@ -14,14 +14,29 @@ Ideas and planned work for the grid world generator that aren't scheduled into a
 - **Settings outside the tuning bounds.** Only the settings a `GridTuning` can express have grid codes; a grid
   written by hand (e.g. a datapack replacing the default grid's settings) can't be shared as a code.
 
+## Light cycles
+
+- **Smoother, faster driving.** Driving is jittery and slow.
+- **Light-wall hotkey.** A key while driving that switches laying light barriers on and off.
+- **Translucent light barriers.** They're fully opaque; they should be partly see-through.
+- **Animated treads.** The tire treads would look good animated.
+- **Packing it back up.** A light cycle can't be broken back down into its baton.
+- **Deploy and mount.** Using the baton while sprinting should deploy the light cycle with the player already riding it.
+
+## City variety
+
+- **Less perfect quadrants.** The city's four quadrants are too regular; it needs more variation.
+- **More waypoint kinds in the city**, e.g. a light-cycle arena, or a large plaza holding smaller POIs.
+
 ## Corruption and inhabitants
 
+- **Bigger, more detailed strongholds, and more of them.**
 - **A final boss.** `all_lieutenants_defeated` is in place to bring back (or summon) something bigger once the
   whole regime falls.
 - **Real art.** Corrupted programs, enforcers and lieutenants use the Program model with existing or generated
   skins; corruption shows as a render jitter.
 - **Trinkets.** Core Dumps keep Accessories slots (which also covers Trinkets mods through Accessories'
-  compatibility layer). Trinkets itself has no 1.21.4 release; add direct support if it updates.
+  compatibility layer). Trinkets itself has no 1.21.5 release; add direct support if it updates.
 - **More trigger ideas.** Each trigger type is one record in `Triggers`; candidates: an advancement earned, the
   number of corrupted programs near the stronghold, a Grid Tuning Laser retuned to this grid.
 

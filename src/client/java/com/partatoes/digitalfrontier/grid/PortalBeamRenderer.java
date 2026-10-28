@@ -52,8 +52,8 @@ public final class PortalBeamRenderer {
         }
         Vec3d camera = context.camera().getPos();
         // Well inside the far plane (four times the view distance), and past the loaded terrain
-        double near = MinecraftClient.getInstance().gameRenderer.getViewDistance() * 1.5;
-        float tickDelta = context.tickCounter().getTickDelta(false);
+        double near = MinecraftClient.getInstance().gameRenderer.getViewDistanceBlocks() * 1.5;
+        float tickDelta = context.tickCounter().getTickProgress(false);
         long time = context.world().getTime();
         MatrixStack matrices = new MatrixStack();
 

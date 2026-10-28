@@ -234,7 +234,7 @@ public final class GridCommands {
     private static Text copyable(String code) {
         return Text.literal(code).styled(style -> style
                 .withColor(Formatting.AQUA)
-                .withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, code))
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.translatable("chat.copy.click"))));
+                .withClickEvent(new ClickEvent.CopyToClipboard(code))
+                .withHoverEvent(new HoverEvent.ShowText(Text.translatable("chat.copy.click"))));
     }
 }
