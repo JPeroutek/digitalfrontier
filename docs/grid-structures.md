@@ -131,7 +131,7 @@ id (`digitalfrontier:<name>`), which F3 shows when you stand on it.
 | Field | Required | Meaning |
 |---|---|---|
 | `kind` | yes | `building`, `landmark`, `plaza`, `street`, `terminal`, `portal` or `stronghold` (see below). |
-| `zones` | yes | Where it can appear: `city_core`, `city`, `outskirts`, `waypoint`, `outlands`, `unallocated`. Buildings only generate where the layout places buildings: city zones, a few in the outskirts, and the low buildings around each waypoint (1–3 floors). Plazas appear in the city and at waypoints; street furniture on city and waypoint streets. |
+| `zones` | yes | Where it can appear: `city_core`, `city`, `outskirts`, `waypoint`, `outlands`, `unallocated`, `derelict`. Buildings only generate where the layout places buildings: city zones, a few in the outskirts, the low buildings around each waypoint (1–3 floors), and the ruins on derelict sectors (1–4 floors, always badly corrupted). Derelict sectors are islands of old floor far out over the Sea of Simulation, past where unallocated space crumbles away. Plazas appear in the city and at waypoints; street furniture on city and waypoint streets. |
 | `weight` | no (10) | Relative chance against other matching definitions. |
 | `footprint` | no (1) | `1` for 16×16 parts, `2` for 32×32 parts. |
 | `base` | no | Part placed once at street level. |

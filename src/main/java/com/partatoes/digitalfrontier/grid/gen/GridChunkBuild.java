@@ -224,7 +224,7 @@ final class GridChunkBuild {
     private GridTransit.ChunkTransit transit() {
         if (transit == null) {
             transit = GridTransit.forChunk(layout.transit(), assets, layout.settings().gridSeed(), plan, chunkX, chunkZ,
-                    this::skywayFits, (localX, localZ) -> column(localX, localZ).top());
+                    this::skywayFits, (localX, localZ) -> column(localX, localZ).highest());
         }
         return transit;
     }
@@ -278,9 +278,9 @@ final class GridChunkBuild {
         return GridTransit.passageSpot(transit());
     }
 
-    /** Lowest Y with a block in a column. Above the world bottom only in unallocated space. */
+    /** Lowest Y with a block in a column: the ground and the sea bed both go down to the world bottom. */
     int columnBottom(int localX, int localZ) {
-        return column(localX, localZ).bottom();
+        return column(localX, localZ).lowest();
     }
 
     /** Highest non-air Y in a column, or the ground if nothing stands on it (below the world bottom for void). */
@@ -293,7 +293,7 @@ final class GridChunkBuild {
                 return y;
             }
         }
-        return column(localX, localZ).top();
+        return column(localX, localZ).highest();
     }
 
     private GridTerrain.Column column(int localX, int localZ) {

@@ -35,7 +35,7 @@ public record GridBiomes(
             return switch (zone) {
                 case CITY_CORE, CITY -> corruptedCity;
                 case OUTSKIRTS, WAYPOINT, OUTLANDS -> corruptedOutlands;
-                case UNALLOCATED -> corruptedUnallocated;
+                case UNALLOCATED, DERELICT -> corruptedUnallocated;
             };
         }
         return switch (zone) {
@@ -44,7 +44,7 @@ public record GridBiomes(
             // Waypoints are small settlements out past the city; until they get their own biome they read as outskirts
             case OUTSKIRTS, WAYPOINT -> outskirts;
             case OUTLANDS -> outlands;
-            case UNALLOCATED -> unallocated;
+            case UNALLOCATED, DERELICT -> unallocated;
         };
     }
 

@@ -377,7 +377,7 @@ public class ModGridStarterProvider implements DataProvider {
     private static Map<String, GridBuildingDef> buildingDefs() {
         Map<String, GridBuildingDef> defs = new LinkedHashMap<>();
         defs.put("starter_tower", new GridBuildingDef(GridBuildingDef.Kind.BUILDING,
-                List.of(Zone.CITY_CORE, Zone.CITY, Zone.OUTSKIRTS, Zone.WAYPOINT), 10, 1,
+                List.of(Zone.CITY_CORE, Zone.CITY, Zone.OUTSKIRTS, Zone.WAYPOINT, Zone.DERELICT), 10, 1,
                 Optional.of(id("grid/starter/tower/base")),
                 List.of(id("grid/starter/tower/floor_glass"), id("grid/starter/tower/floor_striped")),
                 Optional.of(id("grid/starter/tower/roof")), 1, 24));
@@ -424,7 +424,7 @@ public class ModGridStarterProvider implements DataProvider {
         level(defs, "guideway_crossing", GridBuildingDef.Kind.GUIDEWAY_CROSSING);
         level(defs, "guideway_station", GridBuildingDef.Kind.GUIDEWAY_STATION);
         // Express lines run out beyond the city, so their tunnels are wanted everywhere
-        List<Zone> everywhere = List.of(Zone.CITY_CORE, Zone.CITY, Zone.OUTSKIRTS, Zone.WAYPOINT, Zone.OUTLANDS, Zone.UNALLOCATED);
+        List<Zone> everywhere = List.of(Zone.CITY_CORE, Zone.CITY, Zone.OUTSKIRTS, Zone.WAYPOINT, Zone.OUTLANDS, Zone.UNALLOCATED, Zone.DERELICT);
         level(defs, "subway", GridBuildingDef.Kind.SUBWAY, everywhere);
         level(defs, "subway_station", GridBuildingDef.Kind.SUBWAY_STATION);
         level(defs, "subway_corner", GridBuildingDef.Kind.SUBWAY_CORNER, everywhere);

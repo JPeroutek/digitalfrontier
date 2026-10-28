@@ -2,6 +2,7 @@ package com.partatoes.digitalfrontier.grid.gen;
 
 import com.partatoes.digitalfrontier.block.ModBlocks;
 import com.partatoes.digitalfrontier.grid.layout.ChunkPlan;
+import com.partatoes.digitalfrontier.grid.layout.DerelictSector;
 import com.partatoes.digitalfrontier.grid.layout.DiagonalRoad;
 import com.partatoes.digitalfrontier.grid.layout.GridLayout;
 import com.partatoes.digitalfrontier.grid.layout.GridLayoutSettings;
@@ -26,7 +27,9 @@ import static com.partatoes.digitalfrontier.grid.layout.GridLayout.FLOOR_Y;
  * <ul>
  *   <li>Most of the grid is solid gridstone up to the street surface at {@link GridLayout#FLOOR_Y}.</li>
  *   <li>The outlands rise into terraced mesas, leveling off beside highways and around sites.</li>
- *   <li>Unallocated space breaks up into floating fragments that thin out into the void.</li>
+ *   <li>Unallocated space breaks up into floating fragments that thin out over the Sea of Simulation, a dark sea
+ *       below the floor with faint lines across its bed, out to the horizon.</li>
+ *   <li>Far out over the sea, derelict sectors: ragged islands of old floor, their undersides tapering away.</li>
  * </ul>
  */
 final class GridTerrain {
@@ -48,31 +51,55 @@ final class GridTerrain {
     private static final int FRAGMENT_SIZE = 4;
     /** Chunks past the outlands edge after which unallocated space is empty. */
     private static final int FRAGMENT_FADE_CHUNKS = 24;
+    /** The Sea of Simulation's surface, and its bed. */
+    static final int SEA_LEVEL = 40;
+    private static final int SEA_BED = 24;
+    private static final int ISLAND_DEPTH = 14;
 
     private static final int SALT_MESA_LARGE = 3001;
     private static final int SALT_MESA_SMALL = 3002;
     private static final int SALT_FRAGMENT = 3003;
     private static final int SALT_FRAGMENT_HEIGHT = 3004;
     private static final int SALT_FRAGMENT_THICKNESS = 3005;
+    private static final int SALT_ISLAND_EDGE = 3006;
+    private static final int SALT_ISLAND_DEPTH = 3007;
 
     private GridTerrain() {
     }
 
     /**
      * One column of ground: blocks from {@code bottom} to {@code top} inclusive, {@code surface} on top and
-     * {@code body} below it. Empty (void) when {@code top < bottom}.
+     * {@code body} below it; none when {@code top < bottom}. Over the sea, the Sea of Simulation fills in below.
      */
-    record Column(int bottom, int top, BlockState surface, BlockState body) {
-        static final Column VOID = new Column(WORLD_BOTTOM, WORLD_BOTTOM - 1, Blocks.AIR.getDefaultState(), Blocks.AIR.getDefaultState());
+    record Column(int bottom, int top, BlockState surface, BlockState body, boolean sea) {
+        // Open sea, nothing above it
+        static final Column SEA = new Column(SEA_LEVEL + 1, SEA_LEVEL, Blocks.AIR.getDefaultState(), Blocks.AIR.getDefaultState(), true);
+
+        Column(int bottom, int top, BlockState surface, BlockState body) {
+            this(bottom, top, surface, body, false);
+        }
 
         boolean isEmpty() {
             return top < bottom;
+        }
+
+        /** Lowest Y with a block in this column. */
+        int lowest() {
+            return sea ? WORLD_BOTTOM : bottom;
+        }
+
+        /** Highest Y with a block in this column, before anything stands on it: the ground, or the sea's surface. */
+        int highest() {
+            return isEmpty() && sea ? SEA_LEVEL : top;
         }
     }
 
     static Column column(GridLayout layout, ChunkPlan plan, int blockX, int blockZ) {
         if (plan.zone() == Zone.UNALLOCATED) {
             return fragment(layout.settings(), blockX, blockZ);
+        }
+        if (plan.zone() == Zone.DERELICT) {
+            return island(layout, plan, blockX, blockZ);
         }
         int localX = blockX & 15;
         int localZ = blockZ & 15;
@@ -94,12 +121,12 @@ final class GridTerrain {
         if (plan.type() == PlanType.STREET && isLaneWall(plan, localX, localZ)) {
             return FLOOR_Y + 1;
         }
-        return column.top();
+        return column.highest();
     }
 
     static BlockState blockAt(ChunkPlan plan, Column column, int localX, int y, int localZ) {
         if (y < column.bottom()) {
-            return Blocks.AIR.getDefaultState();
+            return column.sea() ? seaAt(localX, y, localZ) : Blocks.AIR.getDefaultState();
         }
         if (y < column.top()) {
             return column.body();
@@ -190,13 +217,52 @@ final class GridTerrain {
         int tileZ = Math.floorDiv(blockZ, FRAGMENT_SIZE);
         long seed = settings.gridSeed();
         if (GridRandom.unit(GridRandom.hash(seed, tileX, tileZ, SALT_FRAGMENT)) < 0.08 + past / FRAGMENT_FADE_CHUNKS) {
-            return Column.VOID;
+            return Column.SEA;
         }
         double drift = Math.min(1.0, past / 8);
         int top = FLOOR_Y + (int) Math.round((GridRandom.unit(GridRandom.hash(seed, tileX, tileZ, SALT_FRAGMENT_HEIGHT)) - 0.5) * 6 * drift);
         int thickness = 1 + GridRandom.nextInt(GridRandom.hash(seed, tileX, tileZ, SALT_FRAGMENT_THICKNESS), 3);
         return new Column(top - thickness + 1, top, ModBlocks.GRIDSTONE_BLOCK.getDefaultState(),
-                ModBlocks.CRACKED_GRIDSTONE_BLOCK.getDefaultState());
+                ModBlocks.CRACKED_GRIDSTONE_BLOCK.getDefaultState(), true);
+    }
+
+    /**
+     * A derelict sector's island: old floor at street level out to a ragged edge, its underside tapering from deep
+     * in the middle to a thin rim. Faint lines on the chunk edges are what's left of its streets.
+     */
+    private static Column island(GridLayout layout, ChunkPlan plan, int blockX, int blockZ) {
+        DerelictSector sector = layout.derelictAt(blockX >> 4, blockZ >> 4);
+        if (sector == null) {
+            return Column.SEA;
+        }
+        long seed = layout.settings().gridSeed();
+        int tileX = Math.floorDiv(blockX, FRAGMENT_SIZE);
+        int tileZ = Math.floorDiv(blockZ, FRAGMENT_SIZE);
+        double edge = sector.radius() * (0.78 + 0.22 * GridRandom.unit(GridRandom.hash(seed, tileX, tileZ, SALT_ISLAND_EDGE)));
+        double distance = sector.distanceTo(blockX + 0.5, blockZ + 0.5);
+        if (distance > edge) {
+            return Column.SEA;
+        }
+        double depth = ISLAND_DEPTH * (0.7 + 0.3 * GridRandom.unit(GridRandom.hash(seed, tileX, tileZ, SALT_ISLAND_DEPTH)));
+        int thickness = 2 + (int) (depth * (1 - distance / edge));
+        BlockState surface = (blockX & 15) == 0 || (blockZ & 15) == 0
+                ? pattern("full", plan.district())
+                : ModBlocks.GRIDSTONE_BLOCK.getDefaultState();
+        return new Column(FLOOR_Y - thickness + 1, FLOOR_Y, surface, ModBlocks.CRACKED_GRIDSTONE_BLOCK.getDefaultState(), true);
+    }
+
+    // The Sea of Simulation below a column: dark water over a bed of gridstone, lit with a faint line on chunk edges
+    private static BlockState seaAt(int localX, int y, int localZ) {
+        if (y > SEA_LEVEL) {
+            return Blocks.AIR.getDefaultState();
+        }
+        if (y > SEA_BED) {
+            return Blocks.WATER.getDefaultState();
+        }
+        if (y == SEA_BED && (localX == 0 || localZ == 0)) {
+            return pattern("full", DyeColor.CYAN);
+        }
+        return ModBlocks.GRIDSTONE_BLOCK.getDefaultState();
     }
 
     // Smoothly interpolated random values on a lattice of the given cell size

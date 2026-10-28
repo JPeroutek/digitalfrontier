@@ -9,7 +9,9 @@ public enum Zone implements StringIdentifiable {
     OUTSKIRTS("outskirts"),
     WAYPOINT("waypoint"),
     OUTLANDS("outlands"),
-    UNALLOCATED("unallocated");
+    UNALLOCATED("unallocated"),
+    /** Islands of abandoned grid out over the Sea of Simulation, past unallocated space (see {@link DerelictSector}). */
+    DERELICT("derelict");
 
     public static final Codec<Zone> CODEC = StringIdentifiable.createCodec(Zone::values);
 

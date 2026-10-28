@@ -57,6 +57,42 @@ class GridLayoutTest {
     }
 
     @Test
+    void derelictSectorsFloatFarOutAndThinWithDistance() {
+        GridLayout layout = new GridLayout(DEFAULT);
+        int start = DEFAULT.outlandsRadius() + DerelictSector.START;
+        int near = 0;
+        int far = 0;
+        for (int x = -1200; x <= 1200; x += 3) {
+            for (int z = -1200; z <= 1200; z += 3) {
+                if (layout.zoneAt(x, z) != Zone.DERELICT) {
+                    continue;
+                }
+                double distance = Math.hypot(x, z);
+                assertTrue(distance > start - DerelictSector.CELL, "derelict too close in at " + x + "," + z);
+                ChunkPlan plan = layout.planAt(x, z);
+                assertTrue(plan.corruption() >= 0.5f, "derelict chunk barely corrupted at " + x + "," + z);
+                if (plan.type() == PlanType.BUILDING) {
+                    assertTrue(layout.derelictAt(x, z).holdsBuilding(x, z));
+                }
+                if (distance < start + 150) {
+                    near++;
+                } else if (distance >= start + 600 && distance < start + 750) {
+                    far++;
+                }
+            }
+        }
+        // Compare chunks per area: the far ring is much larger
+        double nearDensity = near / ring(start - DerelictSector.CELL, start + 150);
+        double farDensity = far / ring(start + 600, start + 750);
+        assertTrue(far > 0, "none far out");
+        assertTrue(farDensity < nearDensity / 2, "near " + nearDensity + ", far " + farDensity);
+    }
+
+    private static double ring(double inner, double outer) {
+        return Math.PI * (outer * outer - inner * inner);
+    }
+
+    @Test
     void uniformStreetsFollowTheBlockGrid() {
         GridLayout layout = new GridLayout(UNIFORM);
         int period = DEFAULT.blockSize() + 1;

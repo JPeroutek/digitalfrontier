@@ -166,17 +166,26 @@ public final class GridLayout {
         if (distance <= settings.outlandsRadius()) {
             return Zone.OUTLANDS;
         }
-        return Zone.UNALLOCATED;
+        return DerelictSector.at(settings, chunkX, chunkZ) != null ? Zone.DERELICT : Zone.UNALLOCATED;
     }
 
     /** Corruption intensity of a chunk, in [0, 1]; the same value its plan carries. */
     public float corruptionAt(int chunkX, int chunkZ) {
-        return corruption.intensityAt(chunkX, chunkZ);
+        float intensity = corruption.intensityAt(chunkX, chunkZ);
+        // Derelict sectors are long abandoned: badly corrupted wherever they are
+        DerelictSector sector = derelictAt(chunkX, chunkZ);
+        return sector != null ? Math.max(intensity, sector.corruption()) : intensity;
+    }
+
+    /** The derelict sector covering any part of a chunk, or null. */
+    @Nullable
+    public DerelictSector derelictAt(int chunkX, int chunkZ) {
+        return Math.hypot(chunkX, chunkZ) > settings.outlandsRadius() ? DerelictSector.at(settings, chunkX, chunkZ) : null;
     }
 
     public ChunkPlan planAt(int chunkX, int chunkZ) {
         Zone zone = zoneAt(chunkX, chunkZ);
-        float intensity = corruption.intensityAt(chunkX, chunkZ);
+        float intensity = corruptionAt(chunkX, chunkZ);
         Plans plans = new Plans(zone, districtAt(chunkX, chunkZ), intensity, CorruptionTier.fromIntensity(intensity));
 
         Site site = sitesByChunk.get(chunkKey(chunkX, chunkZ));
@@ -217,6 +226,10 @@ public final class GridLayout {
                     : plans.open(null);
             case WAYPOINT -> settlementAt(chunkX, chunkZ, roll, plans);
             case OUTLANDS, UNALLOCATED -> plans.open(null);
+            // The ruins of a few low buildings, where the island is wide enough to hold them
+            case DERELICT -> derelictAt(chunkX, chunkZ).holdsBuilding(chunkX, chunkZ) && GridRandom.unit(roll) < 0.45
+                    ? plans.building(1 + floorRoll(chunkX, chunkZ) % 4, plans.district(), null)
+                    : plans.open(null);
         };
     }
 

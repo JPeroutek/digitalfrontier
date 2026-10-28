@@ -40,8 +40,9 @@ public class ModBiomes {
         BiomeEffects.Builder effects = new BiomeEffects.Builder()
                 .fogColor(fogColor)
                 .skyColor(0x000000)
-                .waterColor(0x3F76E4)
-                .waterFogColor(0x050533)
+                // The Sea of Simulation: dark, and darker under the surface
+                .waterColor(0x103842)
+                .waterFogColor(0x02090C)
                 .moodSound(BiomeMoodSound.CAVE);
         if (particles != null) {
             effects.particleConfig(particles);
