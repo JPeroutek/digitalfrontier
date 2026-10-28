@@ -31,7 +31,7 @@ public class DigitalFrontierClient implements ClientModInitializer {
 		EntityRendererRegistry.register(ModEntities.CORRUPTED_PROGRAM, context -> new GridMobRenderer<>(context,
 				GridMobRenderer.variants("corrupted_program_0", "corrupted_program_1", "corrupted_program_2"), 0.6f));
 		EntityRendererRegistry.register(ModEntities.ENFORCER, context -> new GridMobRenderer<>(context,
-				GridMobRenderer.variants("guardRed64", "guardOrange64"), 0.2f));
+				GridMobRenderer.variants("guard_red64", "guard_orange64"), 0.2f));
 		// The lieutenant's skin comes from its definition, so lore packs can swap it
 		EntityRendererRegistry.register(ModEntities.LIEUTENANT, context -> new GridMobRenderer<LieutenantEntity>(context,
 				entity -> entity.texture() != null ? entity.texture() : LieutenantDef.Archetype.RULER.defaultTexture(), 0.35f));
