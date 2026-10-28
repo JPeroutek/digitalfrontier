@@ -1,7 +1,7 @@
 package com.partatoes.digitalfrontier.compat;
 
 import com.partatoes.digitalfrontier.grid.exit.MemoryPaging;
-import io.wispforest.accessories.api.DropRule;
+import io.wispforest.accessories.api.events.DropRule;
 import io.wispforest.accessories.api.events.OnDropCallback;
 import net.minecraft.entity.player.PlayerEntity;
 

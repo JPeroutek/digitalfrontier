@@ -200,8 +200,8 @@ public class CorruptedProgramEntity extends PathAwareEntity {
     @Override
     public void readCustomDataFromNbt(NbtCompound nbt) {
         super.readCustomDataFromNbt(nbt);
-        quirks = nbt.getInt("Quirks");
-        provokable = nbt.getBoolean("Provokable");
+        quirks = nbt.getInt("Quirks", 0);
+        provokable = nbt.getBoolean("Provokable", false);
     }
 
     @Nullable

@@ -5,11 +5,11 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Uuids;
 import net.minecraft.world.PersistentState;
+import net.minecraft.world.PersistentStateType;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -23,12 +23,14 @@ import java.util.UUID;
 public final class StrongholdState extends PersistentState {
     private static final String STRONGHOLDS_KEY = "strongholds";
     private static final Codec<Map<String, Stronghold>> CODEC = Codec.unboundedMap(Codec.STRING, Stronghold.CODEC);
-    private static final Type<StrongholdState> TYPE = new Type<>(StrongholdState::new, StrongholdState::fromNbt, null);
+    // Saved through the same NBT as before 1.21.5, so a bad entry only drops that stronghold
+    private static final PersistentStateType<StrongholdState> TYPE = new PersistentStateType<>(DigitalFrontier.MOD_ID + "_strongholds",
+            StrongholdState::new, NbtCompound.CODEC.xmap(StrongholdState::fromNbt, state -> state.writeNbt(new NbtCompound())), null);
 
     private final Map<String, Stronghold> strongholds = new HashMap<>();
 
     public static StrongholdState of(ServerWorld grid) {
-        return grid.getPersistentStateManager().getOrCreate(TYPE, DigitalFrontier.MOD_ID + "_strongholds");
+        return grid.getPersistentStateManager().getOrCreate(TYPE);
     }
 
     @Nullable
@@ -45,7 +47,7 @@ public final class StrongholdState extends PersistentState {
         markDirty();
     }
 
-    private static StrongholdState fromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
+    private static StrongholdState fromNbt(NbtCompound nbt) {
         StrongholdState state = new StrongholdState();
         CODEC.parse(NbtOps.INSTANCE, nbt.get(STRONGHOLDS_KEY))
                 .resultOrPartial(error -> DigitalFrontier.LOGGER.error("Couldn't read grid strongholds: {}", error))
@@ -53,8 +55,7 @@ public final class StrongholdState extends PersistentState {
         return state;
     }
 
-    @Override
-    public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
+    private NbtCompound writeNbt(NbtCompound nbt) {
         CODEC.encodeStart(NbtOps.INSTANCE, strongholds).ifSuccess(encoded -> nbt.put(STRONGHOLDS_KEY, encoded));
         return nbt;
     }

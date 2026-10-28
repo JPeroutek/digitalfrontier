@@ -9,6 +9,7 @@ import net.minecraft.block.BlockRenderType;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityCollisionHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.shape.VoxelShape;
@@ -37,7 +38,7 @@ public class GridPortalBlock extends Block {
     }
 
     @Override
-    protected void onEntityCollision(BlockState state, World world, BlockPos pos, Entity entity) {
+    protected void onEntityCollision(BlockState state, World world, BlockPos pos, Entity entity, EntityCollisionHandler handler) {
         // A player touches several portal blocks in one tick; only the first one, while they're still here, counts
         if (entity instanceof ServerPlayerEntity player && player.getWorld() == world && ModDimensions.isGrid(world)) {
             StrongholdManager.fire(player.getServerWorld(), new GridEvent.PortalUsed());

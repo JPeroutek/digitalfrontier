@@ -15,6 +15,8 @@ import com.partatoes.digitalfrontier.grid.parts.GridAssets;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.AbstractSignBlock;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.HorizontalConnectingBlock;
+import net.minecraft.block.WallBlock;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.SignText;
 import net.minecraft.nbt.NbtCompound;
@@ -89,7 +91,10 @@ public class GridChunkGenerator extends ChunkGenerator {
                     if (state.isAir()) {
                         continue;
                     }
-                    chunk.setBlockState(pos.set(chunkPos.getStartX() + localX, y, chunkPos.getStartZ() + localZ), state, false);
+                    chunk.setBlockState(pos.set(chunkPos.getStartX() + localX, y, chunkPos.getStartZ() + localZ), state, 0);
+                    if (connectsToNeighbours(state)) {
+                        chunk.markBlockForPostProcessing(pos);
+                    }
                     oceanFloor.trackUpdate(localX, y, localZ, state);
                     worldSurface.trackUpdate(localX, y, localZ, state);
                 }
@@ -97,6 +102,12 @@ public class GridChunkGenerator extends ChunkGenerator {
         }
         placeSigns(build, chunk);
         return CompletableFuture.completedFuture(chunk);
+    }
+
+    // Walls, fences, panes and bars take their shape from block updates, which a chunk being generated doesn't get: marked
+    // blocks are shaped against their neighbours when the chunk is finished, as vanilla does for structure pieces
+    private static boolean connectsToNeighbours(BlockState state) {
+        return state.getBlock() instanceof WallBlock || state.getBlock() instanceof HorizontalConnectingBlock;
     }
 
     // Station signs need their text as block entities, loaded with the chunk (a chunk being generated has no world to

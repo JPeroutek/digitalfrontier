@@ -12,12 +12,12 @@ import net.fabricmc.fabric.api.gamerule.v1.GameRuleFactory;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.PersistentState;
+import net.minecraft.world.PersistentStateType;
 import xyz.nucleoid.fantasy.Fantasy;
 import xyz.nucleoid.fantasy.RuntimeWorldConfig;
 import xyz.nucleoid.fantasy.RuntimeWorldHandle;
@@ -102,17 +102,19 @@ public final class GridManager {
     }
 
     private static State state(MinecraftServer server) {
-        return server.getOverworld().getPersistentStateManager().getOrCreate(State.TYPE, DigitalFrontier.MOD_ID + "_grids");
+        return server.getOverworld().getPersistentStateManager().getOrCreate(State.TYPE);
     }
 
     private static final class State extends PersistentState {
         private static final Codec<Map<Identifier, GridLayoutSettings>> CODEC = Codec.unboundedMap(Identifier.CODEC, GridLayoutSettings.CODEC);
         private static final String GRIDS_KEY = "grids";
-        static final Type<State> TYPE = new Type<>(State::new, State::fromNbt, null);
+        // Saved through the same NBT as before 1.21.5, so a bad entry only drops that grid
+        static final PersistentStateType<State> TYPE = new PersistentStateType<>(DigitalFrontier.MOD_ID + "_grids", State::new,
+                NbtCompound.CODEC.xmap(State::fromNbt, state -> state.writeNbt(new NbtCompound())), null);
 
         final Map<Identifier, GridLayoutSettings> grids = new LinkedHashMap<>();
 
-        private static State fromNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
+        private static State fromNbt(NbtCompound nbt) {
             State state = new State();
             CODEC.parse(NbtOps.INSTANCE, nbt.get(GRIDS_KEY))
                     .resultOrPartial(error -> DigitalFrontier.LOGGER.error("Couldn't read tuned grids: {}", error))
@@ -120,8 +122,7 @@ public final class GridManager {
             return state;
         }
 
-        @Override
-        public NbtCompound writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registries) {
+        NbtCompound writeNbt(NbtCompound nbt) {
             CODEC.encodeStart(NbtOps.INSTANCE, grids).ifSuccess(encoded -> nbt.put(GRIDS_KEY, encoded));
             return nbt;
         }

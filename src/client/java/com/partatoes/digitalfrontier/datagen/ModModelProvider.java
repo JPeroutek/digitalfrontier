@@ -9,9 +9,13 @@ import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.minecraft.block.Block;
 import net.minecraft.block.enums.BlockFace;
 import net.minecraft.client.data.*;
+import net.minecraft.client.render.model.json.ModelVariant;
+import net.minecraft.client.render.model.json.ModelVariantOperator;
+import net.minecraft.client.render.model.json.WeightedVariant;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.AxisRotation;
 import net.minecraft.util.math.Direction;
 
 import java.util.ArrayList;
@@ -53,11 +57,11 @@ public class ModModelProvider extends FabricModelProvider {
 
         // Horrifying mess to create blockstates and models for Lamp
         blockStateModelGenerator.blockStateCollector.accept(
-                VariantsBlockStateSupplier.create(ModBlocks.PIXEL_LAMP)
-                        .coordinate(BlockStateModelGenerator.createBooleanModelMap(
+                VariantsBlockModelDefinitionCreator.of(ModBlocks.PIXEL_LAMP)
+                        .with(BlockStateModelGenerator.createBooleanModelMap(
                                 Properties.LIT,
-                                blockStateModelGenerator.createSubModel(ModBlocks.PIXEL_LAMP, "_lit", Models.CUBE_ALL, TextureMap::all),
-                                TexturedModel.CUBE_ALL.upload(ModBlocks.PIXEL_LAMP, blockStateModelGenerator.modelCollector)))
+                                BlockStateModelGenerator.createWeightedVariant(blockStateModelGenerator.createSubModel(ModBlocks.PIXEL_LAMP, "_lit", Models.CUBE_ALL, TextureMap::all)),
+                                BlockStateModelGenerator.createWeightedVariant(TexturedModel.CUBE_ALL.upload(ModBlocks.PIXEL_LAMP, blockStateModelGenerator.modelCollector))))
         );
 
         blockStateModelGenerator.registerNorthDefaultHorizontalRotation(ModBlocks.KEYBOARD_BLOCK);
@@ -80,56 +84,61 @@ public class ModModelProvider extends FabricModelProvider {
                 .put(TextureKey.TOP, TextureMap.getId(ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("thick_ring").get(DyeColor.CYAN)))
                 .put(TextureKey.SIDE, TextureMap.getId(ModBlocks.GRIDSTONE_BRICKS_BLOCK))
                 .put(TextureKey.BOTTOM, TextureMap.getId(ModBlocks.GRIDSTONE_BLOCK)), blockStateModelGenerator.modelCollector);
-        blockStateModelGenerator.blockStateCollector.accept(BlockStateModelGenerator.createSingletonBlockState(ModBlocks.DIGITIZING_LASER, laserModel));
+        blockStateModelGenerator.blockStateCollector.accept(BlockStateModelGenerator.createSingletonBlockState(ModBlocks.DIGITIZING_LASER, BlockStateModelGenerator.createWeightedVariant(laserModel)));
         Identifier tuningLaserModel = Models.CUBE_BOTTOM_TOP.upload(ModBlocks.GRID_TUNING_LASER, new TextureMap()
                 .put(TextureKey.TOP, TextureMap.getId(ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("thick_ring").get(DyeColor.ORANGE)))
                 .put(TextureKey.SIDE, TextureMap.getId(ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("border_1").get(DyeColor.CYAN)))
                 .put(TextureKey.BOTTOM, TextureMap.getId(ModBlocks.GRIDSTONE_BLOCK)), blockStateModelGenerator.modelCollector);
-        blockStateModelGenerator.blockStateCollector.accept(BlockStateModelGenerator.createSingletonBlockState(ModBlocks.GRID_TUNING_LASER, tuningLaserModel));
+        blockStateModelGenerator.blockStateCollector.accept(BlockStateModelGenerator.createSingletonBlockState(ModBlocks.GRID_TUNING_LASER, BlockStateModelGenerator.createWeightedVariant(tuningLaserModel)));
 
         blockStateModelGenerator.blockStateCollector.accept(
-                createFacingFacePoweredBlockStates(ModBlocks.LIGHT_BARRIER_EMITTER, ModelIds.getBlockModelId(ModBlocks.LIGHT_BARRIER_EMITTER), ModelIds.getBlockSubModelId(ModBlocks.LIGHT_BARRIER_EMITTER, "_powered"))
+                VariantsBlockModelDefinitionCreator.of(ModBlocks.LIGHT_BARRIER_EMITTER)
+                        .with(BlockStateModelGenerator.createBooleanModelMap(Properties.POWERED,
+                                BlockStateModelGenerator.createWeightedVariant(ModelIds.getBlockSubModelId(ModBlocks.LIGHT_BARRIER_EMITTER, "_powered")),
+                                BlockStateModelGenerator.createWeightedVariant(ModelIds.getBlockModelId(ModBlocks.LIGHT_BARRIER_EMITTER))))
+                        .coordinate(faceRotations())
         );
         blockStateModelGenerator.blockStateCollector.accept(
-                createFacingFaceBlockStates(ModBlocks.LIGHT_BARRIER, ModelIds.getBlockModelId(ModBlocks.LIGHT_BARRIER))
+                VariantsBlockModelDefinitionCreator.of(ModBlocks.LIGHT_BARRIER, BlockStateModelGenerator.createWeightedVariant(ModelIds.getBlockModelId(ModBlocks.LIGHT_BARRIER)))
+                        .coordinate(faceRotations())
         );
     }
 
     // An emissive cube per flicker value: steady, then glows that drop out now and then (<name>_glow_flicker_<n>),
     // each flickering one in several phases so neighbouring blocks don't flicker together
     private static void registerPattern(BlockStateModelGenerator blockStateModelGenerator, Block block) {
-        BlockStateVariantMap.SingleProperty<Integer> variants = BlockStateVariantMap.create(PatternBlock.FLICKER);
+        BlockStateVariantMap.SingleProperty<WeightedVariant, Integer> variants = BlockStateVariantMap.models(PatternBlock.FLICKER);
         for (int flicker : PatternBlock.FLICKER.getValues()) {
             if (flicker == 0) {
                 TextureMap textures = new TextureMap()
                         .put(TextureKey.ALL, TextureMap.getId(block))
                         .put(GLOW, TextureMap.getSubId(block, "_glow"));
                 Identifier modelId = EMISSIVE_CUBE_ALL.upload(block, textures, blockStateModelGenerator.modelCollector);
-                variants.register(flicker, BlockStateVariant.create().put(VariantSettings.MODEL, modelId));
+                variants.register(flicker, BlockStateModelGenerator.createWeightedVariant(modelId));
                 continue;
             }
-            List<BlockStateVariant> phases = new ArrayList<>();
+            List<ModelVariant> phases = new ArrayList<>();
             for (int phase = 0; phase < ModTextureProvider.FLICKER_PHASES; phase++) {
                 String suffix = "_flicker_" + flicker + ModTextureProvider.phaseSuffix(phase);
                 TextureMap textures = new TextureMap()
                         .put(TextureKey.ALL, TextureMap.getId(block))
                         .put(GLOW, TextureMap.getSubId(block, "_glow" + suffix));
                 Identifier modelId = EMISSIVE_CUBE_ALL.upload(ModelIds.getBlockSubModelId(block, suffix), textures, blockStateModelGenerator.modelCollector);
-                phases.add(BlockStateVariant.create().put(VariantSettings.MODEL, modelId));
+                phases.add(new ModelVariant(modelId));
             }
-            variants.register(flicker, phases);
+            variants.register(flicker, BlockStateModelGenerator.createWeightedVariant(phases.toArray(ModelVariant[]::new)));
         }
-        blockStateModelGenerator.blockStateCollector.accept(VariantsBlockStateSupplier.create(block).coordinate(variants));
+        blockStateModelGenerator.blockStateCollector.accept(VariantsBlockModelDefinitionCreator.of(block).with(variants));
     }
 
     // Turns a cube can be shown at, so every face of an animated block can come out at a different angle
-    private static final VariantSettings.Rotation[][] TURNS = {
-            {VariantSettings.Rotation.R0, VariantSettings.Rotation.R0},
-            {VariantSettings.Rotation.R90, VariantSettings.Rotation.R0},
-            {VariantSettings.Rotation.R180, VariantSettings.Rotation.R0},
-            {VariantSettings.Rotation.R270, VariantSettings.Rotation.R0},
-            {VariantSettings.Rotation.R90, VariantSettings.Rotation.R90},
-            {VariantSettings.Rotation.R270, VariantSettings.Rotation.R90},
+    private static final AxisRotation[][] TURNS = {
+            {AxisRotation.R0, AxisRotation.R0},
+            {AxisRotation.R90, AxisRotation.R0},
+            {AxisRotation.R180, AxisRotation.R0},
+            {AxisRotation.R270, AxisRotation.R0},
+            {AxisRotation.R90, AxisRotation.R90},
+            {AxisRotation.R270, AxisRotation.R90},
     };
 
     /**
@@ -138,7 +147,7 @@ public class ModModelProvider extends FabricModelProvider {
      * neither animates in step nor repeats one look.
      */
     private static void registerAnimated(BlockStateModelGenerator blockStateModelGenerator, Block block, int templates) {
-        List<BlockStateVariant> variants = new ArrayList<>();
+        List<ModelVariant> variants = new ArrayList<>();
         for (int template = 0; template < templates; template++) {
             for (int phase = 0; phase < ModTextureProvider.ANIMATION_PHASES; phase++) {
                 String suffix = ModTextureProvider.templateSuffix(template) + ModTextureProvider.phaseSuffix(phase);
@@ -148,15 +157,13 @@ public class ModModelProvider extends FabricModelProvider {
                 Identifier modelId = suffix.isEmpty()
                         ? EMISSIVE_CUBE_ALL.upload(block, textures, blockStateModelGenerator.modelCollector)
                         : EMISSIVE_CUBE_ALL.upload(ModelIds.getBlockSubModelId(block, suffix), textures, blockStateModelGenerator.modelCollector);
-                for (VariantSettings.Rotation[] turn : TURNS) {
-                    variants.add(BlockStateVariant.create()
-                            .put(VariantSettings.MODEL, modelId)
-                            .put(VariantSettings.X, turn[0])
-                            .put(VariantSettings.Y, turn[1]));
+                for (AxisRotation[] turn : TURNS) {
+                    variants.add(new ModelVariant(modelId).withRotationX(turn[0]).withRotationY(turn[1]));
                 }
             }
         }
-        blockStateModelGenerator.blockStateCollector.accept(VariantsBlockStateSupplier.create(block, variants.toArray(BlockStateVariant[]::new)));
+        blockStateModelGenerator.blockStateCollector.accept(BlockStateModelGenerator.createSingletonBlockState(block,
+                BlockStateModelGenerator.createWeightedVariant(variants.toArray(ModelVariant[]::new))));
     }
 
     // Expects the block's texture plus a <name>_glow texture holding only the pixels that should glow
@@ -169,130 +176,25 @@ public class ModModelProvider extends FabricModelProvider {
                 .put(TextureKey.ALL, TextureMap.getId(textureSource))
                 .put(GLOW, TextureMap.getSubId(textureSource, "_glow"));
         Identifier modelId = EMISSIVE_CUBE_ALL.upload(block, textures, blockStateModelGenerator.modelCollector);
-        blockStateModelGenerator.blockStateCollector.accept(BlockStateModelGenerator.createSingletonBlockState(block, modelId));
+        blockStateModelGenerator.blockStateCollector.accept(BlockStateModelGenerator.createSingletonBlockState(block, BlockStateModelGenerator.createWeightedVariant(modelId)));
     }
 
-    public static BlockStateSupplier createFacingFacePoweredBlockStates(Block block, Identifier regularModelId, Identifier pressedModelId) {
-        return VariantsBlockStateSupplier.create(block)
-                .coordinate(
-                        BlockStateVariantMap.create(Properties.POWERED)
-                                .register(false, BlockStateVariant.create().put(VariantSettings.MODEL, regularModelId))
-                                .register(true, BlockStateVariant.create().put(VariantSettings.MODEL, pressedModelId))
-                )
-                .coordinate(
-                        BlockStateVariantMap.create(Properties.BLOCK_FACE, Properties.HORIZONTAL_FACING)
-                                .register(BlockFace.FLOOR, Direction.EAST, BlockStateVariant.create().put(VariantSettings.Y, VariantSettings.Rotation.R90))
-                                .register(BlockFace.FLOOR, Direction.WEST, BlockStateVariant.create().put(VariantSettings.Y, VariantSettings.Rotation.R270))
-                                .register(BlockFace.FLOOR, Direction.SOUTH, BlockStateVariant.create().put(VariantSettings.Y, VariantSettings.Rotation.R180))
-                                .register(BlockFace.FLOOR, Direction.NORTH, BlockStateVariant.create())
-                                .register(
-                                        BlockFace.WALL,
-                                        Direction.EAST,
-                                        BlockStateVariant.create()
-                                                .put(VariantSettings.Y, VariantSettings.Rotation.R90)
-                                                .put(VariantSettings.X, VariantSettings.Rotation.R90)
-//                                                .put(VariantSettings.UVLOCK, true)
-                                )
-                                .register(
-                                        BlockFace.WALL,
-                                        Direction.WEST,
-                                        BlockStateVariant.create()
-                                                .put(VariantSettings.Y, VariantSettings.Rotation.R270)
-                                                .put(VariantSettings.X, VariantSettings.Rotation.R90)
-//                                                .put(VariantSettings.UVLOCK, true)
-                                )
-                                .register(
-                                        BlockFace.WALL,
-                                        Direction.SOUTH,
-                                        BlockStateVariant.create()
-                                                .put(VariantSettings.Y, VariantSettings.Rotation.R180)
-                                                .put(VariantSettings.X, VariantSettings.Rotation.R90)
-//                                                .put(VariantSettings.UVLOCK, true)
-                                )
-                                .register(
-                                        BlockFace.WALL, Direction.NORTH, BlockStateVariant.create()
-                                                .put(VariantSettings.X, VariantSettings.Rotation.R90)
-//                                                .put(VariantSettings.UVLOCK, true)
-                                )
-                                .register(
-                                        BlockFace.CEILING,
-                                        Direction.EAST,
-                                        BlockStateVariant.create().put(VariantSettings.Y, VariantSettings.Rotation.R270).put(VariantSettings.X, VariantSettings.Rotation.R180)
-                                )
-                                .register(
-                                        BlockFace.CEILING,
-                                        Direction.WEST,
-                                        BlockStateVariant.create().put(VariantSettings.Y, VariantSettings.Rotation.R90).put(VariantSettings.X, VariantSettings.Rotation.R180)
-                                )
-                                .register(BlockFace.CEILING, Direction.SOUTH, BlockStateVariant.create().put(VariantSettings.X, VariantSettings.Rotation.R180))
-                                .register(
-                                        BlockFace.CEILING,
-                                        Direction.NORTH,
-                                        BlockStateVariant.create().put(VariantSettings.Y, VariantSettings.Rotation.R180).put(VariantSettings.X, VariantSettings.Rotation.R180)
-                                )
-                );
+    // Turns a model that faces north on the floor to each face and facing, as for buttons
+    private static BlockStateVariantMap<ModelVariantOperator> faceRotations() {
+        return BlockStateVariantMap.operations(Properties.BLOCK_FACE, Properties.HORIZONTAL_FACING)
+                .register(BlockFace.FLOOR, Direction.EAST, BlockStateModelGenerator.ROTATE_Y_90)
+                .register(BlockFace.FLOOR, Direction.WEST, BlockStateModelGenerator.ROTATE_Y_270)
+                .register(BlockFace.FLOOR, Direction.SOUTH, BlockStateModelGenerator.ROTATE_Y_180)
+                .register(BlockFace.FLOOR, Direction.NORTH, BlockStateModelGenerator.NO_OP)
+                .register(BlockFace.WALL, Direction.EAST, BlockStateModelGenerator.ROTATE_Y_90.then(BlockStateModelGenerator.ROTATE_X_90))
+                .register(BlockFace.WALL, Direction.WEST, BlockStateModelGenerator.ROTATE_Y_270.then(BlockStateModelGenerator.ROTATE_X_90))
+                .register(BlockFace.WALL, Direction.SOUTH, BlockStateModelGenerator.ROTATE_Y_180.then(BlockStateModelGenerator.ROTATE_X_90))
+                .register(BlockFace.WALL, Direction.NORTH, BlockStateModelGenerator.ROTATE_X_90)
+                .register(BlockFace.CEILING, Direction.EAST, BlockStateModelGenerator.ROTATE_Y_270.then(BlockStateModelGenerator.ROTATE_X_180))
+                .register(BlockFace.CEILING, Direction.WEST, BlockStateModelGenerator.ROTATE_Y_90.then(BlockStateModelGenerator.ROTATE_X_180))
+                .register(BlockFace.CEILING, Direction.SOUTH, BlockStateModelGenerator.ROTATE_X_180)
+                .register(BlockFace.CEILING, Direction.NORTH, BlockStateModelGenerator.ROTATE_Y_180.then(BlockStateModelGenerator.ROTATE_X_180));
     }
-    public static BlockStateSupplier createFacingFaceBlockStates(Block block, Identifier regularModelId) {
-        return VariantsBlockStateSupplier.create(block, BlockStateVariant.create().put(VariantSettings.MODEL, regularModelId))
-//                .coordinate(
-//                        BlockStateVariantMap.create(Properties.POWERED)
-//                                .register(false, BlockStateVariant.create().put(VariantSettings.MODEL, regularModelId))
-//                                .register(true, BlockStateVariant.create().put(VariantSettings.MODEL, pressedModelId))
-//                )
-                .coordinate(
-                        BlockStateVariantMap.create(Properties.BLOCK_FACE, Properties.HORIZONTAL_FACING)
-                                .register(BlockFace.FLOOR, Direction.EAST, BlockStateVariant.create().put(VariantSettings.Y, VariantSettings.Rotation.R90))
-                                .register(BlockFace.FLOOR, Direction.WEST, BlockStateVariant.create().put(VariantSettings.Y, VariantSettings.Rotation.R270))
-                                .register(BlockFace.FLOOR, Direction.SOUTH, BlockStateVariant.create().put(VariantSettings.Y, VariantSettings.Rotation.R180))
-                                .register(BlockFace.FLOOR, Direction.NORTH, BlockStateVariant.create())
-                                .register(
-                                        BlockFace.WALL,
-                                        Direction.EAST,
-                                        BlockStateVariant.create()
-                                                .put(VariantSettings.Y, VariantSettings.Rotation.R90)
-                                                .put(VariantSettings.X, VariantSettings.Rotation.R90)
-//                                                .put(VariantSettings.UVLOCK, true)
-                                )
-                                .register(
-                                        BlockFace.WALL,
-                                        Direction.WEST,
-                                        BlockStateVariant.create()
-                                                .put(VariantSettings.Y, VariantSettings.Rotation.R270)
-                                                .put(VariantSettings.X, VariantSettings.Rotation.R90)
-//                                                .put(VariantSettings.UVLOCK, true)
-                                )
-                                .register(
-                                        BlockFace.WALL,
-                                        Direction.SOUTH,
-                                        BlockStateVariant.create()
-                                                .put(VariantSettings.Y, VariantSettings.Rotation.R180)
-                                                .put(VariantSettings.X, VariantSettings.Rotation.R90)
-//                                                .put(VariantSettings.UVLOCK, true)
-                                )
-                                .register(
-                                        BlockFace.WALL, Direction.NORTH, BlockStateVariant.create()
-                                                .put(VariantSettings.X, VariantSettings.Rotation.R90)
-//                                                .put(VariantSettings.UVLOCK, true)
-                                )
-                                .register(
-                                        BlockFace.CEILING,
-                                        Direction.EAST,
-                                        BlockStateVariant.create().put(VariantSettings.Y, VariantSettings.Rotation.R270).put(VariantSettings.X, VariantSettings.Rotation.R180)
-                                )
-                                .register(
-                                        BlockFace.CEILING,
-                                        Direction.WEST,
-                                        BlockStateVariant.create().put(VariantSettings.Y, VariantSettings.Rotation.R90).put(VariantSettings.X, VariantSettings.Rotation.R180)
-                                )
-                                .register(BlockFace.CEILING, Direction.SOUTH, BlockStateVariant.create().put(VariantSettings.X, VariantSettings.Rotation.R180))
-                                .register(
-                                        BlockFace.CEILING,
-                                        Direction.NORTH,
-                                        BlockStateVariant.create().put(VariantSettings.Y, VariantSettings.Rotation.R180).put(VariantSettings.X, VariantSettings.Rotation.R180)
-                                )
-                );
-    }
-
     @Override
     public void generateItemModels(ItemModelGenerator itemModelGenerator) {
         itemModelGenerator.register(ModItems.BINARY_0, Models.GENERATED);
