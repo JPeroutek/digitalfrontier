@@ -311,7 +311,8 @@ public class ModTextureProvider implements DataProvider {
 
         // Flickering glows for lightly corrupted ground: lit, then out for a moment (see PatternBlock)
         BufferedImage flickerImage = new BufferedImage(16, 32, BufferedImage.TYPE_INT_ARGB);
-        flickerImage.getGraphics().drawImage(emissiveImage, 0, 0, null);
+        // Copy pixels directly: drawing through AWT Graphics needs a display, which CI doesn't have
+        flickerImage.setRGB(0, 0, 16, 16, emissiveImage.getRGB(0, 0, 16, 16, null, 0, 16), 0, 16);
         for (int i = 0; i < FLICKER_TIMINGS.length; i++) {
             int[] times = FLICKER_TIMINGS[i];
             for (int phase = 0; phase < FLICKER_PHASES; phase++) {
