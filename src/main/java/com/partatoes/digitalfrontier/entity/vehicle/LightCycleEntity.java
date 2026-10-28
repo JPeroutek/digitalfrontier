@@ -15,7 +15,8 @@ import net.minecraft.entity.MovementType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.vehicle.VehicleEntity;
 import net.minecraft.item.Item;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -47,12 +48,12 @@ public class LightCycleEntity extends VehicleEntity {
     }
 
     @Override
-    protected void readCustomDataFromNbt(NbtCompound nbt) {
+    protected void readCustomData(ReadView view) {
 
     }
 
     @Override
-    protected void writeCustomDataToNbt(NbtCompound nbt) {
+    protected void writeCustomData(WriteView view) {
 
     }
 
@@ -125,11 +126,11 @@ public class LightCycleEntity extends VehicleEntity {
     }
 
     public static boolean canCollide(Entity entity, Entity other) {
-        return (other.isCollidable() || other.isPushable()) && !entity.isConnectedThroughVehicle(other);
+        return (other.isCollidable(entity) || other.isPushable()) && !entity.isConnectedThroughVehicle(other);
     }
 
     @Override
-    public boolean isCollidable() {
+    public boolean isCollidable(@Nullable Entity entity) {
         return true;
     }
 

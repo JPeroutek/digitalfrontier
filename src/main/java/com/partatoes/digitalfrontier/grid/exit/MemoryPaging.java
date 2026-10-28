@@ -82,7 +82,7 @@ public final class MemoryPaging {
     }
 
     private static void pageOut(ServerPlayerEntity player) {
-        if (!ModDimensions.isGrid(player.getServerWorld()) || holdsDeathProtector(player)) {
+        if (!ModDimensions.isGrid(player.getWorld()) || holdsDeathProtector(player)) {
             return;
         }
         // A Core Dump does everything Memory Paging does and more, so it's used first
@@ -95,12 +95,12 @@ public final class MemoryPaging {
         if (!coreDump.isEmpty()) {
             player.setAttached(KEEP_INVENTORY, true);
         }
-        Identifier grid = player.getServerWorld().getRegistryKey().getValue();
+        Identifier grid = player.getWorld().getRegistryKey().getValue();
         TerminalRef target = player.getAttachedOrCreate(GridMemory.TYPE).lastArrival()
                 .filter(terminal -> terminal.grid().equals(grid))
                 .orElse(new TerminalRef(grid, GridLayout.MAIN_ARRIVAL_ID));
         player.setAttached(PENDING, target);
-        StrongholdManager.fire(player.getServerWorld(), new GridEvent.MemoryPaged());
+        StrongholdManager.fire(player.getWorld(), new GridEvent.MemoryPaged());
     }
 
     // What the keepInventory game rule copies; vanilla skips it for a death without that rule
@@ -120,7 +120,7 @@ public final class MemoryPaging {
         if (target == null) {
             return;
         }
-        if (player.getServerWorld().getRegistryKey().getValue().equals(target.grid())) {
+        if (player.getWorld().getRegistryKey().getValue().equals(target.grid())) {
             String key = keepsInventory(oldPlayer) ? "message.digitalfrontier.core_dumped" : "message.digitalfrontier.memory_paged";
             GridArrival.recordArrival(player, target,
                     Text.translatable(key, GridArrival.terminalName(target.terminal())).formatted(Formatting.AQUA));

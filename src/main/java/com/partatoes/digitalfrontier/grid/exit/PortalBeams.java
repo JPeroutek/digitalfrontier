@@ -68,7 +68,7 @@ public final class PortalBeams {
     }
 
     private static void send(ServerPlayerEntity player) {
-        ServerWorld world = player.getServerWorld();
+        ServerWorld world = player.getWorld();
         GridChunkGenerator generator = GridArrival.generator(world);
         List<Beam> beams = generator == null ? List.of() : generator.portalBeams().stream().map(Beam::of).toList();
         ServerPlayNetworking.send(player, new BeamsPayload(world.getRegistryKey().getValue(), beams));
