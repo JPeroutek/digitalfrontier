@@ -2,6 +2,7 @@ package com.partatoes.digitalfrontier.datagen;
 
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingOutputStream;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.block.ModBlocks;
@@ -50,8 +51,12 @@ public class ModTextureProvider implements DataProvider {
 
         // Corruption blocks: animated, so each texture is a vertical strip of frames plus an .mcmeta
         futures.add(CompletableFuture.runAsync(() -> createStatic(writer)));
-        ModBlocks.GLITCHED_GRIDSTONE.keySet().forEach(color ->
-                futures.add(CompletableFuture.runAsync(() -> createGlitched(writer, color))));
+        ModBlocks.GLITCHED_GRIDSTONE.keySet().forEach(color -> {
+            for (int template = 0; template < GLITCH_TEMPLATES.length; template++) {
+                int glitch = template;
+                futures.add(CompletableFuture.runAsync(() -> createGlitched(writer, color, glitch)));
+            }
+        });
         for (int i = 0; i < CORRUPTED_PROGRAM_SOURCES.length; i++) {
             int variant = i;
             futures.add(CompletableFuture.runAsync(() -> createCorruptedProgram(writer, variant)));
@@ -63,7 +68,31 @@ public class ModTextureProvider implements DataProvider {
 
     private static final int STATIC_FRAMES = 8;
     private static final int GLITCH_FRAMES = 4;
-    private static final String GLITCH_TEMPLATE = "gridstone_pattern_thick_ring";
+    // The patterns glitched gridstone is made from, each glitched its own way; the block picks one by position
+    static final String[] GLITCH_TEMPLATES = {
+            "thick_ring", "cross", "curved_t", "checker_4x4", "exchanger", "border_3", "center_stripe", "single_entry_circle",
+    };
+
+    // Template 0 keeps the plain name
+    static String templateSuffix(int template) {
+        return template == 0 ? "" : "_t" + template;
+    }
+    // Ticks lit and out, in turn: mostly lit, dropping out for a tick or two every few seconds
+    private static final int[][] FLICKER_TIMINGS = {
+            {90, 2, 4, 1, 150, 3},
+            {130, 1, 60, 2, 3, 2},
+    };
+    /**
+     * Every block showing an animated texture shows the same frame at the same time, so each animation is written
+     * several times, each copy started at a different point in its cycle; the block state picks a copy by position
+     * (see ModModelProvider). Copy 0 keeps the plain name, the others get {@link #phaseSuffix}.
+     */
+    static final int ANIMATION_PHASES = 4;
+    static final int FLICKER_PHASES = 2;
+
+    static String phaseSuffix(int phase) {
+        return phase == 0 ? "" : "_p" + phase;
+    }
 
     // TV static: gray noise with brighter scan lines; the brightest specks also go in the glow layer
     private void createStatic(DataWriter writer) {
@@ -82,17 +111,17 @@ public class ModTextureProvider implements DataProvider {
                 }
             }
         }
-        writeAnimated(writer, image, "static_block", 1);
-        writeAnimated(writer, glow, "static_block_glow", 1);
+        writePhases(writer, image, glow, "static_block", 1, ANIMATION_PHASES);
     }
 
     // A pattern whose rows jump sideways from frame to frame, in the given color
-    private void createGlitched(DataWriter writer, DyeColor color) {
-        BufferedImage template = readTemplate(GLITCH_TEMPLATE);
+    private void createGlitched(DataWriter writer, DyeColor color, int templateIndex) {
+        BufferedImage template = readTemplate("gridstone_pattern_" + GLITCH_TEMPLATES[templateIndex]);
         if (template == null) {
             return;
         }
-        Random random = new Random(0x611C7L);
+        // The same glitches in every color, different ones for each pattern
+        Random random = new Random(0x611C7L + templateIndex * 7919L);
         BufferedImage image = new BufferedImage(16, 16 * GLITCH_FRAMES, BufferedImage.TYPE_INT_ARGB);
         BufferedImage glow = new BufferedImage(16, 16 * GLITCH_FRAMES, BufferedImage.TYPE_INT_ARGB);
         for (int frame = 0; frame < GLITCH_FRAMES; frame++) {
@@ -108,9 +137,7 @@ public class ModTextureProvider implements DataProvider {
                 }
             }
         }
-        String name = "glitched_gridstone_" + color.asString();
-        writeAnimated(writer, image, name, 3);
-        writeAnimated(writer, glow, name + "_glow", 3);
+        writePhases(writer, image, glow, "glitched_gridstone_" + color.asString() + templateSuffix(templateIndex), 3, ANIMATION_PHASES);
     }
 
     // Program skins that corrupted programs are made from
@@ -188,6 +215,46 @@ public class ModTextureProvider implements DataProvider {
         DataProvider.writeToPath(writer, meta, resolver.resolve(Identifier.of(DigitalFrontier.MOD_ID, assetName), "png.mcmeta")).join();
     }
 
+    // An animation and its glow layer, once per phase, each copy's frames starting further into the cycle
+    private void writePhases(DataWriter writer, BufferedImage image, BufferedImage glow, String name, int frameTime, int phases) {
+        int frames = image.getHeight() / 16;
+        for (int phase = 0; phase < phases; phase++) {
+            int shift = phase * frames / phases;
+            writeAnimated(writer, shiftFrames(image, shift), name + phaseSuffix(phase), frameTime);
+            writeAnimated(writer, shiftFrames(glow, shift), name + phaseSuffix(phase) + "_glow", frameTime);
+        }
+    }
+
+    // A vertical strip of 16×16 frames, starting at frame {@code shift} and wrapping round
+    private static BufferedImage shiftFrames(BufferedImage strip, int shift) {
+        int frames = strip.getHeight() / 16;
+        BufferedImage shifted = new BufferedImage(16, strip.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        for (int frame = 0; frame < frames; frame++) {
+            int source = (frame + shift) % frames;
+            shifted.setRGB(0, frame * 16, 16, 16, strip.getRGB(0, source * 16, 16, 16, null, 0, 16), 0, 16);
+        }
+        return shifted;
+    }
+
+    // A two-frame strip shown in turn, frame 0 then frame 1, for each of the times, starting at times[start]
+    private void writeAnimated(DataWriter writer, BufferedImage image, String assetName, int[] times, int start) {
+        writeBufferedImageToPath(writer, image, assetName);
+        JsonArray frames = new JsonArray();
+        for (int i = 0; i < times.length; i++) {
+            int entry = (start + i) % times.length;
+            JsonObject frame = new JsonObject();
+            frame.addProperty("index", entry % 2);
+            frame.addProperty("time", times[entry]);
+            frames.add(frame);
+        }
+        JsonObject animation = new JsonObject();
+        animation.add("frames", frames);
+        JsonObject meta = new JsonObject();
+        meta.add("animation", animation);
+        DataOutput.PathResolver resolver = dataOutput.getResolver(OutputType.RESOURCE_PACK, "textures/block");
+        DataProvider.writeToPath(writer, meta, resolver.resolve(Identifier.of(DigitalFrontier.MOD_ID, assetName), "png.mcmeta")).join();
+    }
+
     private BufferedImage readTemplate(String templateName) {
         String resourcePath = String.format("assets/%s/textures/block/%s.png", DigitalFrontier.MOD_ID, templateName);
         try (var resourceStream = ModTextureProvider.class.getClassLoader().getResourceAsStream(resourcePath)) {
@@ -241,6 +308,17 @@ public class ModTextureProvider implements DataProvider {
         
         String emissivePatternName = String.format("%s_%s_glow", templateName, color.asString().toLowerCase());
         writeBufferedImageToPath(writer, emissiveImage, emissivePatternName);
+
+        // Flickering glows for lightly corrupted ground: lit, then out for a moment (see PatternBlock)
+        BufferedImage flickerImage = new BufferedImage(16, 32, BufferedImage.TYPE_INT_ARGB);
+        flickerImage.getGraphics().drawImage(emissiveImage, 0, 0, null);
+        for (int i = 0; i < FLICKER_TIMINGS.length; i++) {
+            int[] times = FLICKER_TIMINGS[i];
+            for (int phase = 0; phase < FLICKER_PHASES; phase++) {
+                writeAnimated(writer, flickerImage, emissivePatternName + "_flicker_" + (i + 1) + phaseSuffix(phase), times,
+                        phase * times.length / FLICKER_PHASES);
+            }
+        }
     }
 
     private int applyAlpha(int color, int alpha) {

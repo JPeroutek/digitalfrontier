@@ -108,8 +108,8 @@ public class ModBlocks {
                     .copy(Blocks.COMPARATOR)
                     .registryKey(RegistryKey.of(RegistryKeys.BLOCK, KEYBOARD_BLOCK_ID))));
 
-    // Light the glowing lines give off; enough to light streets and building faces without washing out the dark
-    private static final int PATTERN_LUMINANCE = 6;
+    // Light the glowing lines give off; a faint glow, so the dark between them stays dark
+    private static final int PATTERN_LUMINANCE = 2;
 
     // More patterns TBD.  Spiral, 90 deg left, straight (all with varying thicknesses and entry/exits
     public static final String[] GRIDSTONE_PATTERNS = new String[] {
@@ -168,7 +168,7 @@ public class ModBlocks {
                                         color -> color,
                                         color -> {
                                             Identifier id = Identifier.of(DigitalFrontier.MOD_ID, String.format("gridstone_pattern_%s_%s", patternName, color.asString().toLowerCase()));
-                                            return registerBlock(id, new Block(
+                                            return registerBlock(id, new PatternBlock(
                                                     AbstractBlock.Settings.copy(ModBlocks.GRIDSTONE_BLOCK)
                                                             .luminance(state -> PATTERN_LUMINANCE)
                                                             .registryKey(RegistryKey.of(RegistryKeys.BLOCK, id))));

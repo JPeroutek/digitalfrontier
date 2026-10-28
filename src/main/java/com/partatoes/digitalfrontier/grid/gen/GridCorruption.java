@@ -1,6 +1,7 @@
 package com.partatoes.digitalfrontier.grid.gen;
 
 import com.partatoes.digitalfrontier.block.ModBlocks;
+import com.partatoes.digitalfrontier.block.custom.PatternBlock;
 import com.partatoes.digitalfrontier.grid.layout.CorruptionTier;
 import com.partatoes.digitalfrontier.grid.layout.GridRandom;
 import net.minecraft.block.Block;
@@ -9,6 +10,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.util.DyeColor;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.partatoes.digitalfrontier.grid.layout.GridLayout.FLOOR_Y;
@@ -20,13 +22,16 @@ import static com.partatoes.digitalfrontier.grid.layout.GridLayout.FLOOR_Y;
  *
  * <p>Effects build up with intensity (see {@link CorruptionTier} for the thresholds):
  * <ul>
- *   <li>LOW: pattern lines show the wrong district color; gridstone cracks.</li>
- *   <li>UNSTABLE: holes through walls, floors and streets; columns of buildings shifted up or down
- *       ("misaligned rows"); pattern lines glitch.</li>
+ *   <li>LOW: barely anything; a few pattern lines flicker, their glow dropping out now and then, so lightly
+ *       corrupted buildings keep their clean look.</li>
+ *   <li>UNSTABLE: pattern lines stray from their district color, to its neighbours on the color wheel at first and
+ *       further around it as intensity rises, or glitch; gridstone cracks; holes through walls, floors and
+ *       streets; columns of buildings shifted up or down ("misaligned rows").</li>
  *   <li>CORRUPTED and up: blocks dissolve into static; buildings break off above a cut and float apart.</li>
  * </ul>
- * Structural effects (holes, shifts, breaks) are skipped on site chunks so terminals, the Portal and strongholds
- * stay intact; their materials still corrupt. Arrival Pads, Portal blocks and Stronghold Uplinks are never touched.
+ * Structural effects (holes, shifts, breaks) are skipped on site chunks so terminals and strongholds stay intact;
+ * their materials still corrupt. The Portal's chunk isn't corrupted at all (see {@link GridChunkBuild}), and
+ * Arrival Pads, Portal blocks and Stronghold Uplinks are never touched.
  */
 final class GridCorruption {
     /** Below this intensity nothing changes. */
@@ -56,10 +61,16 @@ final class GridCorruption {
     private static final int SALT_FRAGMENT = 5011;
     private static final int SALT_SPAN = 5012;
     private static final int SALT_CAVE_IN = 5013;
+    private static final int SALT_RECOLOR_JUMP = 5014;
+    private static final int SALT_FLICKER = 5015;
+    private static final int SALT_FLICKER_TIMING = 5016;
     /** Missing spans of the city's levels are this many blocks each way. */
     private static final int SPAN = 8;
 
-    private static final DyeColor[] COLORS = DyeColor.values();
+    // The dye colors as two color wheels: the hues in order, and the neutrals from light to dark
+    private static final List<DyeColor> HUES = List.of(DyeColor.RED, DyeColor.ORANGE, DyeColor.YELLOW, DyeColor.LIME, DyeColor.GREEN,
+            DyeColor.CYAN, DyeColor.LIGHT_BLUE, DyeColor.BLUE, DyeColor.PURPLE, DyeColor.MAGENTA, DyeColor.PINK);
+    private static final List<DyeColor> NEUTRALS = List.of(DyeColor.WHITE, DyeColor.LIGHT_GRAY, DyeColor.GRAY, DyeColor.BLACK, DyeColor.BROWN);
     private static volatile Map<Block, Pattern> patterns;
 
     private GridCorruption() {
@@ -163,17 +174,44 @@ final class GridCorruption {
             if (intensity >= UNSTABLE && roll(seed, blockX, y, blockZ, SALT_GLITCH) < (intensity - UNSTABLE) * 0.8) {
                 return ModBlocks.GLITCHED_GRIDSTONE.get(pattern.color()).getDefaultState();
             }
-            if (roll(seed, blockX, y, blockZ, SALT_RECOLOR) < (intensity - LOW) * 0.8) {
-                DyeColor wrong = COLORS[(int) (roll(seed, blockX, y, blockZ, SALT_RECOLOR_PICK) * COLORS.length)];
+            if (intensity >= UNSTABLE && roll(seed, blockX, y, blockZ, SALT_RECOLOR) < (intensity - UNSTABLE) * 0.8) {
+                DyeColor wrong = strayColor(pattern.color(), intensity, roll(seed, blockX, y, blockZ, SALT_RECOLOR_PICK),
+                        roll(seed, blockX, y, blockZ, SALT_RECOLOR_JUMP));
                 return ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get(pattern.name()).get(wrong).getDefaultState();
+            }
+            if (state.contains(PatternBlock.FLICKER) && roll(seed, blockX, y, blockZ, SALT_FLICKER) < Math.min(0.25, (intensity - LOW) * 0.5)) {
+                return state.with(PatternBlock.FLICKER, roll(seed, blockX, y, blockZ, SALT_FLICKER_TIMING) < 0.5 ? 1 : 2);
             }
             return state;
         }
         if ((state.isOf(ModBlocks.GRIDSTONE_BLOCK) || state.isOf(ModBlocks.GRIDSTONE_BRICKS_BLOCK))
-                && roll(seed, blockX, y, blockZ, SALT_CRACK) < (intensity - LOW) * 0.6) {
+                && intensity >= UNSTABLE && roll(seed, blockX, y, blockZ, SALT_CRACK) < (intensity - UNSTABLE) * 0.6) {
             return ModBlocks.CRACKED_GRIDSTONE_BLOCK.getDefaultState();
         }
         return state;
+    }
+
+    /**
+     * The wrong color a corrupted pattern line shows: a neighbour of its own color on the color wheel when lines first
+     * stray (at UNSTABLE), reaching further around the wheel as intensity rises, and at high intensity sometimes
+     * jumping between the hues and the neutrals.
+     *
+     * @param pick a roll in [0, 1) choosing the step around the wheel
+     * @param jump a roll in [0, 1) deciding whether to leave the color's own wheel
+     */
+    static DyeColor strayColor(DyeColor color, float intensity, double pick, double jump) {
+        double severity = Math.clamp((intensity - UNSTABLE) / (1 - UNSTABLE), 0, 1);
+        boolean hue = HUES.contains(color);
+        if (jump < severity * severity * 0.3) {
+            List<DyeColor> other = hue ? NEUTRALS : HUES;
+            return other.get((int) (pick * other.size()));
+        }
+        List<DyeColor> wheel = hue ? HUES : NEUTRALS;
+        // Steps of 1 at the start, up to half way round the wheel at full intensity, either way
+        int reach = 1 + (int) Math.round(severity * (wheel.size() / 2 - 1));
+        int choice = (int) (pick * reach * 2);
+        int step = (choice / 2 + 1) * (choice % 2 == 0 ? 1 : -1);
+        return wheel.get(Math.floorMod(wheel.indexOf(color) + step, wheel.size()));
     }
 
     private static double roll(long seed, int x, int y, int z, int salt) {
