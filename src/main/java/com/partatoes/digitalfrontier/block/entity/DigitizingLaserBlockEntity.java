@@ -67,7 +67,7 @@ public class DigitizingLaserBlockEntity extends BlockEntity {
     public void startScan(ServerPlayerEntity player) {
         scanning = player.getUuid();
         scanTicks = 0;
-        player.getWorld().playSound(null, pos, SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.BLOCKS, 1.0f, 1.2f);
+        player.getEntityWorld().playSound(null, pos, SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.BLOCKS, 1.0f, 1.2f);
     }
 
     public static void tick(World world, BlockPos pos, BlockState state, DigitizingLaserBlockEntity laser) {
@@ -76,7 +76,7 @@ public class DigitizingLaserBlockEntity extends BlockEntity {
         }
         ServerPlayerEntity player = serverWorld.getServer().getPlayerManager().getPlayer(laser.scanning);
         Vec3d emitter = Vec3d.ofCenter(pos).add(0, 0.5, 0);
-        if (player == null || player.getWorld() != serverWorld || !player.isAlive()
+        if (player == null || player.getEntityWorld() != serverWorld || !player.isAlive()
                 || player.squaredDistanceTo(emitter) > MAX_RANGE * MAX_RANGE) {
             laser.scanning = null;
             if (player != null) {
@@ -100,7 +100,7 @@ public class DigitizingLaserBlockEntity extends BlockEntity {
 
     // A beam from the emitter to the player, and a ring sweeping up the player as the scan progresses
     private static void spawnScanParticles(ServerWorld world, Vec3d emitter, ServerPlayerEntity player, float progress) {
-        Vec3d target = player.getPos().add(0, player.getHeight() * progress, 0);
+        Vec3d target = player.getEntityPos().add(0, player.getHeight() * progress, 0);
         Vec3d beam = target.subtract(emitter);
         int steps = Math.max(1, (int) (beam.length() * 4));
         for (int i = 0; i <= steps; i++) {

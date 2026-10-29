@@ -108,8 +108,8 @@ public class ModBlocks {
                     .copy(Blocks.COMPARATOR)
                     .registryKey(RegistryKey.of(RegistryKeys.BLOCK, KEYBOARD_BLOCK_ID))));
 
-    // Light the glowing lines give off; a faint glow, so the dark between them stays dark
-    private static final int PATTERN_LUMINANCE = 2;
+    // Light the glowing lines give off: enough to see the streets by, with the dark between them still dim
+    private static final int PATTERN_LUMINANCE = 6;
 
     // More patterns TBD.  Spiral, 90 deg left, straight (all with varying thicknesses and entry/exits
     public static final String[] GRIDSTONE_PATTERNS = new String[] {

@@ -13,6 +13,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class ItemStackMixin {
     @Inject(method = "onCraftByPlayer", at = @At("HEAD"))
     public void fireItemCrafted(PlayerEntity player, int amount, CallbackInfo ci) {
-        StrongholdEvents.onItemCrafted((ItemStack) (Object) this, player.getWorld(), player);
+        StrongholdEvents.onItemCrafted((ItemStack) (Object) this, player.getEntityWorld(), player);
     }
 }

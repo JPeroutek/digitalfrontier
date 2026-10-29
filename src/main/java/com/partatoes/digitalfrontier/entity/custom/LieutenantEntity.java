@@ -170,16 +170,16 @@ public class LieutenantEntity extends HostileEntity {
             return;
         }
         abilityCooldown = 80;
-        Vec3d toward = target.getPos().subtract(getPos()).normalize();
+        Vec3d toward = target.getEntityPos().subtract(getEntityPos()).normalize();
         setVelocity(toward.x * 1.6, 0.35, toward.z * 1.6);
         velocityModified = true;
-        getWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_BREEZE_WIND_BURST, SoundCategory.HOSTILE, 1.0f, 1.4f);
+        getEntityWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_BREEZE_WIND_BURST, SoundCategory.HOSTILE, 1.0f, 1.4f);
     }
 
     @Override
     public void onDeath(DamageSource damageSource) {
         super.onDeath(damageSource);
-        if (getWorld() instanceof ServerWorld) {
+        if (getEntityWorld() instanceof ServerWorld) {
             StrongholdManager.onDefeated(this);
         }
     }
@@ -195,7 +195,7 @@ public class LieutenantEntity extends HostileEntity {
         }
         LootWorldContext.Builder context = new LootWorldContext.Builder(world)
                 .add(LootContextParameters.THIS_ENTITY, this)
-                .add(LootContextParameters.ORIGIN, getPos())
+                .add(LootContextParameters.ORIGIN, getEntityPos())
                 .add(LootContextParameters.DAMAGE_SOURCE, source)
                 .addOptional(LootContextParameters.ATTACKING_ENTITY, source.getAttacker())
                 .addOptional(LootContextParameters.DIRECT_ATTACKING_ENTITY, source.getSource());
@@ -257,7 +257,7 @@ public class LieutenantEntity extends HostileEntity {
 
         @Override
         public boolean canStart() {
-            return getTarget() == null && !home.equals(BlockPos.ORIGIN) && home.getSquaredDistance(getPos()) > LEASH * LEASH;
+            return getTarget() == null && !home.equals(BlockPos.ORIGIN) && home.getSquaredDistance(getEntityPos()) > LEASH * LEASH;
         }
 
         @Override
