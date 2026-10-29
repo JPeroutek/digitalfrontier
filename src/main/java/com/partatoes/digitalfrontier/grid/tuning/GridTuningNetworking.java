@@ -9,20 +9,19 @@ import com.partatoes.digitalfrontier.grid.arrival.TerminalRef;
 import com.partatoes.digitalfrontier.grid.layout.GridLayout;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.codec.PacketCodecs;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.phys.Vec3;
 import java.util.Optional;
 
 /**
@@ -36,69 +35,69 @@ public final class GridTuningNetworking {
     }
 
     /** Server to client: open the tuning screen for the laser at {@code pos}, showing {@code code}. */
-    public record OpenScreenPayload(BlockPos pos, String code) implements CustomPayload {
-        public static final Id<OpenScreenPayload> ID = new Id<>(Identifier.of(DigitalFrontier.MOD_ID, "open_grid_tuning"));
-        public static final PacketCodec<RegistryByteBuf, OpenScreenPayload> CODEC = PacketCodec.tuple(
-                BlockPos.PACKET_CODEC, OpenScreenPayload::pos,
-                PacketCodecs.STRING, OpenScreenPayload::code,
+    public record OpenScreenPayload(BlockPos pos, String code) implements CustomPacketPayload {
+        public static final Type<OpenScreenPayload> ID = new Type<>(Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "open_grid_tuning"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, OpenScreenPayload> CODEC = StreamCodec.composite(
+                BlockPos.STREAM_CODEC, OpenScreenPayload::pos,
+                ByteBufCodecs.STRING_UTF8, OpenScreenPayload::code,
                 OpenScreenPayload::new);
 
         @Override
-        public Id<? extends CustomPayload> getId() {
+        public Type<? extends CustomPacketPayload> type() {
             return ID;
         }
     }
 
     /** Client to server: tune the laser at {@code pos} to the grid with this code. */
-    public record TunePayload(BlockPos pos, String code) implements CustomPayload {
-        public static final Id<TunePayload> ID = new Id<>(Identifier.of(DigitalFrontier.MOD_ID, "tune_laser"));
-        public static final PacketCodec<RegistryByteBuf, TunePayload> CODEC = PacketCodec.tuple(
-                BlockPos.PACKET_CODEC, TunePayload::pos,
-                PacketCodecs.string(64), TunePayload::code,
+    public record TunePayload(BlockPos pos, String code) implements CustomPacketPayload {
+        public static final Type<TunePayload> ID = new Type<>(Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "tune_laser"));
+        public static final StreamCodec<RegistryFriendlyByteBuf, TunePayload> CODEC = StreamCodec.composite(
+                BlockPos.STREAM_CODEC, TunePayload::pos,
+                ByteBufCodecs.stringUtf8(64), TunePayload::code,
                 TunePayload::new);
 
         @Override
-        public Id<? extends CustomPayload> getId() {
+        public Type<? extends CustomPacketPayload> type() {
             return ID;
         }
     }
 
     public static void register() {
-        PayloadTypeRegistry.playS2C().register(OpenScreenPayload.ID, OpenScreenPayload.CODEC);
-        PayloadTypeRegistry.playC2S().register(TunePayload.ID, TunePayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(OpenScreenPayload.ID, OpenScreenPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(TunePayload.ID, TunePayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(TunePayload.ID, (payload, context) -> tune(context.player(), payload));
     }
 
-    public static void openScreen(ServerPlayerEntity player, DigitizingLaserBlockEntity laser) {
+    public static void openScreen(ServerPlayer player, DigitizingLaserBlockEntity laser) {
         GridTuning current = Optional.ofNullable(laser.link())
-                .flatMap(link -> GridArrival.gridWorld(player.getEntityWorld().getServer(), link.grid()))
+                .flatMap(link -> GridArrival.gridWorld(player.level().getServer(), link.grid()))
                 .flatMap(world -> GridTuning.fromSettings(GridArrival.generator(world).layout().settings()))
                 .orElse(GridTuning.DEFAULT);
-        ServerPlayNetworking.send(player, new OpenScreenPayload(laser.getPos(), current.code()));
+        ServerPlayNetworking.send(player, new OpenScreenPayload(laser.getBlockPos(), current.code()));
     }
 
-    private static void tune(ServerPlayerEntity player, TunePayload payload) {
-        ServerWorld world = player.getEntityWorld();
+    private static void tune(ServerPlayer player, TunePayload payload) {
+        ServerLevel world = player.level();
         BlockPos pos = payload.pos();
         if (!(world.getBlockState(pos).getBlock() instanceof DigitizingLaserBlock block) || !block.isTunable()
                 || !(world.getBlockEntity(pos) instanceof DigitizingLaserBlockEntity laser)
-                || player.squaredDistanceTo(Vec3d.ofCenter(pos)) > MAX_DISTANCE * MAX_DISTANCE) {
+                || player.distanceToSqr(Vec3.atCenterOf(pos)) > MAX_DISTANCE * MAX_DISTANCE) {
             return;
         }
         Optional<GridTuning> tuning = GridTuning.fromCode(payload.code());
         if (tuning.isEmpty()) {
-            player.sendMessage(Text.translatable("message.digitalfrontier.invalid_grid_code").formatted(Formatting.RED), true);
+            player.sendOverlayMessage(Component.translatable("message.digitalfrontier.invalid_grid_code").withStyle(ChatFormatting.RED));
             return;
         }
-        Optional<ServerWorld> grid = GridManager.getOrCreate(player.getEntityWorld().getServer(), tuning.get().toSettings());
+        Optional<ServerLevel> grid = GridManager.getOrCreate(player.level().getServer(), tuning.get().toSettings());
         if (grid.isEmpty()) {
-            player.sendMessage(Text.translatable("message.digitalfrontier.grid_limit",
-                    GridManager.maxTunedGrids(player.getEntityWorld().getServer())).formatted(Formatting.RED), true);
+            player.sendOverlayMessage(Component.translatable("message.digitalfrontier.grid_limit",
+                    GridManager.maxTunedGrids(player.level().getServer())).withStyle(ChatFormatting.RED));
             return;
         }
-        Identifier gridId = grid.get().getRegistryKey().getValue();
+        Identifier gridId = grid.get().dimension().identifier();
         laser.setLink(new TerminalRef(gridId, GridLayout.MAIN_ARRIVAL_ID));
-        world.playSound(null, pos, SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.BLOCKS, 1.0f, 0.8f);
-        player.sendMessage(Text.translatable("message.digitalfrontier.laser_tuned_grid", gridId.toString()).formatted(Formatting.AQUA), true);
+        world.playSound(null, pos, SoundEvents.BEACON_POWER_SELECT, SoundSource.BLOCKS, 1.0f, 0.8f);
+        player.sendOverlayMessage(Component.translatable("message.digitalfrontier.laser_tuned_grid", gridId.toString()).withStyle(ChatFormatting.AQUA));
     }
 }

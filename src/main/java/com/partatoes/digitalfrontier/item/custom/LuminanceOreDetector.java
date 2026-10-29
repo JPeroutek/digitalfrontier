@@ -1,53 +1,52 @@
 package com.partatoes.digitalfrontier.item.custom;
 
 import com.partatoes.digitalfrontier.block.ModBlocks;
-import net.minecraft.block.BlockState;
-import net.minecraft.component.type.TooltipDisplayComponent;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.ItemUsageContext;
-import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-
 import java.util.function.Consumer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.world.item.component.TooltipDisplay;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class LuminanceOreDetector extends Item {
 
-    public LuminanceOreDetector(Settings settings) {
+    public LuminanceOreDetector(Properties settings) {
         super(settings);
     }
 
     @Override
-    public ActionResult useOnBlock(ItemUsageContext context) {
+    public InteractionResult useOn(UseOnContext context) {
         if(context.getPlayer() == null) {
-            return ActionResult.PASS;
+            return InteractionResult.PASS;
         }
-        if(!context.getWorld().isClient()) {
-            BlockPos positionClicked = context.getBlockPos();
-            PlayerEntity player = context.getPlayer();
+        if(!context.getLevel().isClientSide()) {
+            BlockPos positionClicked = context.getClickedPos();
+            Player player = context.getPlayer();
 
             for(int i = 0; i <= positionClicked.getY() + 64; i++) {
-                BlockState state = context.getWorld().getBlockState(positionClicked.down(i));
+                BlockState state = context.getLevel().getBlockState(positionClicked.below(i));
 
-                if (state.isOf(ModBlocks.LUMINANCE_ORE)) {
-                    player.sendMessage(Text.literal("Found Luminance Ore at Y level " + positionClicked.down(i).getY()), false);
+                if (state.is(ModBlocks.LUMINANCE_ORE)) {
+                    player.sendSystemMessage(Component.literal("Found Luminance Ore at Y level " + positionClicked.below(i).getY()));
                     break;
                 }
             }
         }
 
-        context.getStack().damage(1, context.getPlayer(), context.getHand().equals(Hand.MAIN_HAND) ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
-        return ActionResult.SUCCESS;
+        context.getItemInHand().hurtAndBreak(1, context.getPlayer(), context.getHand().equals(InteractionHand.MAIN_HAND) ? EquipmentSlot.MAINHAND : EquipmentSlot.OFFHAND);
+        return InteractionResult.SUCCESS;
     }
 
     @Override
-    public void appendTooltip(ItemStack stack, TooltipContext context, TooltipDisplayComponent displayComponent, Consumer<Text> textConsumer, TooltipType type) {
-        textConsumer.accept(Text.translatable("item.digitalfrontier.luminance_detector.tooltip"));
-        super.appendTooltip(stack, context, displayComponent, textConsumer, type);
+    public void appendHoverText(ItemStack stack, TooltipContext context, TooltipDisplay displayComponent, Consumer<Component> textConsumer, TooltipFlag type) {
+        textConsumer.accept(Component.translatable("item.digitalfrontier.luminance_detector.tooltip"));
+        super.appendHoverText(stack, context, displayComponent, textConsumer, type);
     }
 }

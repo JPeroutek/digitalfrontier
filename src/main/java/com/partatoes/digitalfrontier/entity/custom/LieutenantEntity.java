@@ -4,81 +4,82 @@ import com.partatoes.digitalfrontier.entity.ModEntities;
 import com.partatoes.digitalfrontier.grid.stronghold.LieutenantDef;
 import com.partatoes.digitalfrontier.grid.stronghold.Lieutenants;
 import com.partatoes.digitalfrontier.grid.stronghold.StrongholdManager;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.goal.ActiveTargetGoal;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.ai.goal.LookAroundGoal;
-import net.minecraft.entity.ai.goal.LookAtEntityGoal;
-import net.minecraft.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.entity.ai.goal.RevengeGoal;
-import net.minecraft.entity.ai.goal.SwimGoal;
-import net.minecraft.entity.ai.goal.WanderAroundGoal;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.boss.BossBar;
-import net.minecraft.entity.boss.ServerBossBar;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.data.TrackedData;
-import net.minecraft.entity.data.TrackedDataHandlerRegistry;
-import net.minecraft.entity.mob.HostileEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.loot.LootTable;
-import net.minecraft.loot.context.LootContextParameters;
-import net.minecraft.loot.context.LootContextTypes;
-import net.minecraft.loot.context.LootWorldContext;
-import net.minecraft.storage.ReadView;
-import net.minecraft.storage.WriteView;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
 import java.util.Optional;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerBossEvent;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
+import net.minecraft.world.BossEvent;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.RandomStrollGoal;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.LootTable;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * A stronghold's lieutenant: a named boss spawned by {@link StrongholdManager} from a {@link LieutenantDef}. Its
  * name, skin and health come from the definition; how it fights from the definition's archetype. It stays near its
  * stronghold. What it drops when derezzed is its definition's loot table, or {@code digitalfrontier:entities/lieutenant}.
  */
-public class LieutenantEntity extends HostileEntity {
-    private static final TrackedData<String> TEXTURE = DataTracker.registerData(LieutenantEntity.class, TrackedDataHandlerRegistry.STRING);
+public class LieutenantEntity extends Monster {
+    private static final EntityDataAccessor<String> TEXTURE = SynchedEntityData.defineId(LieutenantEntity.class, EntityDataSerializers.STRING);
     private static final int LEASH = 24;
     private static final int MAX_ENFORCERS = 4;
 
-    private final ServerBossBar bossBar = new ServerBossBar(Text.empty(), BossBar.Color.RED, BossBar.Style.NOTCHED_10);
+    private final ServerBossEvent bossBar = new ServerBossEvent(Mth.createInsecureUUID(this.random), Component.empty(), BossEvent.BossBarColor.RED, BossEvent.BossBarOverlay.NOTCHED_10);
     @Nullable
     private Identifier lieutenantId;
     @Nullable
     private String strongholdId;
     private LieutenantDef.Archetype archetype = LieutenantDef.Archetype.RULER;
-    private BlockPos home = BlockPos.ORIGIN;
+    private BlockPos home = BlockPos.ZERO;
     private int abilityCooldown = 100;
 
-    public LieutenantEntity(EntityType<? extends HostileEntity> entityType, World world) {
+    public LieutenantEntity(EntityType<? extends Monster> entityType, Level world) {
         super(entityType, world);
-        this.experiencePoints = 100;
-        setPersistent();
+        this.xpReward = 100;
+        setPersistenceRequired();
     }
 
-    public static DefaultAttributeContainer.Builder createLieutenantAttributes() {
-        return HostileEntity.createHostileAttributes()
-                .add(EntityAttributes.MAX_HEALTH, 300)
-                .add(EntityAttributes.ATTACK_DAMAGE, 10)
-                .add(EntityAttributes.MOVEMENT_SPEED, 0.3)
-                .add(EntityAttributes.ARMOR, 8)
-                .add(EntityAttributes.FOLLOW_RANGE, 40)
-                .add(EntityAttributes.KNOCKBACK_RESISTANCE, 0.8);
+    public static AttributeSupplier.Builder createLieutenantAttributes() {
+        return Monster.createMonsterAttributes()
+                .add(Attributes.MAX_HEALTH, 300)
+                .add(Attributes.ATTACK_DAMAGE, 10)
+                .add(Attributes.MOVEMENT_SPEED, 0.3)
+                .add(Attributes.ARMOR, 8)
+                .add(Attributes.FOLLOW_RANGE, 40)
+                .add(Attributes.KNOCKBACK_RESISTANCE, 0.8);
     }
 
     /** Called once when the stronghold spawns it. */
@@ -90,9 +91,9 @@ public class LieutenantEntity extends HostileEntity {
         this.home = home;
         setCustomName(def.name());
         setCustomNameVisible(true);
-        dataTracker.set(TEXTURE, def.textureOrDefault().toString());
-        getAttributeInstance(EntityAttributes.MAX_HEALTH).setBaseValue(def.healthOrDefault());
-        getAttributeInstance(EntityAttributes.MOVEMENT_SPEED).setBaseValue(def.archetype().speed());
+        entityData.set(TEXTURE, def.textureOrDefault().toString());
+        getAttribute(Attributes.MAX_HEALTH).setBaseValue(def.healthOrDefault());
+        getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(def.archetype().speed());
         setHealth(getMaxHealth());
     }
 
@@ -103,38 +104,38 @@ public class LieutenantEntity extends HostileEntity {
 
     @Nullable
     public Identifier texture() {
-        String texture = dataTracker.get(TEXTURE);
+        String texture = entityData.get(TEXTURE);
         return texture.isEmpty() ? null : Identifier.tryParse(texture);
     }
 
     @Override
-    protected void initDataTracker(DataTracker.Builder builder) {
-        super.initDataTracker(builder);
-        builder.add(TEXTURE, "");
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(TEXTURE, "");
     }
 
     @Override
-    protected void initGoals() {
-        this.goalSelector.add(0, new SwimGoal(this));
-        this.goalSelector.add(2, new MeleeAttackGoal(this, 1.1, true));
-        this.goalSelector.add(3, new ReturnHomeGoal());
-        this.goalSelector.add(5, new WanderAroundGoal(this, 0.6));
-        this.goalSelector.add(6, new LookAtEntityGoal(this, PlayerEntity.class, 16));
-        this.goalSelector.add(7, new LookAroundGoal(this));
-        this.targetSelector.add(1, new RevengeGoal(this));
-        this.targetSelector.add(2, new ActiveTargetGoal<>(this, PlayerEntity.class, true));
+    protected void registerGoals() {
+        this.goalSelector.addGoal(0, new FloatGoal(this));
+        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.1, true));
+        this.goalSelector.addGoal(3, new ReturnHomeGoal());
+        this.goalSelector.addGoal(5, new RandomStrollGoal(this, 0.6));
+        this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 16));
+        this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
+        this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
+        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
     }
 
     @Override
-    protected void mobTick(ServerWorld world) {
-        super.mobTick(world);
+    protected void customServerAiStep(ServerLevel world) {
+        super.customServerAiStep(world);
         // A copy the stronghold no longer expects (defeated, respawned elsewhere, duplicated) removes itself
-        if (age % 20 == 0 && !StrongholdManager.isCurrent(this)) {
+        if (tickCount % 20 == 0 && !StrongholdManager.isCurrent(this)) {
             discard();
             return;
         }
         bossBar.setName(getDisplayName());
-        bossBar.setPercent(getHealth() / getMaxHealth());
+        bossBar.setProgress(getHealth() / getMaxHealth());
 
         LivingEntity target = getTarget();
         if (target == null || --abilityCooldown > 0) {
@@ -147,19 +148,19 @@ public class LieutenantEntity extends HostileEntity {
     }
 
     // The ruler calls its guard: two enforcers at a time, never more than four around it
-    private void summonEnforcers(ServerWorld world) {
+    private void summonEnforcers(ServerLevel world) {
         abilityCooldown = 300;
-        int nearby = world.getEntitiesByClass(EnforcerEntity.class, getBoundingBox().expand(24), entity -> true).size();
+        int nearby = world.getEntitiesOfClass(EnforcerEntity.class, getBoundingBox().inflate(24), entity -> true).size();
         for (int i = 0; i < 2 && nearby + i < MAX_ENFORCERS; i++) {
-            EnforcerEntity enforcer = ModEntities.ENFORCER.create(world, SpawnReason.MOB_SUMMONED);
+            EnforcerEntity enforcer = ModEntities.ENFORCER.create(world, EntitySpawnReason.MOB_SUMMONED);
             if (enforcer == null) {
                 return;
             }
-            enforcer.refreshPositionAndAngles(getX() + random.nextInt(7) - 3, getY(), getZ() + random.nextInt(7) - 3, getYaw(), 0);
+            enforcer.snapTo(getX() + random.nextInt(7) - 3, getY(), getZ() + random.nextInt(7) - 3, getYRot(), 0);
             enforcer.setTarget(getTarget());
-            world.spawnEntity(enforcer);
+            world.addFreshEntity(enforcer);
         }
-        world.playSound(null, getX(), getY(), getZ(), SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.HOSTILE, 1.5f, 0.5f);
+        world.playSound(null, getX(), getY(), getZ(), SoundEvents.BEACON_POWER_SELECT, SoundSource.HOSTILE, 1.5f, 0.5f);
     }
 
     // The duelist closes distance in a sudden leap
@@ -170,81 +171,81 @@ public class LieutenantEntity extends HostileEntity {
             return;
         }
         abilityCooldown = 80;
-        Vec3d toward = target.getEntityPos().subtract(getEntityPos()).normalize();
-        setVelocity(toward.x * 1.6, 0.35, toward.z * 1.6);
-        velocityDirty = true;
-        getEntityWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_BREEZE_WIND_BURST, SoundCategory.HOSTILE, 1.0f, 1.4f);
+        Vec3 toward = target.position().subtract(position()).normalize();
+        setDeltaMovement(toward.x * 1.6, 0.35, toward.z * 1.6);
+        needsSync = true;
+        level().playSound(null, getX(), getY(), getZ(), SoundEvents.BREEZE_WIND_CHARGE_BURST, SoundSource.HOSTILE, 1.0f, 1.4f);
     }
 
     @Override
-    public void onDeath(DamageSource damageSource) {
-        super.onDeath(damageSource);
-        if (getEntityWorld() instanceof ServerWorld) {
+    public void die(DamageSource damageSource) {
+        super.die(damageSource);
+        if (level() instanceof ServerLevel) {
             StrongholdManager.onDefeated(this);
         }
     }
 
     // A definition can name its own loot table; vanilla's death loot would always use the entity type's
     @Override
-    protected void dropLoot(ServerWorld world, DamageSource source, boolean causedByPlayer) {
+    protected void dropFromLootTable(ServerLevel world, DamageSource source, boolean causedByPlayer) {
         Lieutenants.Lieutenant lieutenant = lieutenantId == null ? null : Lieutenants.get(lieutenantId);
-        Optional<RegistryKey<LootTable>> table = lieutenant == null ? Optional.empty() : lieutenant.def().lootTable();
+        Optional<ResourceKey<LootTable>> table = lieutenant == null ? Optional.empty() : lieutenant.def().lootTable();
         if (table.isEmpty()) {
-            super.dropLoot(world, source, causedByPlayer);
+            super.dropFromLootTable(world, source, causedByPlayer);
             return;
         }
-        LootWorldContext.Builder context = new LootWorldContext.Builder(world)
-                .add(LootContextParameters.THIS_ENTITY, this)
-                .add(LootContextParameters.ORIGIN, getEntityPos())
-                .add(LootContextParameters.DAMAGE_SOURCE, source)
-                .addOptional(LootContextParameters.ATTACKING_ENTITY, source.getAttacker())
-                .addOptional(LootContextParameters.DIRECT_ATTACKING_ENTITY, source.getSource());
-        PlayerEntity attackingPlayer = getAttackingPlayer();
+        LootParams.Builder context = new LootParams.Builder(world)
+                .withParameter(LootContextParams.THIS_ENTITY, this)
+                .withParameter(LootContextParams.ORIGIN, position())
+                .withParameter(LootContextParams.DAMAGE_SOURCE, source)
+                .withOptionalParameter(LootContextParams.ATTACKING_ENTITY, source.getEntity())
+                .withOptionalParameter(LootContextParams.DIRECT_ATTACKING_ENTITY, source.getDirectEntity());
+        Player attackingPlayer = getLastHurtByPlayer();
         if (causedByPlayer && attackingPlayer != null) {
-            context = context.add(LootContextParameters.LAST_DAMAGE_PLAYER, attackingPlayer).luck(attackingPlayer.getLuck());
+            context = context.withParameter(LootContextParams.LAST_DAMAGE_PLAYER, attackingPlayer).withLuck(attackingPlayer.getLuck());
         }
-        world.getServer().getReloadableRegistries().getLootTable(table.get())
-                .generateLoot(context.build(LootContextTypes.ENTITY), getLootTableSeed(), stack -> dropStack(world, stack));
+        world.getServer().reloadableRegistries().getLootTable(table.get())
+                .getRandomItems(context.create(LootContextParamSets.ENTITY), getLootTableSeed(), stack -> spawnAtLocation(world, stack));
     }
 
     @Override
-    public void onStartedTrackingBy(ServerPlayerEntity player) {
-        super.onStartedTrackingBy(player);
+    public void startSeenByPlayer(ServerPlayer player) {
+        super.startSeenByPlayer(player);
         bossBar.addPlayer(player);
     }
 
     @Override
-    public void onStoppedTrackingBy(ServerPlayerEntity player) {
-        super.onStoppedTrackingBy(player);
+    public void stopSeenByPlayer(ServerPlayer player) {
+        super.stopSeenByPlayer(player);
         bossBar.removePlayer(player);
     }
 
     @Override
-    protected void writeCustomData(WriteView view) {
-        super.writeCustomData(view);
+    protected void addAdditionalSaveData(ValueOutput view) {
+        super.addAdditionalSaveData(view);
         if (lieutenantId != null) {
             view.putString("Lieutenant", lieutenantId.toString());
         }
         if (strongholdId != null) {
             view.putString("Stronghold", strongholdId);
         }
-        view.putString("Archetype", archetype.asString());
-        view.put("Home", BlockPos.CODEC, home);
-        view.putString("Texture", dataTracker.get(TEXTURE));
+        view.putString("Archetype", archetype.getSerializedName());
+        view.store("Home", BlockPos.CODEC, home);
+        view.putString("Texture", entityData.get(TEXTURE));
     }
 
     @Override
-    protected void readCustomData(ReadView view) {
-        super.readCustomData(view);
-        lieutenantId = view.getOptionalString("Lieutenant").map(Identifier::tryParse).orElse(null);
-        strongholdId = view.getOptionalString("Stronghold").orElse(null);
+    protected void readAdditionalSaveData(ValueInput view) {
+        super.readAdditionalSaveData(view);
+        lieutenantId = view.getString("Lieutenant").map(Identifier::tryParse).orElse(null);
+        strongholdId = view.getString("Stronghold").orElse(null);
         for (LieutenantDef.Archetype candidate : LieutenantDef.Archetype.values()) {
-            if (candidate.asString().equals(view.getString("Archetype", ""))) {
+            if (candidate.getSerializedName().equals(view.getStringOr("Archetype", ""))) {
                 archetype = candidate;
             }
         }
         view.read("Home", BlockPos.CODEC).ifPresent(pos -> home = pos);
-        dataTracker.set(TEXTURE, view.getString("Texture", ""));
+        entityData.set(TEXTURE, view.getStringOr("Texture", ""));
         if (hasCustomName()) {
             bossBar.setName(getDisplayName());
         }
@@ -252,22 +253,22 @@ public class LieutenantEntity extends HostileEntity {
 
     private class ReturnHomeGoal extends Goal {
         ReturnHomeGoal() {
-            setControls(EnumSet.of(Control.MOVE));
+            setFlags(EnumSet.of(Flag.MOVE));
         }
 
         @Override
-        public boolean canStart() {
-            return getTarget() == null && !home.equals(BlockPos.ORIGIN) && home.getSquaredDistance(getEntityPos()) > LEASH * LEASH;
+        public boolean canUse() {
+            return getTarget() == null && !home.equals(BlockPos.ZERO) && home.distToCenterSqr(position()) > LEASH * LEASH;
         }
 
         @Override
         public void start() {
-            getNavigation().startMovingTo(home.getX() + 0.5, home.getY(), home.getZ() + 0.5, 1.0);
+            getNavigation().moveTo(home.getX() + 0.5, home.getY(), home.getZ() + 0.5, 1.0);
         }
 
         @Override
-        public boolean shouldContinue() {
-            return getTarget() == null && !getNavigation().isIdle();
+        public boolean canContinueToUse() {
+            return getTarget() == null && !getNavigation().isDone();
         }
     }
 }

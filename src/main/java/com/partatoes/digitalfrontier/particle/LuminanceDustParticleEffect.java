@@ -1,11 +1,10 @@
 package com.partatoes.digitalfrontier.particle;
 
-import net.minecraft.particle.DustParticleEffect;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.particles.DustParticleOptions;
 import org.joml.Vector3f;
 
 
-public class LuminanceDustParticleEffect extends DustParticleEffect {
+public class LuminanceDustParticleEffect extends DustParticleOptions {
 
     public static final int COLOR = 0xFDB3B5;
     public static final LuminanceDustParticleEffect DEFAULT = new LuminanceDustParticleEffect(COLOR, 1.0f);

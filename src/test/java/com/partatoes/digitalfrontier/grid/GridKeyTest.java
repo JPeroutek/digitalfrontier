@@ -1,7 +1,7 @@
 package com.partatoes.digitalfrontier.grid;
 
 import com.partatoes.digitalfrontier.grid.layout.GridLayoutSettings;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -15,7 +15,7 @@ class GridKeyTest {
 
     @Test
     void defaultSettingsMapToDefault() {
-        assertEquals(Identifier.of("digitalfrontier", "default"), GridKey.of(GridLayoutSettings.DEFAULT));
+        assertEquals(Identifier.fromNamespaceAndPath("digitalfrontier", "default"), GridKey.of(GridLayoutSettings.DEFAULT));
     }
 
     @Test

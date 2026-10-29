@@ -1,18 +1,18 @@
 package com.partatoes.digitalfrontier.grid.parts;
 
 import com.partatoes.digitalfrontier.block.ModBlocks;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.datafixer.DataFixTypes;
-import net.minecraft.datafixer.Schemas;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtHelper;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.registry.Registries;
-import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.util.datafix.DataFixTypes;
+import net.minecraft.util.datafix.DataFixers;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * A block template loaded from a vanilla structure (.nbt) file, flattened into a palette and an index array
@@ -39,38 +39,38 @@ public final class GridPart {
         this.arrivalPad = arrivalPad;
     }
 
-    public static GridPart fromNbt(NbtCompound nbt) {
+    public static GridPart fromNbt(CompoundTag nbt) {
         // Upgrade templates saved by older Minecraft versions, as the vanilla structure loader does
-        NbtCompound fixed = DataFixTypes.STRUCTURE.update(Schemas.getFixer(), nbt, NbtHelper.getDataVersion(nbt, 500));
+        CompoundTag fixed = DataFixTypes.STRUCTURE.updateToCurrentVersion(DataFixers.getDataFixer(), nbt, NbtUtils.getDataVersion(nbt, 500));
 
-        NbtList size = fixed.getListOrEmpty("size");
-        int sizeX = size.getInt(0, 0);
-        int sizeY = size.getInt(1, 0);
-        int sizeZ = size.getInt(2, 0);
+        ListTag size = fixed.getListOrEmpty("size");
+        int sizeX = size.getIntOr(0, 0);
+        int sizeY = size.getIntOr(1, 0);
+        int sizeZ = size.getIntOr(2, 0);
 
         // Templates saved with several palettes (rare; e.g. shipwrecks) use the first one
-        NbtList paletteNbt = fixed.contains("palettes")
+        ListTag paletteNbt = fixed.contains("palettes")
                 ? fixed.getListOrEmpty("palettes").getListOrEmpty(0)
                 : fixed.getListOrEmpty("palette");
         BlockState[] palette = new BlockState[paletteNbt.size()];
         for (int i = 0; i < palette.length; i++) {
-            palette[i] = NbtHelper.toBlockState(Registries.BLOCK, paletteNbt.getCompoundOrEmpty(i));
+            palette[i] = NbtUtils.readBlockState(BuiltInRegistries.BLOCK, paletteNbt.getCompoundOrEmpty(i));
         }
 
         short[] blocks = new short[sizeX * sizeY * sizeZ];
         Arrays.fill(blocks, VOID);
         BlockPos arrivalPad = null;
-        NbtList blockList = fixed.getListOrEmpty("blocks");
+        ListTag blockList = fixed.getListOrEmpty("blocks");
         for (int i = 0; i < blockList.size(); i++) {
-            NbtCompound block = blockList.getCompoundOrEmpty(i);
-            int stateIndex = block.getInt("state", 0);
-            if (palette[stateIndex].isOf(Blocks.STRUCTURE_VOID)) {
+            CompoundTag block = blockList.getCompoundOrEmpty(i);
+            int stateIndex = block.getIntOr("state", 0);
+            if (palette[stateIndex].is(Blocks.STRUCTURE_VOID)) {
                 continue;
             }
-            NbtList pos = block.getListOrEmpty("pos");
-            blocks[index(pos.getInt(0, 0), pos.getInt(1, 0), pos.getInt(2, 0), sizeX, sizeZ)] = (short) stateIndex;
-            if (arrivalPad == null && palette[stateIndex].isOf(ModBlocks.ARRIVAL_PAD)) {
-                arrivalPad = new BlockPos(pos.getInt(0, 0), pos.getInt(1, 0), pos.getInt(2, 0));
+            ListTag pos = block.getListOrEmpty("pos");
+            blocks[index(pos.getIntOr(0, 0), pos.getIntOr(1, 0), pos.getIntOr(2, 0), sizeX, sizeZ)] = (short) stateIndex;
+            if (arrivalPad == null && palette[stateIndex].is(ModBlocks.ARRIVAL_PAD)) {
+                arrivalPad = new BlockPos(pos.getIntOr(0, 0), pos.getIntOr(1, 0), pos.getIntOr(2, 0));
             }
         }
         return new GridPart(sizeX, sizeY, sizeZ, palette, blocks, arrivalPad);

@@ -1,15 +1,14 @@
 package com.partatoes.digitalfrontier.grid.parts;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.registry.Registries;
-import net.minecraft.state.property.Property;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.Identifier;
-
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
 
 /**
  * Recolors white blocks to a district's color. Any block whose id contains "white" is swapped for the block
@@ -27,25 +26,25 @@ public final class DistrictPalette {
             return state;
         }
         Block target = VARIANTS.computeIfAbsent(state.getBlock(), DistrictPalette::findVariants).get(color);
-        return target == null ? state : copyProperties(state, target.getDefaultState());
+        return target == null ? state : copyProperties(state, target.defaultBlockState());
     }
 
     private static Map<DyeColor, Block> findVariants(Block block) {
-        Identifier id = Registries.BLOCK.getId(block);
+        Identifier id = BuiltInRegistries.BLOCK.getKey(block);
         if (!id.getPath().contains("white")) {
             return Map.of();
         }
         Map<DyeColor, Block> variants = new EnumMap<>(DyeColor.class);
         for (DyeColor color : DyeColor.values()) {
-            Identifier variantId = id.withPath(path -> path.replace("white", color.asString()));
-            Registries.BLOCK.getOptionalValue(variantId).ifPresent(variant -> variants.put(color, variant));
+            Identifier variantId = id.withPath(path -> path.replace("white", color.getSerializedName()));
+            BuiltInRegistries.BLOCK.getOptional(variantId).ifPresent(variant -> variants.put(color, variant));
         }
         return variants;
     }
 
     private static BlockState copyProperties(BlockState from, BlockState to) {
         for (Property<?> property : from.getProperties()) {
-            if (to.contains(property)) {
+            if (to.hasProperty(property)) {
                 to = copyProperty(from, to, property);
             }
         }
@@ -53,6 +52,6 @@ public final class DistrictPalette {
     }
 
     private static <T extends Comparable<T>> BlockState copyProperty(BlockState from, BlockState to, Property<T> property) {
-        return to.with(property, from.get(property));
+        return to.setValue(property, from.getValue(property));
     }
 }

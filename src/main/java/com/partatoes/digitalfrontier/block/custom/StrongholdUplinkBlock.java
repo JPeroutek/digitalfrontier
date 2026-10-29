@@ -2,17 +2,17 @@ package com.partatoes.digitalfrontier.block.custom;
 
 import com.partatoes.digitalfrontier.grid.stronghold.GridEvent;
 import com.partatoes.digitalfrontier.grid.stronghold.StrongholdManager;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.BooleanProperty;
-import net.minecraft.state.property.Properties;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.block.WireOrientation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.redstone.Orientation;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -20,30 +20,30 @@ import org.jetbrains.annotations.Nullable;
  * players can wire their own ways of rebooting a lieutenant.
  */
 public class StrongholdUplinkBlock extends Block {
-    public static final BooleanProperty POWERED = Properties.POWERED;
+    public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
 
-    public StrongholdUplinkBlock(Settings settings) {
+    public StrongholdUplinkBlock(Properties settings) {
         super(settings);
-        setDefaultState(getDefaultState().with(POWERED, false));
+        registerDefaultState(defaultBlockState().setValue(POWERED, false));
     }
 
     @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(POWERED);
     }
 
     @Override
-    protected void neighborUpdate(BlockState state, World world, BlockPos pos, Block sourceBlock, @Nullable WireOrientation wireOrientation, boolean notify) {
-        if (!(world instanceof ServerWorld serverWorld)) {
+    protected void neighborChanged(BlockState state, Level world, BlockPos pos, Block sourceBlock, @Nullable Orientation wireOrientation, boolean notify) {
+        if (!(world instanceof ServerLevel serverWorld)) {
             return;
         }
-        boolean powered = world.isReceivingRedstonePower(pos);
-        if (powered == state.get(POWERED)) {
+        boolean powered = world.hasNeighborSignal(pos);
+        if (powered == state.getValue(POWERED)) {
             return;
         }
-        world.setBlockState(pos, state.with(POWERED, powered), Block.NOTIFY_LISTENERS);
+        world.setBlock(pos, state.setValue(POWERED, powered), Block.UPDATE_CLIENTS);
         if (powered) {
-            world.playSound(null, pos, SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.BLOCKS, 1.0f, 0.6f);
+            world.playSound(null, pos, SoundEvents.BEACON_POWER_SELECT, SoundSource.BLOCKS, 1.0f, 0.6f);
             StrongholdManager.fire(serverWorld, new GridEvent.Redstone(pos));
         }
     }

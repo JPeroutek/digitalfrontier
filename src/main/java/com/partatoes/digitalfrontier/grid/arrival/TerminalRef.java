@@ -2,7 +2,7 @@ package com.partatoes.digitalfrontier.grid.arrival;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 
 /**
  * A terminal in a particular grid. The grid id is the grid's dimension id, e.g. {@code digitalfrontier:default},

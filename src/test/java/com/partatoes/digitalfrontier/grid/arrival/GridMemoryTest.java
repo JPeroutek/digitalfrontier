@@ -1,16 +1,16 @@
 package com.partatoes.digitalfrontier.grid.arrival;
 
 import com.mojang.serialization.JsonOps;
-import net.minecraft.util.Identifier;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import net.minecraft.resources.Identifier;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class GridMemoryTest {
-    private static final Identifier DEFAULT = Identifier.of("digitalfrontier", "default");
-    private static final Identifier TUNED = Identifier.of("digitalfrontier", "0x12cbf34a");
+    private static final Identifier DEFAULT = Identifier.fromNamespaceAndPath("digitalfrontier", "default");
+    private static final Identifier TUNED = Identifier.fromNamespaceAndPath("digitalfrontier", "0x12cbf34a");
 
     @Test
     void discoveriesAreKeptPerGridInOrder() {

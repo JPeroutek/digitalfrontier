@@ -4,10 +4,9 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.partatoes.digitalfrontier.grid.layout.StreetAxis.StreetStyle;
-import net.minecraft.util.DyeColor;
-
 import java.util.List;
 import java.util.Set;
+import net.minecraft.world.item.DyeColor;
 
 /**
  * Everything that defines a grid. Two grids with identical settings are the same grid,

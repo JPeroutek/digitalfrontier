@@ -1,11 +1,11 @@
 package com.partatoes.digitalfrontier.item;
 
 
-import net.fabricmc.fabric.api.registry.FuelRegistryEvents;
+import net.fabricmc.fabric.api.registry.FuelValueEvents;
 
 public class ModFuelItems {
     public static void registerModFuelItems() {
-        FuelRegistryEvents.BUILD.register((builder, context) -> {
+        FuelValueEvents.BUILD.register((builder, context) -> {
             builder.add(ModItems.COAL_DUST, context.baseSmeltTime() / 8);
         });
     }

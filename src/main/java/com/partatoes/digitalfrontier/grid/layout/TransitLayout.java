@@ -2,8 +2,6 @@ package com.partatoes.digitalfrontier.grid.layout;
 
 import com.partatoes.digitalfrontier.grid.layout.StreetAxis.Road;
 import com.partatoes.digitalfrontier.grid.layout.StreetAxis.RoadClass;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -13,6 +11,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import net.minecraft.core.Direction;
+import net.minecraft.world.item.DyeColor;
 
 /**
  * The city's levels above and below the streets, decided from the street pattern ({@link StreetAxis}) and the grid

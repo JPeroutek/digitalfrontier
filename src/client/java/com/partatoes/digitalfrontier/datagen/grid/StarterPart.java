@@ -1,16 +1,15 @@
 package com.partatoes.digitalfrontier.datagen.grid;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtHelper;
-import net.minecraft.nbt.NbtInt;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.util.math.BlockPos;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.IntTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.world.level.block.state.BlockState;
 
 /**
  * A tiny builder for square structure templates, used to generate the starter grid parts in code.
@@ -64,36 +63,36 @@ final class StarterPart {
     }
 
     /** Vanilla structure template format, as a structure block would save it. */
-    NbtCompound toNbt() {
+    CompoundTag toNbt() {
         List<BlockState> palette = new ArrayList<>();
         Map<BlockState, Integer> paletteIndex = new LinkedHashMap<>();
-        NbtList blockList = new NbtList();
+        ListTag blockList = new ListTag();
         blocks.forEach((pos, state) -> {
             int index = paletteIndex.computeIfAbsent(state, newState -> {
                 palette.add(newState);
                 return palette.size() - 1;
             });
-            NbtCompound block = new NbtCompound();
+            CompoundTag block = new CompoundTag();
             block.put("pos", intList(pos.getX(), pos.getY(), pos.getZ()));
             block.putInt("state", index);
             blockList.add(block);
         });
 
-        NbtList paletteList = new NbtList();
-        palette.forEach(state -> paletteList.add(NbtHelper.fromBlockState(state)));
+        ListTag paletteList = new ListTag();
+        palette.forEach(state -> paletteList.add(NbtUtils.writeBlockState(state)));
 
-        NbtCompound root = new NbtCompound();
+        CompoundTag root = new CompoundTag();
         root.put("size", intList(width, height, width));
         root.put("palette", paletteList);
         root.put("blocks", blockList);
-        root.put("entities", new NbtList());
-        return NbtHelper.putDataVersion(root);
+        root.put("entities", new ListTag());
+        return NbtUtils.addCurrentDataVersion(root);
     }
 
-    private static NbtList intList(int... values) {
-        NbtList list = new NbtList();
+    private static ListTag intList(int... values) {
+        ListTag list = new ListTag();
         for (int value : values) {
-            list.add(NbtInt.of(value));
+            list.add(IntTag.valueOf(value));
         }
         return list;
     }

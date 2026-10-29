@@ -1,46 +1,58 @@
 package com.partatoes.digitalfrontier.datagen;
 
+import com.mojang.math.Quadrant;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.block.ModBlocks;
 import com.partatoes.digitalfrontier.block.custom.PatternBlock;
 import com.partatoes.digitalfrontier.item.ModItems;
 import net.fabricmc.fabric.api.client.datagen.v1.provider.FabricModelProvider;
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
-import net.minecraft.block.Block;
-import net.minecraft.block.enums.BlockFace;
-import net.minecraft.client.data.*;
-import net.minecraft.client.render.model.json.ModelVariant;
-import net.minecraft.client.render.model.json.ModelVariantOperator;
-import net.minecraft.client.render.model.json.WeightedVariant;
-import net.minecraft.state.property.Properties;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.AxisRotation;
-import net.minecraft.util.math.Direction;
-
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
+import net.minecraft.client.data.models.*;
+import net.minecraft.client.data.models.blockstates.*;
+import net.minecraft.client.data.models.model.*;
+import net.minecraft.client.data.models.BlockModelGenerators;
+import net.minecraft.client.data.models.ItemModelGenerators;
+import net.minecraft.client.data.models.MultiVariant;
+import net.minecraft.client.data.models.blockstates.MultiVariantGenerator;
+import net.minecraft.client.data.models.blockstates.PropertyDispatch;
+import net.minecraft.client.data.models.model.ItemModelUtils;
+import net.minecraft.client.data.models.model.ModelLocationUtils;
+import net.minecraft.client.data.models.model.ModelTemplate;
+import net.minecraft.client.data.models.model.ModelTemplates;
+import net.minecraft.client.data.models.model.TextureMapping;
+import net.minecraft.client.data.models.model.TextureSlot;
+import net.minecraft.client.data.models.model.TexturedModel;
+import net.minecraft.client.renderer.block.dispatch.Variant;
+import net.minecraft.client.renderer.block.dispatch.VariantMutator;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.properties.AttachFace;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class ModModelProvider extends FabricModelProvider {
     // A cube with a second, full-bright overlay layer: the vanilla way to get per-pixel emissive textures
-    private static final TextureKey GLOW = TextureKey.of("glow");
-    private static final Model EMISSIVE_CUBE_ALL = new Model(
-            Optional.of(Identifier.of(DigitalFrontier.MOD_ID, "block/emissive_cube_all")), Optional.empty(), TextureKey.ALL, GLOW);
+    private static final TextureSlot GLOW = TextureSlot.create("glow");
+    private static final ModelTemplate EMISSIVE_CUBE_ALL = new ModelTemplate(
+            Optional.of(Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "block/emissive_cube_all")), Optional.empty(), TextureSlot.ALL, GLOW);
 
-    public ModModelProvider(FabricDataOutput output) {
+    public ModModelProvider(FabricPackOutput output) {
         super(output);
     }
 
     @Override
-    public void generateBlockStateModels(BlockStateModelGenerator blockStateModelGenerator) {
-        BlockStateModelGenerator.BlockTexturePool gridstonePool = blockStateModelGenerator.registerCubeAllModelTexturePool(ModBlocks.GRIDSTONE_BLOCK);
-        BlockStateModelGenerator.BlockTexturePool crackedGridstonePool = blockStateModelGenerator.registerCubeAllModelTexturePool(ModBlocks.CRACKED_GRIDSTONE_BLOCK);
-        BlockStateModelGenerator.BlockTexturePool gridstoneBricksPool = blockStateModelGenerator.registerCubeAllModelTexturePool(ModBlocks.GRIDSTONE_BRICKS_BLOCK);
+    public void generateBlockStateModels(BlockModelGenerators blockStateModelGenerator) {
+        BlockModelGenerators.BlockFamilyProvider gridstonePool = blockStateModelGenerator.family(ModBlocks.GRIDSTONE_BLOCK);
+        BlockModelGenerators.BlockFamilyProvider crackedGridstonePool = blockStateModelGenerator.family(ModBlocks.CRACKED_GRIDSTONE_BLOCK);
+        BlockModelGenerators.BlockFamilyProvider gridstoneBricksPool = blockStateModelGenerator.family(ModBlocks.GRIDSTONE_BRICKS_BLOCK);
 
-        blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.PIXEL_BLOCK);
-        blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.LUMINANCE_ORE);
-        blockStateModelGenerator.registerSimpleCubeAll(ModBlocks.BOOSTER_BLOCK);
+        blockStateModelGenerator.createTrivialCube(ModBlocks.PIXEL_BLOCK);
+        blockStateModelGenerator.createTrivialCube(ModBlocks.LUMINANCE_ORE);
+        blockStateModelGenerator.createTrivialCube(ModBlocks.BOOSTER_BLOCK);
 
         gridstonePool.wall(ModBlocks.GRIDSTONE_WALL);
         gridstonePool.stairs(ModBlocks.GRIDSTONE_STAIRS);
@@ -56,15 +68,15 @@ public class ModModelProvider extends FabricModelProvider {
         gridstoneBricksPool.slab(ModBlocks.GRIDSTONE_BRICKS_SLAB);
 
         // Horrifying mess to create blockstates and models for Lamp
-        blockStateModelGenerator.blockStateCollector.accept(
-                VariantsBlockModelDefinitionCreator.of(ModBlocks.PIXEL_LAMP)
-                        .with(BlockStateModelGenerator.createBooleanModelMap(
-                                Properties.LIT,
-                                BlockStateModelGenerator.createWeightedVariant(blockStateModelGenerator.createSubModel(ModBlocks.PIXEL_LAMP, "_lit", Models.CUBE_ALL, TextureMap::all)),
-                                BlockStateModelGenerator.createWeightedVariant(TexturedModel.CUBE_ALL.upload(ModBlocks.PIXEL_LAMP, blockStateModelGenerator.modelCollector))))
+        blockStateModelGenerator.blockStateOutput.accept(
+                MultiVariantGenerator.dispatch(ModBlocks.PIXEL_LAMP)
+                        .with(BlockModelGenerators.createBooleanModelDispatch(
+                                BlockStateProperties.LIT,
+                                BlockModelGenerators.plainVariant(blockStateModelGenerator.createSuffixedVariant(ModBlocks.PIXEL_LAMP, "_lit", ModelTemplates.CUBE_ALL, TextureMapping::cube)),
+                                BlockModelGenerators.plainVariant(TexturedModel.CUBE.create(ModBlocks.PIXEL_LAMP, blockStateModelGenerator.modelOutput))))
         );
 
-        blockStateModelGenerator.registerNorthDefaultHorizontalRotatable(ModBlocks.KEYBOARD_BLOCK);
+        blockStateModelGenerator.createNonTemplateHorizontalBlock(ModBlocks.KEYBOARD_BLOCK);
 
         // This will need to be replaced later to support directionality and stuff
         ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS
@@ -80,65 +92,65 @@ public class ModModelProvider extends FabricModelProvider {
         registerAnimated(blockStateModelGenerator, ModBlocks.STATIC_BLOCK, 1);
         registerEmissiveCubeAll(blockStateModelGenerator, ModBlocks.STRONGHOLD_UPLINK, ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("exchanger").get(DyeColor.RED));
         ModBlocks.GLITCHED_GRIDSTONE.values().forEach(block -> registerAnimated(blockStateModelGenerator, block, ModTextureProvider.GLITCH_TEMPLATES.length));
-        Identifier laserModel = Models.CUBE_BOTTOM_TOP.upload(ModBlocks.DIGITIZING_LASER, new TextureMap()
-                .put(TextureKey.TOP, TextureMap.getId(ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("thick_ring").get(DyeColor.CYAN)))
-                .put(TextureKey.SIDE, TextureMap.getId(ModBlocks.GRIDSTONE_BRICKS_BLOCK))
-                .put(TextureKey.BOTTOM, TextureMap.getId(ModBlocks.GRIDSTONE_BLOCK)), blockStateModelGenerator.modelCollector);
-        blockStateModelGenerator.blockStateCollector.accept(BlockStateModelGenerator.createSingletonBlockState(ModBlocks.DIGITIZING_LASER, BlockStateModelGenerator.createWeightedVariant(laserModel)));
-        Identifier tuningLaserModel = Models.CUBE_BOTTOM_TOP.upload(ModBlocks.GRID_TUNING_LASER, new TextureMap()
-                .put(TextureKey.TOP, TextureMap.getId(ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("thick_ring").get(DyeColor.ORANGE)))
-                .put(TextureKey.SIDE, TextureMap.getId(ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("border_1").get(DyeColor.CYAN)))
-                .put(TextureKey.BOTTOM, TextureMap.getId(ModBlocks.GRIDSTONE_BLOCK)), blockStateModelGenerator.modelCollector);
-        blockStateModelGenerator.blockStateCollector.accept(BlockStateModelGenerator.createSingletonBlockState(ModBlocks.GRID_TUNING_LASER, BlockStateModelGenerator.createWeightedVariant(tuningLaserModel)));
+        Identifier laserModel = ModelTemplates.CUBE_BOTTOM_TOP.create(ModBlocks.DIGITIZING_LASER, new TextureMapping()
+                .put(TextureSlot.TOP, TextureMapping.getBlockTexture(ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("thick_ring").get(DyeColor.CYAN)))
+                .put(TextureSlot.SIDE, TextureMapping.getBlockTexture(ModBlocks.GRIDSTONE_BRICKS_BLOCK))
+                .put(TextureSlot.BOTTOM, TextureMapping.getBlockTexture(ModBlocks.GRIDSTONE_BLOCK)), blockStateModelGenerator.modelOutput);
+        blockStateModelGenerator.blockStateOutput.accept(BlockModelGenerators.createSimpleBlock(ModBlocks.DIGITIZING_LASER, BlockModelGenerators.plainVariant(laserModel)));
+        Identifier tuningLaserModel = ModelTemplates.CUBE_BOTTOM_TOP.create(ModBlocks.GRID_TUNING_LASER, new TextureMapping()
+                .put(TextureSlot.TOP, TextureMapping.getBlockTexture(ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("thick_ring").get(DyeColor.ORANGE)))
+                .put(TextureSlot.SIDE, TextureMapping.getBlockTexture(ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("border_1").get(DyeColor.CYAN)))
+                .put(TextureSlot.BOTTOM, TextureMapping.getBlockTexture(ModBlocks.GRIDSTONE_BLOCK)), blockStateModelGenerator.modelOutput);
+        blockStateModelGenerator.blockStateOutput.accept(BlockModelGenerators.createSimpleBlock(ModBlocks.GRID_TUNING_LASER, BlockModelGenerators.plainVariant(tuningLaserModel)));
 
-        blockStateModelGenerator.blockStateCollector.accept(
-                VariantsBlockModelDefinitionCreator.of(ModBlocks.LIGHT_BARRIER_EMITTER)
-                        .with(BlockStateModelGenerator.createBooleanModelMap(Properties.POWERED,
-                                BlockStateModelGenerator.createWeightedVariant(ModelIds.getBlockSubModelId(ModBlocks.LIGHT_BARRIER_EMITTER, "_powered")),
-                                BlockStateModelGenerator.createWeightedVariant(ModelIds.getBlockModelId(ModBlocks.LIGHT_BARRIER_EMITTER))))
-                        .apply(faceRotations())
+        blockStateModelGenerator.blockStateOutput.accept(
+                MultiVariantGenerator.dispatch(ModBlocks.LIGHT_BARRIER_EMITTER)
+                        .with(BlockModelGenerators.createBooleanModelDispatch(BlockStateProperties.POWERED,
+                                BlockModelGenerators.plainVariant(ModelLocationUtils.getModelLocation(ModBlocks.LIGHT_BARRIER_EMITTER, "_powered")),
+                                BlockModelGenerators.plainVariant(ModelLocationUtils.getModelLocation(ModBlocks.LIGHT_BARRIER_EMITTER))))
+                        .with(faceRotations())
         );
-        blockStateModelGenerator.blockStateCollector.accept(
-                VariantsBlockModelDefinitionCreator.of(ModBlocks.LIGHT_BARRIER, BlockStateModelGenerator.createWeightedVariant(ModelIds.getBlockModelId(ModBlocks.LIGHT_BARRIER)))
-                        .apply(faceRotations())
+        blockStateModelGenerator.blockStateOutput.accept(
+                MultiVariantGenerator.dispatch(ModBlocks.LIGHT_BARRIER, BlockModelGenerators.plainVariant(ModelLocationUtils.getModelLocation(ModBlocks.LIGHT_BARRIER)))
+                        .with(faceRotations())
         );
     }
 
     // An emissive cube per flicker value: steady, then glows that drop out now and then (<name>_glow_flicker_<n>),
     // each flickering one in several phases so neighbouring blocks don't flicker together
-    private static void registerPattern(BlockStateModelGenerator blockStateModelGenerator, Block block) {
-        BlockStateVariantMap.SingleProperty<WeightedVariant, Integer> variants = BlockStateVariantMap.models(PatternBlock.FLICKER);
-        for (int flicker : PatternBlock.FLICKER.getValues()) {
+    private static void registerPattern(BlockModelGenerators blockStateModelGenerator, Block block) {
+        PropertyDispatch.C1<MultiVariant, Integer> variants = PropertyDispatch.initial(PatternBlock.FLICKER);
+        for (int flicker : PatternBlock.FLICKER.getPossibleValues()) {
             if (flicker == 0) {
-                TextureMap textures = new TextureMap()
-                        .put(TextureKey.ALL, TextureMap.getId(block))
-                        .put(GLOW, TextureMap.getSubId(block, "_glow"));
-                Identifier modelId = EMISSIVE_CUBE_ALL.upload(block, textures, blockStateModelGenerator.modelCollector);
-                variants.register(flicker, BlockStateModelGenerator.createWeightedVariant(modelId));
+                TextureMapping textures = new TextureMapping()
+                        .put(TextureSlot.ALL, TextureMapping.getBlockTexture(block))
+                        .put(GLOW, TextureMapping.getBlockTexture(block, "_glow"));
+                Identifier modelId = EMISSIVE_CUBE_ALL.create(block, textures, blockStateModelGenerator.modelOutput);
+                variants.select(flicker, BlockModelGenerators.plainVariant(modelId));
                 continue;
             }
-            List<ModelVariant> phases = new ArrayList<>();
+            List<Variant> phases = new ArrayList<>();
             for (int phase = 0; phase < ModTextureProvider.FLICKER_PHASES; phase++) {
                 String suffix = "_flicker_" + flicker + ModTextureProvider.phaseSuffix(phase);
-                TextureMap textures = new TextureMap()
-                        .put(TextureKey.ALL, TextureMap.getId(block))
-                        .put(GLOW, TextureMap.getSubId(block, "_glow" + suffix));
-                Identifier modelId = EMISSIVE_CUBE_ALL.upload(ModelIds.getBlockSubModelId(block, suffix), textures, blockStateModelGenerator.modelCollector);
-                phases.add(new ModelVariant(modelId));
+                TextureMapping textures = new TextureMapping()
+                        .put(TextureSlot.ALL, TextureMapping.getBlockTexture(block))
+                        .put(GLOW, TextureMapping.getBlockTexture(block, "_glow" + suffix));
+                Identifier modelId = EMISSIVE_CUBE_ALL.create(ModelLocationUtils.getModelLocation(block, suffix), textures, blockStateModelGenerator.modelOutput);
+                phases.add(new Variant(modelId));
             }
-            variants.register(flicker, BlockStateModelGenerator.createWeightedVariant(phases.toArray(ModelVariant[]::new)));
+            variants.select(flicker, BlockModelGenerators.variants(phases.toArray(Variant[]::new)));
         }
-        blockStateModelGenerator.blockStateCollector.accept(VariantsBlockModelDefinitionCreator.of(block).with(variants));
+        blockStateModelGenerator.blockStateOutput.accept(MultiVariantGenerator.dispatch(block).with(variants));
     }
 
     // Turns a cube can be shown at, so every face of an animated block can come out at a different angle
-    private static final AxisRotation[][] TURNS = {
-            {AxisRotation.R0, AxisRotation.R0},
-            {AxisRotation.R90, AxisRotation.R0},
-            {AxisRotation.R180, AxisRotation.R0},
-            {AxisRotation.R270, AxisRotation.R0},
-            {AxisRotation.R90, AxisRotation.R90},
-            {AxisRotation.R270, AxisRotation.R90},
+    private static final Quadrant[][] TURNS = {
+            {Quadrant.R0, Quadrant.R0},
+            {Quadrant.R90, Quadrant.R0},
+            {Quadrant.R180, Quadrant.R0},
+            {Quadrant.R270, Quadrant.R0},
+            {Quadrant.R90, Quadrant.R90},
+            {Quadrant.R270, Quadrant.R90},
     };
 
     /**
@@ -146,72 +158,72 @@ public class ModModelProvider extends FabricModelProvider {
      * ModTextureProvider), each at several turns; the game picks one per block by position, so a patch of them
      * neither animates in step nor repeats one look.
      */
-    private static void registerAnimated(BlockStateModelGenerator blockStateModelGenerator, Block block, int templates) {
-        List<ModelVariant> variants = new ArrayList<>();
+    private static void registerAnimated(BlockModelGenerators blockStateModelGenerator, Block block, int templates) {
+        List<Variant> variants = new ArrayList<>();
         for (int template = 0; template < templates; template++) {
             for (int phase = 0; phase < ModTextureProvider.ANIMATION_PHASES; phase++) {
                 String suffix = ModTextureProvider.templateSuffix(template) + ModTextureProvider.phaseSuffix(phase);
-                TextureMap textures = new TextureMap()
-                        .put(TextureKey.ALL, TextureMap.getSubId(block, suffix))
-                        .put(GLOW, TextureMap.getSubId(block, suffix + "_glow"));
+                TextureMapping textures = new TextureMapping()
+                        .put(TextureSlot.ALL, TextureMapping.getBlockTexture(block, suffix))
+                        .put(GLOW, TextureMapping.getBlockTexture(block, suffix + "_glow"));
                 Identifier modelId = suffix.isEmpty()
-                        ? EMISSIVE_CUBE_ALL.upload(block, textures, blockStateModelGenerator.modelCollector)
-                        : EMISSIVE_CUBE_ALL.upload(ModelIds.getBlockSubModelId(block, suffix), textures, blockStateModelGenerator.modelCollector);
-                for (AxisRotation[] turn : TURNS) {
-                    variants.add(new ModelVariant(modelId).withRotationX(turn[0]).withRotationY(turn[1]));
+                        ? EMISSIVE_CUBE_ALL.create(block, textures, blockStateModelGenerator.modelOutput)
+                        : EMISSIVE_CUBE_ALL.create(ModelLocationUtils.getModelLocation(block, suffix), textures, blockStateModelGenerator.modelOutput);
+                for (Quadrant[] turn : TURNS) {
+                    variants.add(new Variant(modelId).withXRot(turn[0]).withYRot(turn[1]));
                 }
             }
         }
-        blockStateModelGenerator.blockStateCollector.accept(BlockStateModelGenerator.createSingletonBlockState(block,
-                BlockStateModelGenerator.createWeightedVariant(variants.toArray(ModelVariant[]::new))));
+        blockStateModelGenerator.blockStateOutput.accept(BlockModelGenerators.createSimpleBlock(block,
+                BlockModelGenerators.variants(variants.toArray(Variant[]::new))));
     }
 
     // Expects the block's texture plus a <name>_glow texture holding only the pixels that should glow
-    private static void registerEmissiveCubeAll(BlockStateModelGenerator blockStateModelGenerator, Block block) {
+    private static void registerEmissiveCubeAll(BlockModelGenerators blockStateModelGenerator, Block block) {
         registerEmissiveCubeAll(blockStateModelGenerator, block, block);
     }
 
-    private static void registerEmissiveCubeAll(BlockStateModelGenerator blockStateModelGenerator, Block block, Block textureSource) {
-        TextureMap textures = new TextureMap()
-                .put(TextureKey.ALL, TextureMap.getId(textureSource))
-                .put(GLOW, TextureMap.getSubId(textureSource, "_glow"));
-        Identifier modelId = EMISSIVE_CUBE_ALL.upload(block, textures, blockStateModelGenerator.modelCollector);
-        blockStateModelGenerator.blockStateCollector.accept(BlockStateModelGenerator.createSingletonBlockState(block, BlockStateModelGenerator.createWeightedVariant(modelId)));
+    private static void registerEmissiveCubeAll(BlockModelGenerators blockStateModelGenerator, Block block, Block textureSource) {
+        TextureMapping textures = new TextureMapping()
+                .put(TextureSlot.ALL, TextureMapping.getBlockTexture(textureSource))
+                .put(GLOW, TextureMapping.getBlockTexture(textureSource, "_glow"));
+        Identifier modelId = EMISSIVE_CUBE_ALL.create(block, textures, blockStateModelGenerator.modelOutput);
+        blockStateModelGenerator.blockStateOutput.accept(BlockModelGenerators.createSimpleBlock(block, BlockModelGenerators.plainVariant(modelId)));
     }
 
     // Turns a model that faces north on the floor to each face and facing, as for buttons
-    private static BlockStateVariantMap<ModelVariantOperator> faceRotations() {
-        return BlockStateVariantMap.operations(Properties.BLOCK_FACE, Properties.HORIZONTAL_FACING)
-                .register(BlockFace.FLOOR, Direction.EAST, BlockStateModelGenerator.ROTATE_Y_90)
-                .register(BlockFace.FLOOR, Direction.WEST, BlockStateModelGenerator.ROTATE_Y_270)
-                .register(BlockFace.FLOOR, Direction.SOUTH, BlockStateModelGenerator.ROTATE_Y_180)
-                .register(BlockFace.FLOOR, Direction.NORTH, BlockStateModelGenerator.NO_OP)
-                .register(BlockFace.WALL, Direction.EAST, BlockStateModelGenerator.ROTATE_Y_90.then(BlockStateModelGenerator.ROTATE_X_90))
-                .register(BlockFace.WALL, Direction.WEST, BlockStateModelGenerator.ROTATE_Y_270.then(BlockStateModelGenerator.ROTATE_X_90))
-                .register(BlockFace.WALL, Direction.SOUTH, BlockStateModelGenerator.ROTATE_Y_180.then(BlockStateModelGenerator.ROTATE_X_90))
-                .register(BlockFace.WALL, Direction.NORTH, BlockStateModelGenerator.ROTATE_X_90)
-                .register(BlockFace.CEILING, Direction.EAST, BlockStateModelGenerator.ROTATE_Y_270.then(BlockStateModelGenerator.ROTATE_X_180))
-                .register(BlockFace.CEILING, Direction.WEST, BlockStateModelGenerator.ROTATE_Y_90.then(BlockStateModelGenerator.ROTATE_X_180))
-                .register(BlockFace.CEILING, Direction.SOUTH, BlockStateModelGenerator.ROTATE_X_180)
-                .register(BlockFace.CEILING, Direction.NORTH, BlockStateModelGenerator.ROTATE_Y_180.then(BlockStateModelGenerator.ROTATE_X_180));
+    private static PropertyDispatch<VariantMutator> faceRotations() {
+        return PropertyDispatch.modify(BlockStateProperties.ATTACH_FACE, BlockStateProperties.HORIZONTAL_FACING)
+                .select(AttachFace.FLOOR, Direction.EAST, BlockModelGenerators.Y_ROT_90)
+                .select(AttachFace.FLOOR, Direction.WEST, BlockModelGenerators.Y_ROT_270)
+                .select(AttachFace.FLOOR, Direction.SOUTH, BlockModelGenerators.Y_ROT_180)
+                .select(AttachFace.FLOOR, Direction.NORTH, BlockModelGenerators.NOP)
+                .select(AttachFace.WALL, Direction.EAST, BlockModelGenerators.Y_ROT_90.then(BlockModelGenerators.X_ROT_90))
+                .select(AttachFace.WALL, Direction.WEST, BlockModelGenerators.Y_ROT_270.then(BlockModelGenerators.X_ROT_90))
+                .select(AttachFace.WALL, Direction.SOUTH, BlockModelGenerators.Y_ROT_180.then(BlockModelGenerators.X_ROT_90))
+                .select(AttachFace.WALL, Direction.NORTH, BlockModelGenerators.X_ROT_90)
+                .select(AttachFace.CEILING, Direction.EAST, BlockModelGenerators.Y_ROT_270.then(BlockModelGenerators.X_ROT_180))
+                .select(AttachFace.CEILING, Direction.WEST, BlockModelGenerators.Y_ROT_90.then(BlockModelGenerators.X_ROT_180))
+                .select(AttachFace.CEILING, Direction.SOUTH, BlockModelGenerators.X_ROT_180)
+                .select(AttachFace.CEILING, Direction.NORTH, BlockModelGenerators.Y_ROT_180.then(BlockModelGenerators.X_ROT_180));
     }
     @Override
-    public void generateItemModels(ItemModelGenerator itemModelGenerator) {
-        itemModelGenerator.register(ModItems.BINARY_0, Models.GENERATED);
-        itemModelGenerator.register(ModItems.BINARY_1, Models.GENERATED);
-        itemModelGenerator.register(ModItems.BYTE, Models.GENERATED);
-        itemModelGenerator.register(ModItems.COAL_DUST, Models.GENERATED);
-        itemModelGenerator.register(ModItems.PIXEL_DUST, Models.GENERATED);
-        itemModelGenerator.register(ModItems.LUMINESSENCE, Models.GENERATED);
-        itemModelGenerator.register(ModItems.LIGHTCYCLE_BATON, Models.GENERATED);
+    public void generateItemModels(ItemModelGenerators itemModelGenerator) {
+        itemModelGenerator.generateFlatItem(ModItems.BINARY_0, ModelTemplates.FLAT_ITEM);
+        itemModelGenerator.generateFlatItem(ModItems.BINARY_1, ModelTemplates.FLAT_ITEM);
+        itemModelGenerator.generateFlatItem(ModItems.BYTE, ModelTemplates.FLAT_ITEM);
+        itemModelGenerator.generateFlatItem(ModItems.COAL_DUST, ModelTemplates.FLAT_ITEM);
+        itemModelGenerator.generateFlatItem(ModItems.PIXEL_DUST, ModelTemplates.FLAT_ITEM);
+        itemModelGenerator.generateFlatItem(ModItems.LUMINESSENCE, ModelTemplates.FLAT_ITEM);
+        itemModelGenerator.generateFlatItem(ModItems.LIGHTCYCLE_BATON, ModelTemplates.FLAT_ITEM);
 
         // Placeholder: borrow the vanilla snowball model until it has its own art
-        itemModelGenerator.output.accept(ModItems.DIMENSION_TELEPORTER, ItemModels.basic(Identifier.ofVanilla("item/snowball")));
+        itemModelGenerator.itemModelOutput.accept(ModItems.DIMENSION_TELEPORTER, ItemModelUtils.plainModel(Identifier.withDefaultNamespace("item/snowball")));
         // Placeholder: the vanilla compass until the tuner has its own art
-        itemModelGenerator.output.accept(ModItems.LASER_TUNER, ItemModels.basic(Identifier.ofVanilla("item/compass_16")));
-        itemModelGenerator.output.accept(ModItems.ESCAPE_KEY, ItemModels.basic(Identifier.ofVanilla("item/trial_key")));
-        itemModelGenerator.output.accept(ModItems.MEMORY_PAGING, ItemModels.basic(Identifier.ofVanilla("item/recovery_compass_16")));
-        itemModelGenerator.output.accept(ModItems.CORE_DUMP, ItemModels.basic(Identifier.ofVanilla("item/heart_of_the_sea")));
+        itemModelGenerator.itemModelOutput.accept(ModItems.LASER_TUNER, ItemModelUtils.plainModel(Identifier.withDefaultNamespace("item/compass_16")));
+        itemModelGenerator.itemModelOutput.accept(ModItems.ESCAPE_KEY, ItemModelUtils.plainModel(Identifier.withDefaultNamespace("item/trial_key")));
+        itemModelGenerator.itemModelOutput.accept(ModItems.MEMORY_PAGING, ItemModelUtils.plainModel(Identifier.withDefaultNamespace("item/recovery_compass_16")));
+        itemModelGenerator.itemModelOutput.accept(ModItems.CORE_DUMP, ItemModelUtils.plainModel(Identifier.withDefaultNamespace("item/heart_of_the_sea")));
 
     }
 }

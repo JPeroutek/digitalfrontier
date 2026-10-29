@@ -2,23 +2,22 @@ package com.partatoes.digitalfrontier.datagen;
 
 import com.partatoes.digitalfrontier.block.ModBlocks;
 import com.partatoes.digitalfrontier.tag.ModTags;
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
-import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider;
-import net.minecraft.block.Block;
-import net.minecraft.data.tag.ProvidedTagBuilder;
-import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.registry.tag.BlockTags;
-
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagsProvider;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.data.tags.TagAppender;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.block.Block;
 import java.util.concurrent.CompletableFuture;
 
-public class ModBlockTagProvider extends FabricTagProvider.BlockTagProvider {
+public class ModBlockTagProvider extends FabricTagsProvider.BlockTagsProvider {
 
-    public ModBlockTagProvider(FabricDataOutput output, CompletableFuture<RegistryWrapper.WrapperLookup> registriesFuture) {
+    public ModBlockTagProvider(FabricPackOutput output, CompletableFuture<HolderLookup.Provider> registriesFuture) {
         super(output, registriesFuture);
     }
 
     @Override
-    protected void configure(RegistryWrapper.WrapperLookup arg) {
+    protected void addTags(HolderLookup.Provider arg) {
         valueLookupBuilder(ModTags.Blocks.GRID_BLOCK)
                 .add(ModBlocks.GRIDSTONE_BLOCK)
                 .add(ModBlocks.CRACKED_GRIDSTONE_BLOCK)
@@ -38,7 +37,7 @@ public class ModBlockTagProvider extends FabricTagProvider.BlockTagProvider {
                 .add(ModBlocks.LUMINANCE_ORE)
                 .add(ModBlocks.GRIDSTONE_WALL);
 
-        ProvidedTagBuilder<Block, Block> pickaxeMineable = valueLookupBuilder(BlockTags.PICKAXE_MINEABLE);
+        TagAppender<Block, Block> pickaxeMineable = valueLookupBuilder(BlockTags.MINEABLE_WITH_PICKAXE);
         ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.values()
                 .forEach(colorMapping -> colorMapping.values().forEach(pickaxeMineable::add));
         pickaxeMineable

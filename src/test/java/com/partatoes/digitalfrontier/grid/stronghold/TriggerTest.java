@@ -3,11 +3,11 @@ package com.partatoes.digitalfrontier.grid.stronghold;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.Bootstrap;
 import net.minecraft.SharedConstants;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.Bootstrap;
+import net.minecraft.server.level.ServerLevel;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -23,8 +23,8 @@ class TriggerTest {
     // Text components (lieutenant names) need the vanilla registries
     @BeforeAll
     static void bootstrap() {
-        SharedConstants.createGameVersion();
-        Bootstrap.initialize();
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
     }
 
     private static Trigger parse(String json) {
@@ -151,7 +151,7 @@ class TriggerTest {
         assertTrue(new Triggers.Redstone(-1).matches(new GridEvent.Redstone(new BlockPos(2000, 65, 0)), context));
         // "Others" means other strongholds: two strongholds can have the same lieutenant
         Identifier sovereign = context.lieutenant();
-        Identifier warden = Identifier.of("digitalfrontier", "the_warden");
+        Identifier warden = Identifier.fromNamespaceAndPath("digitalfrontier", "the_warden");
         Triggers.LieutenantDefeated others = new Triggers.LieutenantDefeated(Optional.empty(), true);
         assertFalse(others.matches(new GridEvent.LieutenantDefeated(sovereign, context.stronghold()), context), "this stronghold");
         assertTrue(others.matches(new GridEvent.LieutenantDefeated(sovereign, "stronghold_1"), context), "same lieutenant elsewhere");
@@ -171,7 +171,7 @@ class TriggerTest {
             this.compiled = compiled;
         }
 
-        public ServerWorld grid() {
+        public ServerLevel grid() {
             throw new UnsupportedOperationException();
         }
 
@@ -180,7 +180,7 @@ class TriggerTest {
         }
 
         public Identifier lieutenant() {
-            return Identifier.of("digitalfrontier", "the_sovereign");
+            return Identifier.fromNamespaceAndPath("digitalfrontier", "the_sovereign");
         }
 
         public String stronghold() {
@@ -224,6 +224,6 @@ class TriggerTest {
                 {"name": "Rinzler", "archetype": "duelist", "loot_table": "mypack:entities/rinzler",
                  "respawn": {"trigger": {"type": "function"}}}""";
         LieutenantDef def = LieutenantDef.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseString(json)).getOrThrow();
-        assertEquals(Identifier.of("mypack", "entities/rinzler"), def.lootTable().orElseThrow().getValue());
+        assertEquals(Identifier.fromNamespaceAndPath("mypack", "entities/rinzler"), def.lootTable().orElseThrow().identifier());
     }
 }

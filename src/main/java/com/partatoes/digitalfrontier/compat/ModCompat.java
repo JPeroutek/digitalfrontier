@@ -9,9 +9,9 @@ public final class ModCompat {
     }
 
     public static void register() {
-        if (FabricLoader.getInstance().isModLoaded("accessories")) {
-            DigitalFrontier.LOGGER.info("Accessories found: Core Dumps will keep equipped accessories");
-            AccessoriesCompat.register();
+        if (FabricLoader.getInstance().isModLoaded("trinkets_updated")) {
+            DigitalFrontier.LOGGER.info("Trinkets Updated found: Core Dumps will keep equipped trinkets");
+            TrinketsCompat.register();
         }
     }
 }

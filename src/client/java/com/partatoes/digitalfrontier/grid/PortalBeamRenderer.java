@@ -2,23 +2,22 @@ package com.partatoes.digitalfrontier.grid;
 
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.ByteBufferBuilder;
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.partatoes.digitalfrontier.grid.exit.PortalBeams;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.block.entity.BeaconBlockEntityRenderer;
-import net.minecraft.client.render.command.BatchingRenderCommandQueue;
-import net.minecraft.client.render.command.CustomCommandRenderer;
-import net.minecraft.client.render.command.OrderedRenderCommandQueueImpl;
-import net.minecraft.client.render.fog.FogRenderer;
-import net.minecraft.client.util.BufferAllocator;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec3d;
-
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.SubmitNodeCollection;
+import net.minecraft.client.renderer.SubmitNodeStorage;
+import net.minecraft.client.renderer.blockentity.BeaconRenderer;
+import net.minecraft.client.renderer.feature.CustomFeatureRenderer;
+import net.minecraft.client.renderer.fog.FogRenderer;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.phys.Vec3;
 import java.util.List;
 
 /**
@@ -32,9 +31,9 @@ public final class PortalBeamRenderer {
     private static final double MIN_ANGULAR_RADIUS = 0.0015;
 
     // The beacon renderer only queues its beam; this queue is drawn straight into BUFFERS, away from the fogged entity pass
-    private static final OrderedRenderCommandQueueImpl QUEUE = new OrderedRenderCommandQueueImpl();
-    private static final CustomCommandRenderer CUSTOM_RENDERER = new CustomCommandRenderer();
-    private static final VertexConsumerProvider.Immediate BUFFERS = VertexConsumerProvider.immediate(new BufferAllocator(1536));
+    private static final SubmitNodeStorage QUEUE = new SubmitNodeStorage();
+    private static final CustomFeatureRenderer CUSTOM_RENDERER = new CustomFeatureRenderer();
+    private static final MultiBufferSource.BufferSource BUFFERS = MultiBufferSource.immediate(new ByteBufferBuilder(1536));
     private static Identifier world;
     private static List<PortalBeams.Beam> beams = List.of();
 
@@ -50,21 +49,21 @@ public final class PortalBeamRenderer {
             world = null;
             beams = List.of();
         });
-        WorldRenderEvents.AFTER_ENTITIES.register(context -> render());
+        LevelRenderEvents.AFTER_SOLID_FEATURES.register(context -> render());
     }
 
     private static void render() {
-        MinecraftClient client = MinecraftClient.getInstance();
-        ClientWorld clientWorld = client.world;
-        if (beams.isEmpty() || clientWorld == null || !clientWorld.getRegistryKey().getValue().equals(world)) {
+        Minecraft client = Minecraft.getInstance();
+        ClientLevel clientWorld = client.level;
+        if (beams.isEmpty() || clientWorld == null || !clientWorld.dimension().identifier().equals(world)) {
             return;
         }
-        Vec3d camera = client.gameRenderer.getCamera().getCameraPos();
+        Vec3 camera = client.gameRenderer.getMainCamera().position();
         // Well inside the far plane (four times the view distance), and past the loaded terrain
-        double near = client.gameRenderer.getViewDistanceBlocks() * 1.5;
+        double near = client.options.getEffectiveRenderDistance() * 16 * 1.5;
         // Turning like a beacon's beam
-        float rotation = Math.floorMod(clientWorld.getTime(), 40) + client.getRenderTickCounter().getTickProgress(false);
-        MatrixStack matrices = new MatrixStack();
+        float rotation = Math.floorMod(clientWorld.getGameTime(), 40) + client.getDeltaTracker().getGameTimeDeltaPartialTick(false);
+        PoseStack matrices = new PoseStack();
 
         for (PortalBeams.Beam beam : beams) {
             double centerX = (beam.minX() + beam.maxX() + 1) / 2.0;
@@ -74,22 +73,23 @@ public final class PortalBeamRenderer {
                     distance * MIN_ANGULAR_RADIUS);
             float scale = distance > near ? (float) (near / distance) : 1;
 
-            matrices.push();
+            matrices.pushPose();
             matrices.scale(scale, scale, scale);
             // The beacon renderer centers its beam on the block, half a block in
             matrices.translate(centerX - 0.5 - camera.x, beam.baseY() - camera.y, centerZ - 0.5 - camera.z);
-            BeaconBlockEntityRenderer.renderBeam(matrices, QUEUE, BeaconBlockEntityRenderer.BEAM_TEXTURE, 1, rotation, 0, HEIGHT,
+            BeaconRenderer.submitBeaconBeam(matrices, QUEUE, BeaconRenderer.BEAM_LOCATION, 1, rotation, 0, HEIGHT,
                     PortalBeams.COLOR, radius * 0.8f, radius);
-            matrices.pop();
+            matrices.popPose();
         }
 
-        for (BatchingRenderCommandQueue queue : QUEUE.getBatchingQueues().values()) {
-            CUSTOM_RENDERER.render(queue, BUFFERS);
+        for (SubmitNodeCollection queue : QUEUE.getSubmitsPerOrder().values()) {
+            CUSTOM_RENDERER.renderSolid(queue, BUFFERS);
+            CUSTOM_RENDERER.renderTranslucent(queue, BUFFERS);
         }
         QUEUE.clear();
         GpuBufferSlice fog = RenderSystem.getShaderFog();
-        RenderSystem.setShaderFog(client.gameRenderer.fogRenderer.getFogBuffer(FogRenderer.FogType.NONE));
-        BUFFERS.draw();
+        RenderSystem.setShaderFog(client.gameRenderer.fogRenderer.getBuffer(FogRenderer.FogMode.NONE));
+        BUFFERS.endBatch();
         RenderSystem.setShaderFog(fog);
     }
 }

@@ -1,14 +1,13 @@
 package com.partatoes.digitalfrontier.grid.layout;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.util.StringIdentifiable;
-
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import net.minecraft.util.StringRepresentable;
 
 /** The levels a city can have above and below its streets (see {@link TransitLayout}). */
-public enum GridLevel implements StringIdentifiable {
+public enum GridLevel implements StringRepresentable {
     /** Light-cycle decks over the boulevards, at Y 80, with ramps up from the street. */
     SKYROADS("skyroads"),
     /** Minecart guideways at Y 88 over some north–south streets. */
@@ -18,7 +17,7 @@ public enum GridLevel implements StringIdentifiable {
     /** Bridges between towers across streets, at their floor heights (Y 101 and up). */
     SKYWAYS("skyways");
 
-    public static final Codec<GridLevel> CODEC = StringIdentifiable.createCodec(GridLevel::values);
+    public static final Codec<GridLevel> CODEC = StringRepresentable.fromEnum(GridLevel::values);
     /** A set of levels as a JSON list, always in declaration order so the encoding (and grid id) is stable. */
     public static final Codec<Set<GridLevel>> SET_CODEC = CODEC.listOf().xmap(GridLevel::setOf, GridLevel::sortedList);
 
@@ -37,7 +36,7 @@ public enum GridLevel implements StringIdentifiable {
     }
 
     @Override
-    public String asString() {
+    public String getSerializedName() {
         return name;
     }
 }

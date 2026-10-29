@@ -1,9 +1,9 @@
 package com.partatoes.digitalfrontier.block.custom;
 
-import net.minecraft.block.Block;
+import net.minecraft.world.level.block.Block;
 
 public class PixelBlock extends Block {
-    public PixelBlock(Settings settings) {
+    public PixelBlock(Properties settings) {
         super(settings);
     }
 }

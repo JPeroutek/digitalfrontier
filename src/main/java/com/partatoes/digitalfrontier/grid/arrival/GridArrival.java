@@ -4,19 +4,19 @@ import com.partatoes.digitalfrontier.grid.gen.GridChunkGenerator;
 import com.partatoes.digitalfrontier.grid.layout.Site;
 import com.partatoes.digitalfrontier.world.ModDimensions;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.TeleportTarget;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.level.portal.TeleportTransition;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
@@ -34,21 +34,21 @@ public final class GridArrival {
     public static void register() {
         GridMemory.register();
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            if (server.getTicks() % DISCOVERY_INTERVAL_TICKS == 0) {
-                server.getPlayerManager().getPlayerList().forEach(GridArrival::discoverNearby);
+            if (server.getTickCount() % DISCOVERY_INTERVAL_TICKS == 0) {
+                server.getPlayerList().getPlayers().forEach(GridArrival::discoverNearby);
             }
         });
     }
 
     /** The world of a grid, if it's loaded and really is a grid. */
-    public static Optional<ServerWorld> gridWorld(MinecraftServer server, Identifier grid) {
-        ServerWorld world = server.getWorld(RegistryKey.of(RegistryKeys.WORLD, grid));
+    public static Optional<ServerLevel> gridWorld(MinecraftServer server, Identifier grid) {
+        ServerLevel world = server.getLevel(ResourceKey.create(Registries.DIMENSION, grid));
         return world != null && generator(world) != null ? Optional.of(world) : Optional.empty();
     }
 
     @Nullable
-    public static GridChunkGenerator generator(ServerWorld world) {
-        return world.getChunkManager().getChunkGenerator() instanceof GridChunkGenerator grid ? grid : null;
+    public static GridChunkGenerator generator(ServerLevel world) {
+        return world.getChunkSource().getGenerator() instanceof GridChunkGenerator grid ? grid : null;
     }
 
     /** The terminal nearest a position, with the position's block coordinates read as grid block coordinates. */
@@ -63,49 +63,49 @@ public final class GridArrival {
      * Sends a player to a terminal and remembers it as their last arrival. Fails (returns false) if the grid
      * isn't loaded or no longer has that terminal.
      */
-    public static boolean teleport(ServerPlayerEntity player, TerminalRef ref) {
-        Optional<TeleportTarget> target = arrivalTarget(player.getEntityWorld().getServer(), ref, player.getYaw(), player.getPitch());
+    public static boolean teleport(ServerPlayer player, TerminalRef ref) {
+        Optional<TeleportTransition> target = arrivalTarget(player.level().getServer(), ref, player.getYRot(), player.getXRot());
         if (target.isEmpty()) {
             return false;
         }
-        player.teleportTo(target.get());
-        player.onLanding();
-        recordArrival(player, ref, Text.translatable("message.digitalfrontier.arrived", terminalName(ref.terminal())));
+        player.teleport(target.get());
+        player.resetFallDistance();
+        recordArrival(player, ref, Component.translatable("message.digitalfrontier.arrived", terminalName(ref.terminal())));
         return true;
     }
 
     /** Where arriving at a terminal puts a player, if the grid is loaded and still has that terminal. */
-    public static Optional<TeleportTarget> arrivalTarget(MinecraftServer server, TerminalRef ref, float yaw, float pitch) {
+    public static Optional<TeleportTransition> arrivalTarget(MinecraftServer server, TerminalRef ref, float yaw, float pitch) {
         return gridWorld(server, ref.grid()).flatMap(world -> {
             GridChunkGenerator generator = generator(world);
-            return generator.layout().terminal(ref.terminal()).map(terminal -> new TeleportTarget(world,
-                    generator.arrivalPos(terminal).toBottomCenterPos(), Vec3d.ZERO, yaw, pitch, TeleportTarget.NO_OP));
+            return generator.layout().terminal(ref.terminal()).map(terminal -> new TeleportTransition(world,
+                    generator.arrivalPos(terminal).getBottomCenter(), Vec3.ZERO, yaw, pitch, TeleportTransition.DO_NOTHING));
         });
     }
 
     /** Everything that happens once a player is standing at a terminal: sound, message and their memory of it. */
-    public static void recordArrival(ServerPlayerEntity player, TerminalRef ref, Text message) {
-        player.getEntityWorld().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BLOCK_BEACON_ACTIVATE,
-                SoundCategory.PLAYERS, 1.0f, 1.5f);
+    public static void recordArrival(ServerPlayer player, TerminalRef ref, Component message) {
+        player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BEACON_ACTIVATE,
+                SoundSource.PLAYERS, 1.0f, 1.5f);
         GridMemory memory = player.getAttachedOrCreate(GridMemory.TYPE);
         player.setAttached(GridMemory.TYPE, memory.withArrival(ref));
-        player.sendMessage(message, true);
+        player.sendOverlayMessage(message);
     }
 
-    public static Text terminalName(String terminalId) {
+    public static Component terminalName(String terminalId) {
         if (terminalId.startsWith(WAYPOINT_PREFIX)) {
             try {
                 int index = Integer.parseInt(terminalId.substring(WAYPOINT_PREFIX.length()));
-                return Text.translatable("terminal.digitalfrontier.waypoint", index + 1);
+                return Component.translatable("terminal.digitalfrontier.waypoint", index + 1);
             } catch (NumberFormatException ignored) {
                 // Fall through to the generic name
             }
         }
-        return Text.translatable("terminal.digitalfrontier." + terminalId);
+        return Component.translatable("terminal.digitalfrontier." + terminalId);
     }
 
-    private static void discoverNearby(ServerPlayerEntity player) {
-        ServerWorld world = player.getEntityWorld();
+    private static void discoverNearby(ServerPlayer player) {
+        ServerLevel world = player.level();
         if (!ModDimensions.isGrid(world) || player.isSpectator()) {
             return;
         }
@@ -119,12 +119,12 @@ public final class GridArrival {
         if (terminal.distanceTo(chunkX, chunkZ) > DISCOVERY_RADIUS) {
             return;
         }
-        TerminalRef ref = new TerminalRef(world.getRegistryKey().getValue(), terminal.id());
+        TerminalRef ref = new TerminalRef(world.dimension().identifier(), terminal.id());
         GridMemory memory = player.getAttachedOrCreate(GridMemory.TYPE);
         if (!memory.hasDiscovered(ref)) {
             player.setAttached(GridMemory.TYPE, memory.withDiscovered(ref));
-            player.sendMessage(Text.translatable("message.digitalfrontier.terminal_discovered", terminalName(terminal.id()))
-                    .formatted(Formatting.AQUA), true);
+            player.sendOverlayMessage(Component.translatable("message.digitalfrontier.terminal_discovered", terminalName(terminal.id()))
+                    .withStyle(ChatFormatting.AQUA));
         }
     }
 }

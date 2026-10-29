@@ -1,31 +1,35 @@
 package com.partatoes.digitalfrontier.entity.custom;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.goal.*;
-import net.minecraft.entity.attribute.DefaultAttributeContainer;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.mob.PathAwareEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 
 // An ordinary program: strolls the streets of clean parts of the grid
-public class ProgramEntity extends PathAwareEntity {
-    public ProgramEntity(EntityType<? extends PathAwareEntity> entityType, World world) {
+public class ProgramEntity extends PathfinderMob {
+    public ProgramEntity(EntityType<? extends PathfinderMob> entityType, Level world) {
         super(entityType, world);
     }
 
     @Override
-    protected void initGoals() {
-        this.goalSelector.add(0, new SwimGoal(this));
-        this.goalSelector.add(1, new WanderAroundFarGoal(this, 0.6));
-        this.goalSelector.add(2, new LookAtEntityGoal(this, PlayerEntity.class, 15));
-        this.goalSelector.add(3, new LookAroundGoal(this));
+    protected void registerGoals() {
+        this.goalSelector.addGoal(0, new FloatGoal(this));
+        this.goalSelector.addGoal(1, new WaterAvoidingRandomStrollGoal(this, 0.6));
+        this.goalSelector.addGoal(2, new LookAtPlayerGoal(this, Player.class, 15));
+        this.goalSelector.addGoal(3, new RandomLookAroundGoal(this));
     }
 
-    public static DefaultAttributeContainer.Builder createProgramAttributes() {
-        return MobEntity.createMobAttributes()
-                .add(EntityAttributes.MAX_HEALTH, 20)
-                .add(EntityAttributes.MOVEMENT_SPEED, 0.25);
+    public static AttributeSupplier.Builder createProgramAttributes() {
+        return Mob.createMobAttributes()
+                .add(Attributes.MAX_HEALTH, 20)
+                .add(Attributes.MOVEMENT_SPEED, 0.25);
     }
 }

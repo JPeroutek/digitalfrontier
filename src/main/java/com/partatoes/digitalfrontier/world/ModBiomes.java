@@ -1,34 +1,33 @@
 package com.partatoes.digitalfrontier.world;
 
 import com.partatoes.digitalfrontier.DigitalFrontier;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.Registerable;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.data.worldgen.BootstrapContext;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.attribute.AmbientParticle;
 import net.minecraft.world.attribute.AmbientSounds;
 import net.minecraft.world.attribute.EnvironmentAttributes;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BiomeEffects;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeGenerationSettings;
+import net.minecraft.world.level.biome.BiomeSpecialEffects;
+import net.minecraft.world.level.biome.MobSpawnSettings;
 import org.jetbrains.annotations.Nullable;
-import net.minecraft.world.biome.GenerationSettings;
-import net.minecraft.world.biome.SpawnSettings;
-
 import java.util.List;
 
 public class ModBiomes {
-    public static final RegistryKey<Biome> GRID_CITY_CORE = registerKey("grid_city_core");
-    public static final RegistryKey<Biome> GRID_CITY = registerKey("grid_city");
-    public static final RegistryKey<Biome> OUTSKIRTS = registerKey("outskirts");
-    public static final RegistryKey<Biome> OUTLANDS = registerKey("outlands");
-    public static final RegistryKey<Biome> UNALLOCATED_SPACE = registerKey("unallocated_space");
+    public static final ResourceKey<Biome> GRID_CITY_CORE = registerKey("grid_city_core");
+    public static final ResourceKey<Biome> GRID_CITY = registerKey("grid_city");
+    public static final ResourceKey<Biome> OUTSKIRTS = registerKey("outskirts");
+    public static final ResourceKey<Biome> OUTLANDS = registerKey("outlands");
+    public static final ResourceKey<Biome> UNALLOCATED_SPACE = registerKey("unallocated_space");
     // Where corruption is strong (the CORRUPTED tier and up): grayed, reddened fog and drifting static
-    public static final RegistryKey<Biome> CORRUPTED_CITY = registerKey("corrupted_city");
-    public static final RegistryKey<Biome> CORRUPTED_OUTLANDS = registerKey("corrupted_outlands");
-    public static final RegistryKey<Biome> CORRUPTED_UNALLOCATED = registerKey("corrupted_unallocated");
+    public static final ResourceKey<Biome> CORRUPTED_CITY = registerKey("corrupted_city");
+    public static final ResourceKey<Biome> CORRUPTED_OUTLANDS = registerKey("corrupted_outlands");
+    public static final ResourceKey<Biome> CORRUPTED_UNALLOCATED = registerKey("corrupted_unallocated");
 
-    public static void bootstrap(Registerable<Biome> context) {
+    public static void bootstrap(BootstrapContext<Biome> context) {
         context.register(GRID_CITY_CORE, gridBiome(0x0B2A3D, null));
         context.register(GRID_CITY, gridBiome(0x0A1F2E, null));
         context.register(OUTSKIRTS, gridBiome(0x111A22, null));
@@ -40,26 +39,26 @@ public class ModBiomes {
     }
 
     private static Biome gridBiome(int fogColor, @Nullable List<AmbientParticle> particles) {
-        Biome.Builder biome = new Biome.Builder()
-                .precipitation(false)
+        Biome.BiomeBuilder biome = new Biome.BiomeBuilder()
+                .hasPrecipitation(false)
                 .temperature(0.5f)
                 .downfall(0.5f)
-                .setEnvironmentAttribute(EnvironmentAttributes.FOG_COLOR_VISUAL, fogColor)
-                .setEnvironmentAttribute(EnvironmentAttributes.SKY_COLOR_VISUAL, 0x000000)
+                .setAttribute(EnvironmentAttributes.FOG_COLOR, fogColor)
+                .setAttribute(EnvironmentAttributes.SKY_COLOR, 0x000000)
                 // The Sea of Simulation: dark, and darker under the surface
-                .setEnvironmentAttribute(EnvironmentAttributes.WATER_FOG_COLOR_VISUAL, 0x02090C)
-                .setEnvironmentAttribute(EnvironmentAttributes.AMBIENT_SOUNDS_AUDIO, AmbientSounds.CAVE)
-                .effects(new BiomeEffects.Builder().waterColor(0x103842).build());
+                .setAttribute(EnvironmentAttributes.WATER_FOG_COLOR, 0x02090C)
+                .setAttribute(EnvironmentAttributes.AMBIENT_SOUNDS, AmbientSounds.LEGACY_CAVE_SETTINGS)
+                .specialEffects(new BiomeSpecialEffects.Builder().waterColor(0x103842).build());
         if (particles != null) {
-            biome.setEnvironmentAttribute(EnvironmentAttributes.AMBIENT_PARTICLES_VISUAL, particles);
+            biome.setAttribute(EnvironmentAttributes.AMBIENT_PARTICLES, particles);
         }
         return biome
-                .spawnSettings(new SpawnSettings.Builder().build())
-                .generationSettings(new GenerationSettings.Builder().build())
+                .mobSpawnSettings(new MobSpawnSettings.Builder().build())
+                .generationSettings(new BiomeGenerationSettings.PlainBuilder().build())
                 .build();
     }
 
-    public static RegistryKey<Biome> registerKey(String name) {
-        return RegistryKey.of(RegistryKeys.BIOME, Identifier.of(DigitalFrontier.MOD_ID, name));
+    public static ResourceKey<Biome> registerKey(String name) {
+        return ResourceKey.create(Registries.BIOME, Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, name));
     }
 }

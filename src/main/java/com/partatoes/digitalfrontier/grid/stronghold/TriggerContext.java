@@ -1,12 +1,12 @@
 package com.partatoes.digitalfrontier.grid.stronghold;
 
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerLevel;
 
 /** What a trigger can see about the stronghold whose lieutenant it might bring back. */
 public interface TriggerContext {
-    ServerWorld grid();
+    ServerLevel grid();
 
     /** The center of the stronghold, at street level. */
     BlockPos center();

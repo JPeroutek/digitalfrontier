@@ -5,13 +5,12 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.partatoes.digitalfrontier.grid.layout.CorruptionTier;
 import com.partatoes.digitalfrontier.grid.layout.GridLayout;
 import com.partatoes.digitalfrontier.grid.layout.GridLayoutSettings;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.source.BiomeCoords;
-import net.minecraft.world.biome.source.BiomeSource;
-import net.minecraft.world.biome.source.util.MultiNoiseUtil;
-
 import java.util.stream.Stream;
+import net.minecraft.core.Holder;
+import net.minecraft.core.QuartPos;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeSource;
+import net.minecraft.world.level.biome.Climate;
 
 /** Picks each position's biome from the zone the grid layout puts it in. */
 public class GridBiomeSource extends BiomeSource {
@@ -43,19 +42,19 @@ public class GridBiomeSource extends BiomeSource {
     }
 
     @Override
-    protected MapCodec<? extends BiomeSource> getCodec() {
+    protected MapCodec<? extends BiomeSource> codec() {
         return CODEC;
     }
 
     @Override
-    protected Stream<RegistryEntry<Biome>> biomeStream() {
+    protected Stream<Holder<Biome>> collectPossibleBiomes() {
         return biomes.stream();
     }
 
     @Override
-    public RegistryEntry<Biome> getBiome(int biomeX, int biomeY, int biomeZ, MultiNoiseUtil.MultiNoiseSampler noise) {
-        int chunkX = BiomeCoords.toChunk(biomeX);
-        int chunkZ = BiomeCoords.toChunk(biomeZ);
+    public Holder<Biome> getNoiseBiome(int biomeX, int biomeY, int biomeZ, Climate.Sampler noise) {
+        int chunkX = QuartPos.toSection(biomeX);
+        int chunkZ = QuartPos.toSection(biomeZ);
         // Only strong corruption changes the biome; lighter corruption just changes blocks
         boolean corrupted = CorruptionTier.fromIntensity(layout.corruptionAt(chunkX, chunkZ)).compareTo(CorruptionTier.CORRUPTED) >= 0;
         return biomes.forZone(layout.zoneAt(chunkX, chunkZ), corrupted);

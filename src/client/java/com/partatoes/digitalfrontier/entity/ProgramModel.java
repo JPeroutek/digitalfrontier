@@ -1,22 +1,22 @@
 package com.partatoes.digitalfrontier.entity;
 
-import net.minecraft.client.model.Dilation;
-import net.minecraft.client.model.ModelPart;
-import net.minecraft.client.model.TexturedModelData;
-import net.minecraft.client.render.entity.model.BipedEntityModel;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
-import net.minecraft.client.render.entity.state.BipedEntityRenderState;
+import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.player.PlayerModel;
+import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
 
 /**
  * The player's shape (with its overlay layers, which hang off the limbs) on a plain biped model. Not a
  * PlayerEntityModel: since 1.21.9 any player render state is drawn by the player renderer with a player skin.
  */
-public class ProgramModel extends BipedEntityModel<BipedEntityRenderState> {
+public class ProgramModel extends HumanoidModel<HumanoidRenderState> {
     public ProgramModel(ModelPart root) {
         super(root);
     }
 
-    public static TexturedModelData getTexturedModelData() {
-        return TexturedModelData.of(PlayerEntityModel.getTexturedModelData(Dilation.NONE, false), 64, 64);
+    public static LayerDefinition getTexturedModelData() {
+        return LayerDefinition.create(PlayerModel.createMesh(CubeDeformation.NONE, false), 64, 64);
     }
 }

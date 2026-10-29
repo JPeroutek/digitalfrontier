@@ -7,14 +7,13 @@ import com.google.gson.JsonObject;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.block.ModBlocks;
 
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
-import net.minecraft.data.DataOutput;
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
+import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
-import net.minecraft.data.DataWriter;
-import net.minecraft.data.DataOutput.OutputType;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.data.PackOutput;
+import net.minecraft.data.PackOutput.Target;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.DyeColor;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -29,15 +28,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ModTextureProvider implements DataProvider {
-    protected final FabricDataOutput dataOutput;
+    protected final FabricPackOutput dataOutput;
     private static final Logger LOGGER = LoggerFactory.getLogger(DigitalFrontier.MOD_ID);
 
-    public ModTextureProvider(FabricDataOutput output) {
+    public ModTextureProvider(FabricPackOutput output) {
         this.dataOutput = output;
     }
 
     @Override
-    public CompletableFuture<?> run(DataWriter writer) {
+    public CompletableFuture<?> run(CachedOutput writer) {
         List<CompletableFuture<?>> futures = new ArrayList<>();
 
         ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS
@@ -95,7 +94,7 @@ public class ModTextureProvider implements DataProvider {
     }
 
     // TV static: gray noise with brighter scan lines; the brightest specks also go in the glow layer
-    private void createStatic(DataWriter writer) {
+    private void createStatic(CachedOutput writer) {
         Random random = new Random(0x57A71CL);
         BufferedImage image = new BufferedImage(16, 16 * STATIC_FRAMES, BufferedImage.TYPE_INT_ARGB);
         BufferedImage glow = new BufferedImage(16, 16 * STATIC_FRAMES, BufferedImage.TYPE_INT_ARGB);
@@ -115,7 +114,7 @@ public class ModTextureProvider implements DataProvider {
     }
 
     // A pattern whose rows jump sideways from frame to frame, in the given color
-    private void createGlitched(DataWriter writer, DyeColor color, int templateIndex) {
+    private void createGlitched(CachedOutput writer, DyeColor color, int templateIndex) {
         BufferedImage template = readTemplate("gridstone_pattern_" + GLITCH_TEMPLATES[templateIndex]);
         if (template == null) {
             return;
@@ -131,13 +130,13 @@ public class ModTextureProvider implements DataProvider {
                 for (int x = 0; x < 16; x++) {
                     int pixel = template.getRGB(Math.floorMod(x - shift, 16), sourceY);
                     boolean line = pixel == -1;
-                    int base = line ? applyAlpha(color.getSignColor(), 0xFF) : applyAlpha(pixel, 0xFF);
+                    int base = line ? applyAlpha(color.getTextColor(), 0xFF) : applyAlpha(pixel, 0xFF);
                     image.setRGB(x, frame * 16 + y, base);
                     glow.setRGB(x, frame * 16 + y, line ? base : 0);
                 }
             }
         }
-        writePhases(writer, image, glow, "glitched_gridstone_" + color.asString() + templateSuffix(templateIndex), 3, ANIMATION_PHASES);
+        writePhases(writer, image, glow, "glitched_gridstone_" + color.getSerializedName() + templateSuffix(templateIndex), 3, ANIMATION_PHASES);
     }
 
     // Program skins that corrupted programs are made from
@@ -147,7 +146,7 @@ public class ModTextureProvider implements DataProvider {
      * A program skin gone wrong: its glowing circuit lines (bright and blue-ish) turn the regime's red-orange,
      * everything else loses most of its color, and scattered pixels become static.
      */
-    private void createCorruptedProgram(DataWriter writer, int variant) {
+    private void createCorruptedProgram(CachedOutput writer, int variant) {
         String path = String.format("assets/%s/textures/entity/%s.png", DigitalFrontier.MOD_ID, CORRUPTED_PROGRAM_SOURCES[variant]);
         BufferedImage source;
         try (var stream = ModTextureProvider.class.getClassLoader().getResourceAsStream(path)) {
@@ -185,8 +184,8 @@ public class ModTextureProvider implements DataProvider {
                 image.setRGB(x, y, result);
             }
         }
-        DataOutput.PathResolver resolver = dataOutput.getResolver(OutputType.RESOURCE_PACK, "textures/entity");
-        writeImage(writer, image, resolver.resolve(Identifier.of(DigitalFrontier.MOD_ID, "corrupted_program_" + variant), "png"));
+        PackOutput.PathProvider resolver = dataOutput.createPathProvider(Target.RESOURCE_PACK, "textures/entity");
+        writeImage(writer, image, resolver.file(Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "corrupted_program_" + variant), "png"));
     }
 
     // Mostly gray, with a little of the original color left
@@ -194,29 +193,29 @@ public class ModTextureProvider implements DataProvider {
         return (channel + gray * 3) / 4;
     }
 
-    private void writeImage(DataWriter writer, BufferedImage image, Path path) {
+    private void writeImage(CachedOutput writer, BufferedImage image, Path path) {
         try {
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             HashingOutputStream hashing = new HashingOutputStream(Hashing.sha1(), bytes);
             ImageIO.write(image, "png", hashing);
-            writer.write(path, bytes.toByteArray(), hashing.hash());
+            writer.writeIfNeeded(path, bytes.toByteArray(), hashing.hash());
         } catch (IOException e) {
             LOGGER.error("Failed to save file to {}", path, e);
         }
     }
 
-    private void writeAnimated(DataWriter writer, BufferedImage image, String assetName, int frameTime) {
+    private void writeAnimated(CachedOutput writer, BufferedImage image, String assetName, int frameTime) {
         writeBufferedImageToPath(writer, image, assetName);
         JsonObject animation = new JsonObject();
         animation.addProperty("frametime", frameTime);
         JsonObject meta = new JsonObject();
         meta.add("animation", animation);
-        DataOutput.PathResolver resolver = dataOutput.getResolver(OutputType.RESOURCE_PACK, "textures/block");
-        DataProvider.writeToPath(writer, meta, resolver.resolve(Identifier.of(DigitalFrontier.MOD_ID, assetName), "png.mcmeta")).join();
+        PackOutput.PathProvider resolver = dataOutput.createPathProvider(Target.RESOURCE_PACK, "textures/block");
+        DataProvider.saveStable(writer, meta, resolver.file(Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, assetName), "png.mcmeta")).join();
     }
 
     // An animation and its glow layer, once per phase, each copy's frames starting further into the cycle
-    private void writePhases(DataWriter writer, BufferedImage image, BufferedImage glow, String name, int frameTime, int phases) {
+    private void writePhases(CachedOutput writer, BufferedImage image, BufferedImage glow, String name, int frameTime, int phases) {
         int frames = image.getHeight() / 16;
         for (int phase = 0; phase < phases; phase++) {
             int shift = phase * frames / phases;
@@ -237,7 +236,7 @@ public class ModTextureProvider implements DataProvider {
     }
 
     // A two-frame strip shown in turn, frame 0 then frame 1, for each of the times, starting at times[start]
-    private void writeAnimated(DataWriter writer, BufferedImage image, String assetName, int[] times, int start) {
+    private void writeAnimated(CachedOutput writer, BufferedImage image, String assetName, int[] times, int start) {
         writeBufferedImageToPath(writer, image, assetName);
         JsonArray frames = new JsonArray();
         for (int i = 0; i < times.length; i++) {
@@ -251,8 +250,8 @@ public class ModTextureProvider implements DataProvider {
         animation.add("frames", frames);
         JsonObject meta = new JsonObject();
         meta.add("animation", animation);
-        DataOutput.PathResolver resolver = dataOutput.getResolver(OutputType.RESOURCE_PACK, "textures/block");
-        DataProvider.writeToPath(writer, meta, resolver.resolve(Identifier.of(DigitalFrontier.MOD_ID, assetName), "png.mcmeta")).join();
+        PackOutput.PathProvider resolver = dataOutput.createPathProvider(Target.RESOURCE_PACK, "textures/block");
+        DataProvider.saveStable(writer, meta, resolver.file(Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, assetName), "png.mcmeta")).join();
     }
 
     private BufferedImage readTemplate(String templateName) {
@@ -269,7 +268,7 @@ public class ModTextureProvider implements DataProvider {
         }
     }
 
-    private void createVariant(DataWriter writer, String templateName, DyeColor color) {
+    private void createVariant(CachedOutput writer, String templateName, DyeColor color) {
         // Read the image from the resources folder
         String resourcePath = String.format("assets/%s/textures/block/%s.png", DigitalFrontier.MOD_ID, templateName);
         BufferedImage templateImage;
@@ -293,8 +292,8 @@ public class ModTextureProvider implements DataProvider {
             for (int y = 0; y < templateImage.getHeight(); y++) {
                 int pixel = templateImage.getRGB(x, y);
                 if (pixel == -1) {
-                    coloredImage.setRGB(x, y, applyAlpha(color.getSignColor(), 0xFF));
-                    emissiveImage.setRGB(x, y, applyAlpha(color.getSignColor(), 0xFF));
+                    coloredImage.setRGB(x, y, applyAlpha(color.getTextColor(), 0xFF));
+                    emissiveImage.setRGB(x, y, applyAlpha(color.getTextColor(), 0xFF));
                 } else {
                     coloredImage.setRGB(x, y, applyAlpha(pixel, 0xFF));
                     emissiveImage.setRGB(x, y, 0x00000000);
@@ -303,10 +302,10 @@ public class ModTextureProvider implements DataProvider {
         }
 
         // Write the image to the path
-        String coloredPatternName = String.format("%s_%s", templateName, color.asString().toLowerCase());
+        String coloredPatternName = String.format("%s_%s", templateName, color.getSerializedName().toLowerCase());
         writeBufferedImageToPath(writer, coloredImage, coloredPatternName);
         
-        String emissivePatternName = String.format("%s_%s_glow", templateName, color.asString().toLowerCase());
+        String emissivePatternName = String.format("%s_%s_glow", templateName, color.getSerializedName().toLowerCase());
         writeBufferedImageToPath(writer, emissiveImage, emissivePatternName);
 
         // Flickering glows for lightly corrupted ground: lit, then out for a moment (see PatternBlock)
@@ -326,9 +325,9 @@ public class ModTextureProvider implements DataProvider {
         return (color & 0x00FFFFFF) | (alpha << 24);
     }
 
-    private void writeBufferedImageToPath(DataWriter writer, BufferedImage image, String assetName) {
-        DataOutput.PathResolver resolver = dataOutput.getResolver(OutputType.RESOURCE_PACK, "textures/block");
-        Path newPath = resolver.resolve(Identifier.of(DigitalFrontier.MOD_ID, assetName), "png");
+    private void writeBufferedImageToPath(CachedOutput writer, BufferedImage image, String assetName) {
+        PackOutput.PathProvider resolver = dataOutput.createPathProvider(Target.RESOURCE_PACK, "textures/block");
+        Path newPath = resolver.file(Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, assetName), "png");
 
         try {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -336,7 +335,7 @@ public class ModTextureProvider implements DataProvider {
 
             ImageIO.write(image, "png", hashingOutputStream);
 
-            writer.write(newPath, byteArrayOutputStream.toByteArray(), hashingOutputStream.hash());
+            writer.writeIfNeeded(newPath, byteArrayOutputStream.toByteArray(), hashingOutputStream.hash());
         } catch (IOException var10) {
             LOGGER.error("Failed to save file to {}", assetName, var10);
         }

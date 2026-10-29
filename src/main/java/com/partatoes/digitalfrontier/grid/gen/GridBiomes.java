@@ -3,34 +3,33 @@ package com.partatoes.digitalfrontier.grid.gen;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.partatoes.digitalfrontier.grid.layout.Zone;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.world.biome.Biome;
-
 import java.util.stream.Stream;
+import net.minecraft.core.Holder;
+import net.minecraft.world.level.biome.Biome;
 
 /** The biome used for each zone of a grid, and for strongly corrupted ground in it. */
 public record GridBiomes(
-        RegistryEntry<Biome> cityCore,
-        RegistryEntry<Biome> city,
-        RegistryEntry<Biome> outskirts,
-        RegistryEntry<Biome> outlands,
-        RegistryEntry<Biome> unallocated,
-        RegistryEntry<Biome> corruptedCity,
-        RegistryEntry<Biome> corruptedOutlands,
-        RegistryEntry<Biome> corruptedUnallocated) {
+        Holder<Biome> cityCore,
+        Holder<Biome> city,
+        Holder<Biome> outskirts,
+        Holder<Biome> outlands,
+        Holder<Biome> unallocated,
+        Holder<Biome> corruptedCity,
+        Holder<Biome> corruptedOutlands,
+        Holder<Biome> corruptedUnallocated) {
 
     public static final Codec<GridBiomes> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            Biome.REGISTRY_CODEC.fieldOf("city_core").forGetter(GridBiomes::cityCore),
-            Biome.REGISTRY_CODEC.fieldOf("city").forGetter(GridBiomes::city),
-            Biome.REGISTRY_CODEC.fieldOf("outskirts").forGetter(GridBiomes::outskirts),
-            Biome.REGISTRY_CODEC.fieldOf("outlands").forGetter(GridBiomes::outlands),
-            Biome.REGISTRY_CODEC.fieldOf("unallocated").forGetter(GridBiomes::unallocated),
-            Biome.REGISTRY_CODEC.fieldOf("corrupted_city").forGetter(GridBiomes::corruptedCity),
-            Biome.REGISTRY_CODEC.fieldOf("corrupted_outlands").forGetter(GridBiomes::corruptedOutlands),
-            Biome.REGISTRY_CODEC.fieldOf("corrupted_unallocated").forGetter(GridBiomes::corruptedUnallocated)
+            Biome.CODEC.fieldOf("city_core").forGetter(GridBiomes::cityCore),
+            Biome.CODEC.fieldOf("city").forGetter(GridBiomes::city),
+            Biome.CODEC.fieldOf("outskirts").forGetter(GridBiomes::outskirts),
+            Biome.CODEC.fieldOf("outlands").forGetter(GridBiomes::outlands),
+            Biome.CODEC.fieldOf("unallocated").forGetter(GridBiomes::unallocated),
+            Biome.CODEC.fieldOf("corrupted_city").forGetter(GridBiomes::corruptedCity),
+            Biome.CODEC.fieldOf("corrupted_outlands").forGetter(GridBiomes::corruptedOutlands),
+            Biome.CODEC.fieldOf("corrupted_unallocated").forGetter(GridBiomes::corruptedUnallocated)
     ).apply(instance, GridBiomes::new));
 
-    public RegistryEntry<Biome> forZone(Zone zone, boolean corrupted) {
+    public Holder<Biome> forZone(Zone zone, boolean corrupted) {
         if (corrupted) {
             return switch (zone) {
                 case CITY_CORE, CITY -> corruptedCity;
@@ -48,7 +47,7 @@ public record GridBiomes(
         };
     }
 
-    public Stream<RegistryEntry<Biome>> stream() {
+    public Stream<Holder<Biome>> stream() {
         return Stream.of(cityCore, city, outskirts, outlands, unallocated, corruptedCity, corruptedOutlands, corruptedUnallocated);
     }
 }

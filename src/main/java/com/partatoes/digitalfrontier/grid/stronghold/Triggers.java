@@ -6,14 +6,14 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.partatoes.digitalfrontier.grid.stronghold.Trigger.EventTrigger;
 import com.partatoes.digitalfrontier.grid.stronghold.Trigger.StateTrigger;
-import net.minecraft.scoreboard.ReadableScoreboardScore;
-import net.minecraft.scoreboard.ScoreHolder;
-import net.minecraft.scoreboard.Scoreboard;
-import net.minecraft.scoreboard.ScoreboardObjective;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.attribute.EnvironmentAttributes;
+import net.minecraft.world.scores.Objective;
+import net.minecraft.world.scores.ReadOnlyScoreInfo;
+import net.minecraft.world.scores.ScoreHolder;
+import net.minecraft.world.scores.Scoreboard;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -99,7 +99,7 @@ public final class Triggers {
         }
 
         public boolean holds(TriggerContext context) {
-            return context.grid().getTime() - context.defeatedAt() >= ticks;
+            return context.grid().getGameTime() - context.defeatedAt() >= ticks;
         }
     }
 
@@ -114,8 +114,8 @@ public final class Triggers {
         }
 
         public boolean holds(TriggerContext context) {
-            ServerWorld overworld = context.grid().getServer().getOverworld();
-            return phases.contains(overworld.getEnvironmentAttributes().getAttributeValue(EnvironmentAttributes.MOON_PHASE_VISUAL).getIndex());
+            ServerLevel overworld = context.grid().getServer().overworld();
+            return phases.contains(overworld.environmentAttributes().getDimensionValue(EnvironmentAttributes.MOON_PHASE).index());
         }
     }
 
@@ -129,7 +129,7 @@ public final class Triggers {
         }
 
         public boolean holds(TriggerContext context) {
-            return context.grid().getServer().getOverworld().isThundering();
+            return context.grid().getServer().overworld().isThundering();
         }
     }
 
@@ -147,12 +147,12 @@ public final class Triggers {
 
         public boolean holds(TriggerContext context) {
             Scoreboard scoreboard = context.grid().getServer().getScoreboard();
-            ScoreboardObjective scoreObjective = scoreboard.getNullableObjective(objective);
+            Objective scoreObjective = scoreboard.getObjective(objective);
             if (scoreObjective == null) {
                 return false;
             }
-            ReadableScoreboardScore score = scoreboard.getScore(ScoreHolder.fromName(holder), scoreObjective);
-            return score != null && score.getScore() >= min;
+            ReadOnlyScoreInfo score = scoreboard.getPlayerScoreInfo(ScoreHolder.forNameOnly(holder), scoreObjective);
+            return score != null && score.value() >= min;
         }
     }
 

@@ -1,6 +1,5 @@
 package com.partatoes.digitalfrontier.grid.layout;
 
-import net.minecraft.util.DyeColor;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -10,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.IntStream;
+import net.minecraft.world.item.DyeColor;
 
 /**
  * The macro map of one grid. A pure function of {@link GridLayoutSettings}: no world access, so every

@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.16-SNAPSHOT'
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
 	id 'maven-publish'
 }
 
@@ -47,25 +47,6 @@ repositories {
 			includeGroup "dev.architectury"
 		}
 	}
-	maven {
-		name = "Wisp Forest"
-		url = "https://maven.wispforest.io/releases"
-		content {
-			includeGroup "io.wispforest"
-		}
-	}
-	// Libraries taken out of the testing mods that bundle them (see nestedLib below)
-	exclusiveContent {
-		forRepository {
-			flatDir {
-				name = "NestedLibs"
-				dirs file("build/nestedlibs")
-			}
-		}
-		filter {
-			includeGroup "nested"
-		}
-	}
 }
 
 loom {
@@ -87,69 +68,46 @@ fabricApi {
 	}
 }
 
-def xaero_minimap = "fabric-1.21.11-26.6.2"
-
-// Loom strips the jars a dev dependency bundles, so a library a testing mod needs but that isn't published anywhere is
-// taken out of the mod's jar into build/nestedlibs, and added as a module (not files(), so Loom remaps the mod against it)
-delete "build/nestedlibs"
-def nestedLib = { String mod, String name ->
-	copy {
-		from zipTree(configurations.detachedConfiguration(dependencies.create(mod)).singleFile)
-		include "META-INF/jars/${name}-*.jar"
-		eachFile { path = it.name }
-		includeEmptyDirs = false
-		into "build/nestedlibs"
-	}
-	def jar = file("build/nestedlibs").list().find { it.startsWith("${name}-") }
-	return "nested:${name}:${jar.substring(name.length() + 1, jar.length() - ".jar".length())}"
-}
-
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	// Yarn names NbtList's get(int) and remove(int), but Loom leaves them unnamed in the game jar (they clash with the
-	// bridge methods) while still renaming calls in remapped mods, which then crash (Xaero's World Map). Keep both unnamed
-	mappings loom.layered {
-		mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-		mappings file("mappings/nbt-list-fix.tiny")
-	}
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-	modImplementation("com.terraformersmc:modmenu:${project.modmenu_version}")
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+	implementation("com.terraformersmc:modmenu:${project.modmenu_version}")
 
 	// Runtime worlds for tuned grids; bundled in the jar so players don't install it separately
-	modImplementation include("xyz.nucleoid:fantasy:${project.fantasy_version}")
+	implementation include("xyz.nucleoid:fantasy:${project.fantasy_version}")
 
 	// Optional integrations: compiled against, never required at runtime (see compat/ModCompat)
-	modCompileOnly("io.wispforest:accessories-fabric:${project.accessories_version}") {
+	compileOnly("maven.modrinth:trinkets-updated:${project.trinkets_version}") {
 		transitive = false
 	}
+	// Its events are yumi-commons ones, nested in its jar and published to Maven Central
+	compileOnly "dev.yumi.commons:yumi-commons-event:2.0.0"
 
 	// For testing purposes...
 	// Release jar from Modrinth bundles worldedit-core; the EngineHub SNAPSHOTs drift out of sync with each other
-	modLocalRuntime "maven.modrinth:worldedit:7.4.2"
-	// It bundles the WorldEdit CUI protocol, published nowhere
-	modLocalRuntime nestedLib("maven.modrinth:worldedit:7.4.2", "worldeditcui-protocol-fabric")
+	localRuntime "maven.modrinth:worldedit:7.4.3"
 	// Maps (handy for checking grid layouts), block/entity tooltips, and recipe/item lookup
-	modLocalRuntime "maven.modrinth:xaeros-minimap:${xaero_minimap}"
-	modLocalRuntime "maven.modrinth:xaeros-world-map:fabric-1.21.11-1.47.2"
-	// Both need XaeroLib, which they bundle and which isn't published for Fabric
-	modLocalRuntime nestedLib("maven.modrinth:xaeros-minimap:${xaero_minimap}", "xaerolib")
-	modLocalRuntime "maven.modrinth:jade:21.1.6+fabric"
-	// REI, chosen when neither JEI nor EMI had a Fabric build (EMI still has none for 1.21.11); from its own maven, which brings its dependencies
-	modLocalRuntime "me.shedaniel:RoughlyEnoughItems-fabric:21.11.816"
+	localRuntime "maven.modrinth:xaeros-minimap:fabric-26.1.2-26.6.2"
+	localRuntime "maven.modrinth:xaeros-world-map:fabric-26.1.2-1.47.2"
+	localRuntime "maven.modrinth:jade:26.1.11+fabric"
+	// REI, chosen when neither JEI nor EMI had a Fabric build (EMI still has none for 26.1.2); from its own maven, which brings its dependencies
+	localRuntime "me.shedaniel:RoughlyEnoughItems-fabric:26.1.819"
 	// Sodium for frame rate
-	modLocalRuntime "maven.modrinth:sodium:mc1.21.11-0.8.14-fabric"
+	localRuntime "maven.modrinth:sodium:mc26.1.2-0.9.2-fabric"
+	// Trinkets Updated, to try the kept-trinkets integration
+	localRuntime "maven.modrinth:trinkets-updated:${project.trinkets_version}"
 	// Distant Horizons and Chunky crash together (DH calls into Chunky before Chunky has started), so it's one or the
 	// other: Distant Horizons to see far out (the derelict sectors from the city), or with -Ppregen, Chunky to
 	// pregenerate chunks, e.g. /chunky world digitalfrontier:default, /chunky radius 3000, /chunky start.
-	// Both by version id: DH 3.3.3-1.21.11; Chunky 1.4.55, a number its Fabric, Forge and NeoForge builds share
+	// Both by version id: DH 3.3.3-26.1.2; Chunky 1.5.3, a number its Fabric, Forge and NeoForge builds share
 	if (project.hasProperty("pregen")) {
-		modLocalRuntime "maven.modrinth:chunky:1CpEkmcD"
+		localRuntime "maven.modrinth:chunky:4Eotm6ov"
 	} else {
-		modLocalRuntime "maven.modrinth:distanthorizons:oNqCUHFk"
+		localRuntime "maven.modrinth:distanthorizons:QHxoccsN"
 	}
 
 	// Runs JUnit tests inside Fabric Loader so Minecraft classes are available
@@ -169,7 +127,7 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 21
+	it.options.release = 25
 }
 
 java {
@@ -178,8 +136,8 @@ java {
 	// If you remove this line, sources will not be generated.
 	//withSourcesJar()
 
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
 }
 
 jar {

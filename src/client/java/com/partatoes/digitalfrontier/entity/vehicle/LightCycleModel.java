@@ -5,8 +5,16 @@
 package com.partatoes.digitalfrontier.entity.vehicle;
 
 import net.minecraft.client.model.*;
-import net.minecraft.client.render.entity.model.EntityModel;
-import net.minecraft.client.render.entity.state.EntityRenderState;
+import net.minecraft.client.model.geom.*;
+import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.client.model.geom.ModelPart;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
 
 public class LightCycleModel<T extends EntityRenderState> extends EntityModel<T> {
 	private final ModelPart LightCycle;
@@ -20,30 +28,30 @@ public class LightCycleModel<T extends EntityRenderState> extends EntityModel<T>
 		this.MainBody = root.getChild("LightCycle").getChild("MainBody");
 		this.RearTire = root.getChild("LightCycle").getChild("RearTire");
 	}
-	public static TexturedModelData getTexturedModelData() {
-		ModelData modelData = new ModelData();
-		ModelPartData modelPartData = modelData.getRoot();
-		ModelPartData LightCycle = modelPartData.addChild("LightCycle", ModelPartBuilder.create(), ModelTransform.origin(0.0F, 24.0F, 0.0F));
+	public static LayerDefinition getTexturedModelData() {
+		MeshDefinition modelData = new MeshDefinition();
+		PartDefinition modelPartData = modelData.getRoot();
+		PartDefinition LightCycle = modelPartData.addOrReplaceChild("LightCycle", CubeListBuilder.create(), PartPose.offset(0.0F, 24.0F, 0.0F));
 
-		ModelPartData FrontTire = LightCycle.addChild("FrontTire", ModelPartBuilder.create().uv(40, 12).cuboid(-8.0F, -16.0F, -28.0F, 16.0F, 16.0F, 4.0F, new Dilation(0.0F))
-				.uv(0, 32).cuboid(-8.0F, -4.0F, -24.0F, 16.0F, 4.0F, 8.0F, new Dilation(0.0F))
-				.uv(0, 0).cuboid(-8.0F, -16.0F, -24.0F, 16.0F, 4.0F, 8.0F, new Dilation(0.0F))
-				.uv(0, 12).cuboid(-8.0F, -16.0F, -16.0F, 16.0F, 16.0F, 4.0F, new Dilation(0.0F)), ModelTransform.origin(0.0F, 0.0F, 0.0F));
+		PartDefinition FrontTire = LightCycle.addOrReplaceChild("FrontTire", CubeListBuilder.create().texOffs(40, 12).addBox(-8.0F, -16.0F, -28.0F, 16.0F, 16.0F, 4.0F, new CubeDeformation(0.0F))
+				.texOffs(0, 32).addBox(-8.0F, -4.0F, -24.0F, 16.0F, 4.0F, 8.0F, new CubeDeformation(0.0F))
+				.texOffs(0, 0).addBox(-8.0F, -16.0F, -24.0F, 16.0F, 4.0F, 8.0F, new CubeDeformation(0.0F))
+				.texOffs(0, 12).addBox(-8.0F, -16.0F, -16.0F, 16.0F, 16.0F, 4.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 0.0F, 0.0F));
 
-		ModelPartData MainBody = LightCycle.addChild("MainBody", ModelPartBuilder.create().uv(56, 8).cuboid(-6.0F, -14.0F, -12.0F, 12.0F, 12.0F, 24.0F, new Dilation(0.0F))
-				.uv(40, 0).cuboid(-5.0F, -16.0F, 11.0F, 10.0F, 2.0F, 1.0F, new Dilation(0.0F))
-				.uv(80, 62).cuboid(-6.0F, -15.0F, -12.0F, 12.0F, 1.0F, 9.0F, new Dilation(0.0F))
-				.uv(58, 0).cuboid(-5.0F, -16.0F, -10.0F, 10.0F, 1.0F, 5.0F, new Dilation(0.0F))
-				.uv(0, 0).cuboid(3.0F, -18.0F, -8.0F, 1.0F, 2.0F, 1.0F, new Dilation(0.0F))
-				.uv(0, 0).cuboid(-4.0F, -18.0F, -8.0F, 1.0F, 2.0F, 1.0F, new Dilation(0.0F))
-				.uv(84, 1).cuboid(4.0F, -18.0F, -8.0F, 5.0F, 1.0F, 1.0F, new Dilation(0.0F))
-				.uv(90, 4).cuboid(-9.0F, -18.0F, -8.0F, 5.0F, 1.0F, 1.0F, new Dilation(0.0F)), ModelTransform.origin(0.0F, 0.0F, 0.0F));
+		PartDefinition MainBody = LightCycle.addOrReplaceChild("MainBody", CubeListBuilder.create().texOffs(56, 8).addBox(-6.0F, -14.0F, -12.0F, 12.0F, 12.0F, 24.0F, new CubeDeformation(0.0F))
+				.texOffs(40, 0).addBox(-5.0F, -16.0F, 11.0F, 10.0F, 2.0F, 1.0F, new CubeDeformation(0.0F))
+				.texOffs(80, 62).addBox(-6.0F, -15.0F, -12.0F, 12.0F, 1.0F, 9.0F, new CubeDeformation(0.0F))
+				.texOffs(58, 0).addBox(-5.0F, -16.0F, -10.0F, 10.0F, 1.0F, 5.0F, new CubeDeformation(0.0F))
+				.texOffs(0, 0).addBox(3.0F, -18.0F, -8.0F, 1.0F, 2.0F, 1.0F, new CubeDeformation(0.0F))
+				.texOffs(0, 0).addBox(-4.0F, -18.0F, -8.0F, 1.0F, 2.0F, 1.0F, new CubeDeformation(0.0F))
+				.texOffs(84, 1).addBox(4.0F, -18.0F, -8.0F, 5.0F, 1.0F, 1.0F, new CubeDeformation(0.0F))
+				.texOffs(90, 4).addBox(-9.0F, -18.0F, -8.0F, 5.0F, 1.0F, 1.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 0.0F, 0.0F));
 
-		ModelPartData RearTire = LightCycle.addChild("RearTire", ModelPartBuilder.create().uv(0, 45).cuboid(-8.0F, -16.0F, 12.0F, 16.0F, 16.0F, 4.0F, new Dilation(0.0F))
-				.uv(40, 56).cuboid(-8.0F, -16.0F, 24.0F, 16.0F, 16.0F, 4.0F, new Dilation(0.0F))
-				.uv(40, 44).cuboid(-8.0F, -4.0F, 16.0F, 16.0F, 4.0F, 8.0F, new Dilation(0.0F))
-				.uv(80, 49).cuboid(-8.0F, -16.0F, 16.0F, 16.0F, 4.0F, 8.0F, new Dilation(0.0F)), ModelTransform.origin(0.0F, 0.0F, 0.0F));
-		return TexturedModelData.of(modelData, 128, 128);
+		PartDefinition RearTire = LightCycle.addOrReplaceChild("RearTire", CubeListBuilder.create().texOffs(0, 45).addBox(-8.0F, -16.0F, 12.0F, 16.0F, 16.0F, 4.0F, new CubeDeformation(0.0F))
+				.texOffs(40, 56).addBox(-8.0F, -16.0F, 24.0F, 16.0F, 16.0F, 4.0F, new CubeDeformation(0.0F))
+				.texOffs(40, 44).addBox(-8.0F, -4.0F, 16.0F, 16.0F, 4.0F, 8.0F, new CubeDeformation(0.0F))
+				.texOffs(80, 49).addBox(-8.0F, -16.0F, 16.0F, 16.0F, 4.0F, 8.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 0.0F, 0.0F));
+		return LayerDefinition.create(modelData, 128, 128);
 	}
 
 //	@Override

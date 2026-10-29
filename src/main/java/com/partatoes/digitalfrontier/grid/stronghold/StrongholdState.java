@@ -3,13 +3,14 @@ package com.partatoes.digitalfrontier.grid.stronghold;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.partatoes.digitalfrontier.DigitalFrontier;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Uuids;
-import net.minecraft.world.PersistentState;
-import net.minecraft.world.PersistentStateType;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerLevel;
+import com.partatoes.digitalfrontier.world.ModSavedData;
+import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.saveddata.SavedDataType;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -20,17 +21,17 @@ import java.util.Optional;
 import java.util.UUID;
 
 /** The strongholds of one grid, saved with that grid's world. */
-public final class StrongholdState extends PersistentState {
+public final class StrongholdState extends SavedData {
     private static final String STRONGHOLDS_KEY = "strongholds";
     private static final Codec<Map<String, Stronghold>> CODEC = Codec.unboundedMap(Codec.STRING, Stronghold.CODEC);
     // Saved through the same NBT as before 1.21.5, so a bad entry only drops that stronghold
-    private static final PersistentStateType<StrongholdState> TYPE = new PersistentStateType<>(DigitalFrontier.MOD_ID + "_strongholds",
-            StrongholdState::new, NbtCompound.CODEC.xmap(StrongholdState::fromNbt, state -> state.writeNbt(new NbtCompound())), null);
+    private static final SavedDataType<StrongholdState> TYPE = new SavedDataType<>(Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "strongholds"),
+            StrongholdState::new, CompoundTag.CODEC.xmap(StrongholdState::fromNbt, state -> state.writeNbt(new CompoundTag())), null);
 
     private final Map<String, Stronghold> strongholds = new HashMap<>();
 
-    public static StrongholdState of(ServerWorld grid) {
-        return grid.getPersistentStateManager().getOrCreate(TYPE);
+    public static StrongholdState of(ServerLevel grid) {
+        return ModSavedData.computeIfAbsent(grid.getDataStorage(), TYPE);
     }
 
     @Nullable
@@ -44,10 +45,10 @@ public final class StrongholdState extends PersistentState {
 
     void put(String strongholdId, Stronghold stronghold) {
         strongholds.put(strongholdId, stronghold);
-        markDirty();
+        setDirty();
     }
 
-    private static StrongholdState fromNbt(NbtCompound nbt) {
+    private static StrongholdState fromNbt(CompoundTag nbt) {
         StrongholdState state = new StrongholdState();
         CODEC.parse(NbtOps.INSTANCE, nbt.get(STRONGHOLDS_KEY))
                 .resultOrPartial(error -> DigitalFrontier.LOGGER.error("Couldn't read grid strongholds: {}", error))
@@ -55,7 +56,7 @@ public final class StrongholdState extends PersistentState {
         return state;
     }
 
-    private NbtCompound writeNbt(NbtCompound nbt) {
+    private CompoundTag writeNbt(CompoundTag nbt) {
         CODEC.encodeStart(NbtOps.INSTANCE, strongholds).ifSuccess(encoded -> nbt.put(STRONGHOLDS_KEY, encoded));
         return nbt;
     }
@@ -70,7 +71,7 @@ public final class StrongholdState extends PersistentState {
                 Codec.BOOL.fieldOf("alive").forGetter(s -> s.alive),
                 Codec.LONG.optionalFieldOf("defeated_at", 0L).forGetter(s -> s.defeatedAt),
                 Codec.INT.optionalFieldOf("respawns", 0).forGetter(s -> s.respawns),
-                Uuids.CODEC.optionalFieldOf("entity").forGetter(s -> Optional.ofNullable(s.entity)),
+                UUIDUtil.AUTHLIB_CODEC.optionalFieldOf("entity").forGetter(s -> Optional.ofNullable(s.entity)),
                 Codec.INT.listOf().optionalFieldOf("progress", List.of()).forGetter(s -> s.progress),
                 Codec.LONG.optionalFieldOf("last_occupied", Long.MIN_VALUE / 2).forGetter(s -> s.lastOccupied)
         ).apply(instance, (lieutenant, alive, defeatedAt, respawns, entity, progress, lastOccupied) -> {

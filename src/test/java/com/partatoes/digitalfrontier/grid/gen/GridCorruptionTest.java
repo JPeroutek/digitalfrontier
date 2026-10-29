@@ -1,10 +1,10 @@
 package com.partatoes.digitalfrontier.grid.gen;
 
-import net.minecraft.util.DyeColor;
 import org.junit.jupiter.api.Test;
 
 import java.util.EnumSet;
 import java.util.Set;
+import net.minecraft.world.item.DyeColor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;

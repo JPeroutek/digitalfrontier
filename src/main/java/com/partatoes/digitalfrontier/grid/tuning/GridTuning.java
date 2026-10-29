@@ -3,8 +3,6 @@ package com.partatoes.digitalfrontier.grid.tuning;
 import com.partatoes.digitalfrontier.grid.layout.GridLayoutSettings;
 import com.partatoes.digitalfrontier.grid.layout.GridLevel;
 import com.partatoes.digitalfrontier.grid.layout.StreetAxis.StreetStyle;
-import net.minecraft.util.DyeColor;
-
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -13,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import net.minecraft.world.item.DyeColor;
 
 /**
  * The settings a Grid Tuning Laser lets players change, each within bounds. Every other layout setting is derived
@@ -92,7 +91,7 @@ public record GridTuning(long seed, int corruptionPercent, int cityRadius, int b
                 .put((byte) blockSize)
                 .put((byte) waypointCount)
                 .put((byte) districtColors.size());
-        districtColors.forEach(color -> buffer.put((byte) color.getIndex()));
+        districtColors.forEach(color -> buffer.put((byte) color.getId()));
         buffer.put((byte) streetStyle.ordinal());
         buffer.put((byte) levels.ordinal());
         return V3_PREFIX + Base64.getUrlEncoder().withoutPadding().encodeToString(buffer.array());
@@ -131,7 +130,7 @@ public record GridTuning(long seed, int corruptionPercent, int cityRadius, int b
                 if (id < 0 || id >= DyeColor.values().length) {
                     return Optional.empty();
                 }
-                colors.add(DyeColor.byIndex(id));
+                colors.add(DyeColor.byId(id));
             }
             // Version 1 codes predate street styles: their grids have uniform streets
             StreetStyle style = StreetStyle.UNIFORM;

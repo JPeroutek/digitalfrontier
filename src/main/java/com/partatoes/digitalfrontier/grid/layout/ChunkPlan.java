@@ -1,8 +1,8 @@
 package com.partatoes.digitalfrontier.grid.layout;
 
 import com.partatoes.digitalfrontier.grid.layout.StreetAxis.RoadClass;
+import net.minecraft.world.item.DyeColor;
 import com.partatoes.digitalfrontier.grid.layout.StreetAxis.Road;
-import net.minecraft.util.DyeColor;
 import org.jetbrains.annotations.Nullable;
 
 /**

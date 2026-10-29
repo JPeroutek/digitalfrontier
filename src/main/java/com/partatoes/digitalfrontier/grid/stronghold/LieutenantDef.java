@@ -3,15 +3,14 @@ package com.partatoes.digitalfrontier.grid.stronghold;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.partatoes.digitalfrontier.DigitalFrontier;
-import net.minecraft.loot.LootTable;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextCodecs;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.StringIdentifiable;
-
 import java.util.Optional;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.StringRepresentable;
+import net.minecraft.world.level.storage.loot.LootTable;
 
 /**
  * A stronghold lieutenant, loaded from {@code data/<namespace>/grid/lieutenant/<name>.json}. Everything that makes
@@ -23,25 +22,25 @@ import java.util.Optional;
  *                          ({@code digitalfrontier:entities/lieutenant})
  */
 public record LieutenantDef(
-        Text name,
+        Component name,
         Archetype archetype,
         Optional<Identifier> texture,
         Optional<Double> health,
         int weight,
         float minGridCorruption,
         float maxGridCorruption,
-        Optional<RegistryKey<LootTable>> lootTable,
+        Optional<ResourceKey<LootTable>> lootTable,
         Respawn respawn) {
 
     public static final Codec<LieutenantDef> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            TextCodecs.CODEC.fieldOf("name").forGetter(LieutenantDef::name),
+            ComponentSerialization.CODEC.fieldOf("name").forGetter(LieutenantDef::name),
             Archetype.CODEC.fieldOf("archetype").forGetter(LieutenantDef::archetype),
             Identifier.CODEC.optionalFieldOf("texture").forGetter(LieutenantDef::texture),
             Codec.doubleRange(1, 4096).optionalFieldOf("health").forGetter(LieutenantDef::health),
             Codec.intRange(1, 1000).optionalFieldOf("weight", 10).forGetter(LieutenantDef::weight),
             Codec.floatRange(0, 1).optionalFieldOf("min_grid_corruption", 0f).forGetter(LieutenantDef::minGridCorruption),
             Codec.floatRange(0, 1).optionalFieldOf("max_grid_corruption", 1f).forGetter(LieutenantDef::maxGridCorruption),
-            RegistryKey.createCodec(RegistryKeys.LOOT_TABLE).optionalFieldOf("loot_table").forGetter(LieutenantDef::lootTable),
+            ResourceKey.codec(Registries.LOOT_TABLE).optionalFieldOf("loot_table").forGetter(LieutenantDef::lootTable),
             Respawn.CODEC.fieldOf("respawn").forGetter(LieutenantDef::respawn)
     ).apply(instance, LieutenantDef::new));
 
@@ -66,13 +65,13 @@ public record LieutenantDef(
     }
 
     /** How a lieutenant fights. Behavior lives in code; each definition picks one. */
-    public enum Archetype implements StringIdentifiable {
+    public enum Archetype implements StringRepresentable {
         /** Commands the regime: keeps its distance, calls in enforcers, hits hard when cornered. */
         RULER("ruler", 300, 0.26, "clu64"),
         /** The silent enforcer: fast, relentless, closes distance in sudden dashes. */
         DUELIST("duelist", 220, 0.36, "rinzler64");
 
-        public static final Codec<Archetype> CODEC = StringIdentifiable.createCodec(Archetype::values);
+        public static final Codec<Archetype> CODEC = StringRepresentable.fromEnum(Archetype::values);
 
         private final String name;
         private final double defaultHealth;
@@ -95,11 +94,11 @@ public record LieutenantDef(
         }
 
         public Identifier defaultTexture() {
-            return Identifier.of(DigitalFrontier.MOD_ID, "textures/entity/" + skin + ".png");
+            return Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "textures/entity/" + skin + ".png");
         }
 
         @Override
-        public String asString() {
+        public String getSerializedName() {
             return name;
         }
     }
