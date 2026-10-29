@@ -5,6 +5,9 @@ import com.partatoes.digitalfrontier.tag.ModTags;
 import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagsProvider;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.Item;
 import java.util.concurrent.CompletableFuture;
 
 public class ModItemTagProvider extends FabricTagsProvider.ItemTagsProvider {
@@ -15,8 +18,12 @@ public class ModItemTagProvider extends FabricTagsProvider.ItemTagsProvider {
 
     @Override
     protected void addTags(HolderLookup.Provider arg) {
-        valueLookupBuilder(ModTags.Items.BIT)
-                .add(ModItems.BINARY_0)
-                .add(ModItems.BINARY_1);
+        builder(ModTags.Items.BIT)
+                .add(key(ModItems.BINARY_0))
+                .add(key(ModItems.BINARY_1));
+    }
+
+    private static ResourceKey<Item> key(Item item) {
+        return BuiltInRegistries.ITEM.getResourceKey(item).orElseThrow();
     }
 }

@@ -2,7 +2,6 @@ package com.partatoes.digitalfrontier.grid;
 
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.ByteBufferBuilder;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.partatoes.digitalfrontier.grid.exit.PortalBeams;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -10,11 +9,10 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.SubmitNodeCollection;
+import net.minecraft.client.renderer.RenderBuffers;
 import net.minecraft.client.renderer.SubmitNodeStorage;
 import net.minecraft.client.renderer.blockentity.BeaconRenderer;
-import net.minecraft.client.renderer.feature.CustomFeatureRenderer;
+import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.fog.FogRenderer;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
@@ -30,10 +28,10 @@ public final class PortalBeamRenderer {
     // The beam never looks thinner than this many blocks per block of distance, so it stays a visible line far away
     private static final double MIN_ANGULAR_RADIUS = 0.0015;
 
-    // The beacon renderer only queues its beam; this queue is drawn straight into BUFFERS, away from the fogged entity pass
+    // The beacon renderer only queues its beam; this queue is drawn on its own after the main pass, with fog off
     private static final SubmitNodeStorage QUEUE = new SubmitNodeStorage();
-    private static final CustomFeatureRenderer CUSTOM_RENDERER = new CustomFeatureRenderer();
-    private static final MultiBufferSource.BufferSource BUFFERS = MultiBufferSource.immediate(new ByteBufferBuilder(1536));
+    // Our own, since vanilla's is still drawing the frame when the main pass ends; made on the first beam
+    private static FeatureRenderDispatcher dispatcher;
     private static Identifier world;
     private static List<PortalBeams.Beam> beams = List.of();
 
@@ -49,7 +47,7 @@ public final class PortalBeamRenderer {
             world = null;
             beams = List.of();
         });
-        LevelRenderEvents.AFTER_SOLID_FEATURES.register(context -> render());
+        LevelRenderEvents.END_MAIN.register(context -> render());
     }
 
     private static void render() {
@@ -58,7 +56,7 @@ public final class PortalBeamRenderer {
         if (beams.isEmpty() || clientWorld == null || !clientWorld.dimension().identifier().equals(world)) {
             return;
         }
-        Vec3 camera = client.gameRenderer.getMainCamera().position();
+        Vec3 camera = client.gameRenderer.mainCamera().position();
         // Well inside the far plane (four times the view distance), and past the loaded terrain
         double near = client.options.getEffectiveRenderDistance() * 16 * 1.5;
         // Turning like a beacon's beam
@@ -82,14 +80,14 @@ public final class PortalBeamRenderer {
             matrices.popPose();
         }
 
-        for (SubmitNodeCollection queue : QUEUE.getSubmitsPerOrder().values()) {
-            CUSTOM_RENDERER.renderSolid(queue, BUFFERS);
-            CUSTOM_RENDERER.renderTranslucent(queue, BUFFERS);
-        }
-        QUEUE.clear();
         GpuBufferSlice fog = RenderSystem.getShaderFog();
         RenderSystem.setShaderFog(client.gameRenderer.fogRenderer.getBuffer(FogRenderer.FogMode.NONE));
-        BUFFERS.endBatch();
+        if (dispatcher == null) {
+            dispatcher = new FeatureRenderDispatcher(new RenderBuffers(1), client.getModelManager(), client.getAtlasManager(),
+                    client.font, client.gameRenderer.gameRenderState());
+        }
+        // Draws and empties the queue
+        dispatcher.renderAllFeatures(QUEUE);
         RenderSystem.setShaderFog(fog);
     }
 }

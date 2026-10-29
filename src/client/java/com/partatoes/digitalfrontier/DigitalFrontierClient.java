@@ -43,6 +43,6 @@ public class DigitalFrontierClient implements ClientModInitializer {
 
 		// Grid Tuning Laser screen, opened by the server with the laser's current grid code
 		ClientPlayNetworking.registerGlobalReceiver(GridTuningNetworking.OpenScreenPayload.ID, (payload, context) ->
-				GridTuning.fromCode(payload.code()).ifPresent(tuning -> context.client().setScreen(new GridTuningScreen(payload.pos(), tuning))));
+				GridTuning.fromCode(payload.code()).ifPresent(tuning -> context.client().gui.setScreen(new GridTuningScreen(payload.pos(), tuning))));
 	}
 }

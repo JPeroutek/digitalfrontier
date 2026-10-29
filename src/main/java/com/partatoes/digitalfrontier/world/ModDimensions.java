@@ -42,7 +42,7 @@ public class ModDimensions {
                 -64, // minY
                 384, // height
                 384, // logicalHeight
-                BlockTags.INFINIBURN_OVERWORLD,
+                context.lookup(Registries.BLOCK).getOrThrow(BlockTags.INFINIBURN_OVERWORLD),
                 0.08f, // ambientLight: a faint floor, so unlit corners aren't pitch black (the lightmap uses AMBIENT_LIGHT_COLOR below)
                 new DimensionType.MonsterSettings(ConstantInt.of(0), 0),
                 DimensionType.Skybox.END,

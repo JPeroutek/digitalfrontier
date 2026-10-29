@@ -35,7 +35,7 @@ public class LightCycleBaton extends Item {
         LightCycleEntity lightCycle = new LightCycleEntity(ModVehicles.LIGHTCYCLE, world);
         lightCycle.setPos(vec);
         if (world instanceof ServerLevel serverWorld) {
-            EntityType.createDefaultStackConfig(serverWorld, stack, player).accept(lightCycle);
+            EntityType.createDefaultStackConfig(serverWorld, stack, player).apply(lightCycle);
         }
         return lightCycle;
     }
