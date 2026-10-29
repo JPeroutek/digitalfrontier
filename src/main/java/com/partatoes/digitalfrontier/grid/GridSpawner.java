@@ -17,7 +17,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.world.Difficulty;
-import net.minecraft.world.GameRules;
+import net.minecraft.world.rule.GameRules;
 import net.minecraft.world.Heightmap;
 
 import java.util.function.Consumer;
@@ -49,7 +49,7 @@ public final class GridSpawner {
             }
             for (ServerWorld world : server.getWorlds()) {
                 GridChunkGenerator generator = GridArrival.generator(world);
-                if (generator != null && world.getGameRules().getBoolean(GameRules.DO_MOB_SPAWNING)) {
+                if (generator != null && world.getGameRules().getValue(GameRules.DO_MOB_SPAWNING)) {
                     world.getPlayers(player -> !player.isSpectator()).forEach(player -> trySpawn(world, generator, player));
                 }
             }

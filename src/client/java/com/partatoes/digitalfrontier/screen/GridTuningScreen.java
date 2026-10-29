@@ -81,28 +81,24 @@ public class GridTuningScreen extends Screen {
             blockSizes.add(size);
         }
         int third = (WIDTH - 8) / 3;
-        addDrawableChild(CyclingButtonWidget.<Integer>builder(value -> Text.literal(value + "×" + value))
+        addDrawableChild(CyclingButtonWidget.<Integer>builder(value -> Text.literal(value + "×" + value), tuning.blockSize())
                 .values(blockSizes)
-                .initially(tuning.blockSize())
                 .build(left, y, third, 20, Text.translatable("screen.digitalfrontier.grid_tuning.block_size"),
                         (button, value) -> update(tuning.withBlockSize(value))));
-        addDrawableChild(CyclingButtonWidget.<Integer>builder(value -> Text.literal(String.valueOf(value)))
+        addDrawableChild(CyclingButtonWidget.<Integer>builder(value -> Text.literal(String.valueOf(value)), tuning.waypointCount())
                 .values(GridTuning.WAYPOINT_COUNTS)
-                .initially(tuning.waypointCount())
                 .build(left + third + 4, y, third, 20, Text.translatable("screen.digitalfrontier.grid_tuning.waypoints"),
                         (button, value) -> update(tuning.withWaypointCount(value))));
         addDrawableChild(CyclingButtonWidget.<StreetAxis.StreetStyle>builder(
-                        value -> Text.translatable("screen.digitalfrontier.grid_tuning.street_style." + value.asString()))
+                        value -> Text.translatable("screen.digitalfrontier.grid_tuning.street_style." + value.asString()), tuning.streetStyle())
                 .values(StreetAxis.StreetStyle.values())
-                .initially(tuning.streetStyle())
                 .build(left + 2 * (third + 4), y, third, 20, Text.translatable("screen.digitalfrontier.grid_tuning.street_style"),
                         (button, value) -> update(tuning.withStreetStyle(value))));
         y += ROW;
 
         addDrawableChild(CyclingButtonWidget.<GridTuning.Levels>builder(
-                        value -> Text.translatable("screen.digitalfrontier.grid_tuning.levels." + value.asString()))
+                        value -> Text.translatable("screen.digitalfrontier.grid_tuning.levels." + value.asString()), tuning.levels())
                 .values(GridTuning.Levels.values())
-                .initially(tuning.levels())
                 .build(left, y, WIDTH, 20, Text.translatable("screen.digitalfrontier.grid_tuning.levels"),
                         (button, value) -> update(tuning.withLevels(value))));
         y += ROW + 12;
@@ -209,19 +205,20 @@ public class GridTuningScreen extends Screen {
         }
     }
 
-    // A swatch of one district color; bright border when the grid uses it
+    // A swatch of one district color; bright border when the grid uses it. (Text is qualified below: ButtonWidget has a
+    // nested ButtonWidget.Text that would shadow it.)
     private class ColorToggle extends ButtonWidget {
         private final DyeColor color;
 
         ColorToggle(int x, int y, DyeColor color) {
-            super(x, y, SWATCH, SWATCH, Text.translatable("color.minecraft." + color.asString()),
+            super(x, y, SWATCH, SWATCH, net.minecraft.text.Text.translatable("color.minecraft." + color.asString()),
                     button -> toggleColor(color), DEFAULT_NARRATION_SUPPLIER);
             this.color = color;
             setTooltip(Tooltip.of(getMessage()));
         }
 
         @Override
-        protected void renderWidget(DrawContext context, int mouseX, int mouseY, float delta) {
+        protected void drawIcon(DrawContext context, int mouseX, int mouseY, float delta) {
             boolean selected = tuning.districtColors().contains(color);
             int border = selected ? WHITE : (isHovered() ? GRAY : 0xFF303030);
             context.fill(getX(), getY(), getX() + width, getY() + height, border);

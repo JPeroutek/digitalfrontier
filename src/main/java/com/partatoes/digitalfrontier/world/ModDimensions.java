@@ -5,17 +5,16 @@ import com.partatoes.digitalfrontier.grid.GridKey;
 import net.minecraft.registry.Registerable;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.intprovider.ConstantIntProvider;
 import net.minecraft.world.World;
+import net.minecraft.world.attribute.BedRule;
+import net.minecraft.world.attribute.EnvironmentAttributeMap;
+import net.minecraft.world.attribute.EnvironmentAttributes;
 import net.minecraft.world.dimension.DimensionOptions;
 import net.minecraft.world.dimension.DimensionType;
-import net.minecraft.world.dimension.DimensionTypes;
-
-import java.util.Optional;
-import java.util.OptionalLong;
-
 public class ModDimensions {
     // One dimension type shared by every grid
     public static final Identifier DIGITAL_FRONTIER_TYPE_ID = Identifier.of(DigitalFrontier.MOD_ID, "digitalfrontier");
@@ -32,21 +31,25 @@ public class ModDimensions {
 
     public static void bootstrapType(Registerable<DimensionType> context) {
         context.register(DIGITAL_FRONTIER_TYPE_KEY, new DimensionType(
-                OptionalLong.of(6000), // fixedTime
+                true, // hasFixedTime: no day and night on the grid
                 false, // hasSkylight
                 false, // hasCeiling
-                false, // ultrawarm
-                false, // natural
                 1.0, // coordinateScale
-                false, // bedWorks: players always respawn outside the grid unless something says otherwise
-                false, // respawnAnchorWorks
                 -64, // minY
                 384, // height
                 384, // logicalHeight
                 BlockTags.INFINIBURN_OVERWORLD,
-                DimensionTypes.THE_END_ID, // effects
                 0.05f, // ambientLight: a faint floor, so unlit corners aren't pitch black
-                Optional.empty(), // cloudHeight: no clouds over the grid
-                new DimensionType.MonsterSettings(true, false, ConstantIntProvider.create(0), 0)));
+                new DimensionType.MonsterSettings(ConstantIntProvider.create(0), 0),
+                DimensionType.Skybox.END,
+                DimensionType.CardinalLightType.DEFAULT,
+                EnvironmentAttributeMap.builder()
+                        // Beds explode and never set a spawn: players always respawn outside the grid unless something says otherwise
+                        .with(EnvironmentAttributes.BED_RULE_GAMEPLAY, BedRule.OTHER_DIMENSION)
+                        .with(EnvironmentAttributes.RESPAWN_ANCHOR_WORKS_GAMEPLAY, false)
+                        .with(EnvironmentAttributes.CAN_START_RAID_GAMEPLAY, false)
+                        .with(EnvironmentAttributes.PIGLINS_ZOMBIFY_GAMEPLAY, false)
+                        .build(),
+                RegistryEntryList.empty())); // timelines: none, so nothing changes with the time of day
     }
 }

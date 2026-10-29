@@ -172,7 +172,7 @@ public class LieutenantEntity extends HostileEntity {
         abilityCooldown = 80;
         Vec3d toward = target.getEntityPos().subtract(getEntityPos()).normalize();
         setVelocity(toward.x * 1.6, 0.35, toward.z * 1.6);
-        velocityModified = true;
+        velocityDirty = true;
         getEntityWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_BREEZE_WIND_BURST, SoundCategory.HOSTILE, 1.0f, 1.4f);
     }
 

@@ -93,7 +93,7 @@ public final class GridTuningNetworking {
         Optional<ServerWorld> grid = GridManager.getOrCreate(player.getEntityWorld().getServer(), tuning.get().toSettings());
         if (grid.isEmpty()) {
             player.sendMessage(Text.translatable("message.digitalfrontier.grid_limit",
-                    player.getEntityWorld().getServer().getGameRules().getInt(GridManager.MAX_TUNED_GRIDS)).formatted(Formatting.RED), true);
+                    GridManager.maxTunedGrids(player.getEntityWorld().getServer())).formatted(Formatting.RED), true);
             return;
         }
         Identifier gridId = grid.get().getRegistryKey().getValue();

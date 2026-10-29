@@ -7,7 +7,7 @@ Ideas and planned work for the grid world generator that aren't scheduled into a
 
 - **Idle unloading.** Every tuned grid stays loaded from server start (Fantasy persistent worlds), costing memory
   even when nobody is in it. Unload grids with no players after a while and reopen them on demand (lasers,
-  `/grid open`, players logging in inside one). The `digitalfrontierMaxTunedGrids` game rule (default 8) caps
+  `/grid open`, players logging in inside one). The `digitalfrontier:max_tuned_grids` game rule (default 8) caps
   the cost until then.
 - **A price for new grids.** Tuning to a grid that doesn't exist yet is free once you own a Grid Tuning Laser.
   Consider consuming an item per new grid.
@@ -36,7 +36,7 @@ Ideas and planned work for the grid world generator that aren't scheduled into a
 - **Real art.** Corrupted programs, enforcers and lieutenants use the Program model with existing or generated
   skins; corruption shows as a render jitter.
 - **Trinkets.** Core Dumps keep Accessories slots (which also covers Trinkets mods through Accessories'
-  compatibility layer). Trinkets itself has no 1.21.10 release; add direct support if it updates.
+  compatibility layer). Trinkets itself has no 1.21.11 release; add direct support if it updates.
 - **More trigger ideas.** Each trigger type is one record in `Triggers`; candidates: an advancement earned, the
   number of corrupted programs near the stronghold, a Grid Tuning Laser retuned to this grid.
 
