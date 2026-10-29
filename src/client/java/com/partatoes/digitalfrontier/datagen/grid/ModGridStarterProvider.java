@@ -46,14 +46,14 @@ public class ModGridStarterProvider implements DataProvider {
     private static final BlockState BRICKS = ModBlocks.GRIDSTONE_BRICKS_BLOCK.defaultBlockState();
     private static final BlockState WALL = ModBlocks.GRIDSTONE_BRICKS_WALL.defaultBlockState();
     // White blocks are recolored to the district's color at generation time
-    private static final BlockState GLASS = Blocks.WHITE_STAINED_GLASS.defaultBlockState();
+    private static final BlockState GLASS = Blocks.STAINED_GLASS.white().defaultBlockState();
     private static final BlockState LIGHT = pattern("full");
     private static final BlockState STRIPE = pattern("center_stripe");
     private static final BlockState TARGET = pattern("thick_target");
     private static final BlockState PAD = ModBlocks.ARRIVAL_PAD.defaultBlockState();
     private static final BlockState PORTAL = ModBlocks.GRID_PORTAL.defaultBlockState();
     private static final BlockState SLAB = ModBlocks.GRIDSTONE_BRICKS_SLAB.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.BOTTOM);
-    private static final BlockState DARK_GLASS = Blocks.BLACK_STAINED_GLASS.defaultBlockState();
+    private static final BlockState DARK_GLASS = Blocks.STAINED_GLASS.black().defaultBlockState();
     private static final BlockState UPLINK = ModBlocks.STRONGHOLD_UPLINK.defaultBlockState();
     private static final BlockState RED_LIGHT = pattern("full", DyeColor.RED);
     private static final BlockState RED_STRIPE = pattern("center_stripe", DyeColor.RED);

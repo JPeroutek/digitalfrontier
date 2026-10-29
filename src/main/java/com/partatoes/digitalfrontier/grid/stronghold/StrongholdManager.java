@@ -19,6 +19,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -319,7 +320,7 @@ public final class StrongholdManager {
 
     private static boolean playerNear(ServerLevel grid, BlockPos center) {
         for (ServerPlayer player : grid.players()) {
-            if (!player.isSpectator() && player.distanceToSqr(center.getCenter()) <= (double) PRESENCE_RADIUS * PRESENCE_RADIUS) {
+            if (!player.isSpectator() && player.distanceToSqr(Vec3.atCenterOf(center)) <= (double) PRESENCE_RADIUS * PRESENCE_RADIUS) {
                 return true;
             }
         }

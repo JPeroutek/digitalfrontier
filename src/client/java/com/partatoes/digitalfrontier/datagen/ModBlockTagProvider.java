@@ -5,7 +5,9 @@ import com.partatoes.digitalfrontier.tag.ModTags;
 import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagsProvider;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.tags.TagAppender;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.Block;
 import java.util.concurrent.CompletableFuture;
@@ -18,55 +20,59 @@ public class ModBlockTagProvider extends FabricTagsProvider.BlockTagsProvider {
 
     @Override
     protected void addTags(HolderLookup.Provider arg) {
-        valueLookupBuilder(ModTags.Blocks.GRID_BLOCK)
-                .add(ModBlocks.GRIDSTONE_BLOCK)
-                .add(ModBlocks.CRACKED_GRIDSTONE_BLOCK)
-                .add(ModBlocks.GRIDSTONE_BRICKS_BLOCK)
-                .add(ModBlocks.LUMINANCE_ORE)
-                .add(ModBlocks.BOOSTER_BLOCK)
-                .add(ModBlocks.GRIDSTONE_STAIRS)
-                .add(ModBlocks.GRIDSTONE_SLAB)
-                .add(ModBlocks.GRIDSTONE_WALL)
-                .add(ModBlocks.CRACKED_GRIDSTONE_STAIRS)
-                .add(ModBlocks.CRACKED_GRIDSTONE_SLAB)
-                .add(ModBlocks.CRACKED_GRIDSTONE_WALL)
-                .add(ModBlocks.GRIDSTONE_BRICKS_STAIRS)
-                .add(ModBlocks.GRIDSTONE_BRICKS_SLAB)
-                .add(ModBlocks.GRIDSTONE_BRICKS_WALL)
-                .add(ModBlocks.GRIDSTONE_PRESSURE_PLATE)
-                .add(ModBlocks.LUMINANCE_ORE)
-                .add(ModBlocks.GRIDSTONE_WALL);
+        builder(ModTags.Blocks.GRID_BLOCK)
+                .add(key(ModBlocks.GRIDSTONE_BLOCK))
+                .add(key(ModBlocks.CRACKED_GRIDSTONE_BLOCK))
+                .add(key(ModBlocks.GRIDSTONE_BRICKS_BLOCK))
+                .add(key(ModBlocks.LUMINANCE_ORE))
+                .add(key(ModBlocks.BOOSTER_BLOCK))
+                .add(key(ModBlocks.GRIDSTONE_STAIRS))
+                .add(key(ModBlocks.GRIDSTONE_SLAB))
+                .add(key(ModBlocks.GRIDSTONE_WALL))
+                .add(key(ModBlocks.CRACKED_GRIDSTONE_STAIRS))
+                .add(key(ModBlocks.CRACKED_GRIDSTONE_SLAB))
+                .add(key(ModBlocks.CRACKED_GRIDSTONE_WALL))
+                .add(key(ModBlocks.GRIDSTONE_BRICKS_STAIRS))
+                .add(key(ModBlocks.GRIDSTONE_BRICKS_SLAB))
+                .add(key(ModBlocks.GRIDSTONE_BRICKS_WALL))
+                .add(key(ModBlocks.GRIDSTONE_PRESSURE_PLATE))
+                .add(key(ModBlocks.LUMINANCE_ORE))
+                .add(key(ModBlocks.GRIDSTONE_WALL));
 
-        TagAppender<Block, Block> pickaxeMineable = valueLookupBuilder(BlockTags.MINEABLE_WITH_PICKAXE);
+        TagAppender<Block> pickaxeMineable = builder(BlockTags.MINEABLE_WITH_PICKAXE);
         ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.values()
-                .forEach(colorMapping -> colorMapping.values().forEach(pickaxeMineable::add));
+                .forEach(colorMapping -> colorMapping.values().forEach(block -> pickaxeMineable.add(key(block))));
         pickaxeMineable
-                .add(ModBlocks.GRIDSTONE_BLOCK)
-                .add(ModBlocks.CRACKED_GRIDSTONE_BLOCK)
-                .add(ModBlocks.GRIDSTONE_BRICKS_BLOCK)
-                .add(ModBlocks.LUMINANCE_ORE)
-                .add(ModBlocks.BOOSTER_BLOCK)
-                .add(ModBlocks.GRIDSTONE_STAIRS)
-                .add(ModBlocks.GRIDSTONE_SLAB)
-                .add(ModBlocks.GRIDSTONE_WALL)
-                .add(ModBlocks.CRACKED_GRIDSTONE_STAIRS)
-                .add(ModBlocks.CRACKED_GRIDSTONE_SLAB)
-                .add(ModBlocks.CRACKED_GRIDSTONE_WALL)
-                .add(ModBlocks.GRIDSTONE_BRICKS_STAIRS)
-                .add(ModBlocks.GRIDSTONE_BRICKS_SLAB)
-                .add(ModBlocks.GRIDSTONE_BRICKS_WALL)
-                .add(ModBlocks.GRIDSTONE_PRESSURE_PLATE)
-                .add(ModBlocks.ARRIVAL_PAD)
-                .add(ModBlocks.DIGITIZING_LASER)
-                .add(ModBlocks.GRID_TUNING_LASER)
-                .add(ModBlocks.STRONGHOLD_UPLINK);
+                .add(key(ModBlocks.GRIDSTONE_BLOCK))
+                .add(key(ModBlocks.CRACKED_GRIDSTONE_BLOCK))
+                .add(key(ModBlocks.GRIDSTONE_BRICKS_BLOCK))
+                .add(key(ModBlocks.LUMINANCE_ORE))
+                .add(key(ModBlocks.BOOSTER_BLOCK))
+                .add(key(ModBlocks.GRIDSTONE_STAIRS))
+                .add(key(ModBlocks.GRIDSTONE_SLAB))
+                .add(key(ModBlocks.GRIDSTONE_WALL))
+                .add(key(ModBlocks.CRACKED_GRIDSTONE_STAIRS))
+                .add(key(ModBlocks.CRACKED_GRIDSTONE_SLAB))
+                .add(key(ModBlocks.CRACKED_GRIDSTONE_WALL))
+                .add(key(ModBlocks.GRIDSTONE_BRICKS_STAIRS))
+                .add(key(ModBlocks.GRIDSTONE_BRICKS_SLAB))
+                .add(key(ModBlocks.GRIDSTONE_BRICKS_WALL))
+                .add(key(ModBlocks.GRIDSTONE_PRESSURE_PLATE))
+                .add(key(ModBlocks.ARRIVAL_PAD))
+                .add(key(ModBlocks.DIGITIZING_LASER))
+                .add(key(ModBlocks.GRID_TUNING_LASER))
+                .add(key(ModBlocks.STRONGHOLD_UPLINK));
 
-        valueLookupBuilder(BlockTags.NEEDS_IRON_TOOL)
-                .add(ModBlocks.LUMINANCE_ORE);
+        builder(BlockTags.NEEDS_IRON_TOOL)
+                .add(key(ModBlocks.LUMINANCE_ORE));
 
-        valueLookupBuilder(BlockTags.WALLS)
-                .add(ModBlocks.GRIDSTONE_WALL)
-                .add(ModBlocks.CRACKED_GRIDSTONE_WALL)
-                .add(ModBlocks.GRIDSTONE_BRICKS_WALL);
+        builder(BlockTags.WALLS)
+                .add(key(ModBlocks.GRIDSTONE_WALL))
+                .add(key(ModBlocks.CRACKED_GRIDSTONE_WALL))
+                .add(key(ModBlocks.GRIDSTONE_BRICKS_WALL));
+    }
+
+    private static ResourceKey<Block> key(Block block) {
+        return BuiltInRegistries.BLOCK.getResourceKey(block).orElseThrow();
     }
 }

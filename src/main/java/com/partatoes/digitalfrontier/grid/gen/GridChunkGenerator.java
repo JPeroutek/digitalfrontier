@@ -26,7 +26,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CrossCollisionBlock;
 import net.minecraft.world.level.block.SignBlock;
 import net.minecraft.world.level.block.WallBlock;
-import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.entity.BlockEntityTypes;
 import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
@@ -92,7 +92,7 @@ public class GridChunkGenerator extends ChunkGenerator {
                     }
                     chunk.setBlockState(pos.set(chunkPos.getMinBlockX() + localX, y, chunkPos.getMinBlockZ() + localZ), state, 0);
                     if (connectsToNeighbours(state)) {
-                        chunk.markPosForPostprocessing(pos);
+                        chunk.markPosForPostProcessing(pos);
                     }
                     oceanFloor.update(localX, y, localZ, state);
                     worldSurface.update(localX, y, localZ, state);
@@ -118,7 +118,7 @@ public class GridChunkGenerator extends ChunkGenerator {
                 continue;
             }
             CompoundTag nbt = new CompoundTag();
-            nbt.putString("id", BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(BlockEntityType.SIGN).toString());
+            nbt.putString("id", BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(BlockEntityTypes.SIGN).toString());
             nbt.putInt("x", pos.getX());
             nbt.putInt("y", pos.getY());
             nbt.putInt("z", pos.getZ());

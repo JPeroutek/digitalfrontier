@@ -36,7 +36,7 @@ public final class GridExit {
         if (ModDimensions.isGrid(world)) {
             world = server.overworld();
         }
-        Vec3 spawn = player.adjustSpawnLocation(world, server.getRespawnData().pos()).getBottomCenter();
+        Vec3 spawn = Vec3.atBottomCenterOf(player.adjustSpawnLocation(world, server.getRespawnData().pos()));
         return new TeleportTransition(world, spawn, Vec3.ZERO, player.getYRot(), player.getXRot(), TeleportTransition.DO_NOTHING);
     }
 }

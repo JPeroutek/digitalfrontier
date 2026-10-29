@@ -79,7 +79,7 @@ public final class GridArrival {
         return gridWorld(server, ref.grid()).flatMap(world -> {
             GridChunkGenerator generator = generator(world);
             return generator.layout().terminal(ref.terminal()).map(terminal -> new TeleportTransition(world,
-                    generator.arrivalPos(terminal).getBottomCenter(), Vec3.ZERO, yaw, pitch, TeleportTransition.DO_NOTHING));
+                    Vec3.atBottomCenterOf(generator.arrivalPos(terminal)), Vec3.ZERO, yaw, pitch, TeleportTransition.DO_NOTHING));
         });
     }
 

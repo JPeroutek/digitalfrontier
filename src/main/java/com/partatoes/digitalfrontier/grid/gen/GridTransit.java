@@ -785,7 +785,7 @@ final class GridTransit {
             return BRICKS;
         }
         if (lateral == 5 || lateral == 10) {
-            return DistrictPalette.remap(Blocks.WHITE_STAINED_GLASS.defaultBlockState(), transit.district());
+            return DistrictPalette.remap(Blocks.STAINED_GLASS.white().defaultBlockState(), transit.district());
         }
         return AIR;
     }

@@ -193,7 +193,7 @@ public class ModBlocks {
                     .strength(-1f, 3600000f) // Hardness -1, unbreakable, same explosive resistance as bedrock
                     .noOcclusion()
                     .lightLevel((state) -> 4)
-                    .emissiveRendering((state, world, pos) -> true) // Should always create light, regardless of state.  This may not be needed?
+                    .emissiveRendering(state -> true) // Should always create light, regardless of state.  This may not be needed?
     ));
 
     public static final Identifier LIGHT_BARRIER_EMITTER_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "light_barrier_emitter");
@@ -204,7 +204,7 @@ public class ModBlocks {
                     .strength(1.5f)
 //                    .nonOpaque()
                     .lightLevel((state) -> state.getValue(LightBarrierEmitterBlock.POWERED) ? 4 : 0)
-                    .emissiveRendering((state, world, pos) -> state.getValue(LightBarrierEmitterBlock.POWERED)) // Should always create light, regardless of state.  This may not be needed?
+                    .emissiveRendering(state -> state.getValue(LightBarrierEmitterBlock.POWERED)) // Should always create light, regardless of state.  This may not be needed?
             ));
 
     // Marks where players arrive in a grid terminal template; the generator looks for it when loading parts
