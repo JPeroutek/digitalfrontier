@@ -164,7 +164,7 @@ public class CorruptedProgramEntity extends PathfinderMob {
             double x = getX() + (random.nextDouble() - 0.5) * 2 * range;
             double z = getZ() + (random.nextDouble() - 0.5) * 2 * range;
             BlockPos target = BlockPos.containing(x, getY(), z);
-            if (randomTeleport(target.getX() + 0.5, target.getY(), target.getZ() + 0.5, true)) {
+            if (randomTeleport(target.getX() + 0.5, target.getY(), target.getZ() + 0.5, true, state -> false)) {
                 level().playSound(null, getX(), getY(), getZ(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.NEUTRAL, 0.4f, 2.0f);
                 return;
             }

@@ -41,6 +41,7 @@ public class ModItems {
                     .setId(ResourceKey.create(Registries.ITEM, BYTE_ID))));
     public static final Identifier COAL_DUST_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "coal_dust");
     public static final Item COAL_DUST = registerItem(COAL_DUST_ID, new Item(new Item.Properties()
+            .cookingFuel(ModFuelItems.COAL_DUST_BURN_TIME)
             .setId(ResourceKey.create(Registries.ITEM, COAL_DUST_ID))));
     public static final Identifier LIGHTCYCLE_BATON_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "lightcycle_baton");
     public static final Item LIGHTCYCLE_BATON = registerItem(LIGHTCYCLE_BATON_ID, new LightCycleBaton(new Item.Properties()

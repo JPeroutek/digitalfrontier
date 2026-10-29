@@ -89,25 +89,25 @@ dependencies {
 
 	// For testing purposes...
 	// Release jar from Modrinth bundles worldedit-core; the EngineHub SNAPSHOTs drift out of sync with each other
-	localRuntime "maven.modrinth:worldedit:7.4.5"
+	localRuntime "maven.modrinth:worldedit:7.4.6"
 	// Maps (handy for checking grid layouts), block/entity tooltips, and recipe/item lookup
-	localRuntime "maven.modrinth:xaeros-minimap:fabric-26.2-26.6.2"
-	localRuntime "maven.modrinth:xaeros-world-map:fabric-26.2-1.47.2"
-	localRuntime "maven.modrinth:jade:26.2.11+fabric"
-	// REI, chosen when neither JEI nor EMI had a Fabric build (EMI still has none for 26.2); from its own maven, which brings its dependencies
-	localRuntime "me.shedaniel:RoughlyEnoughItems-fabric:26.2.821"
+	localRuntime "maven.modrinth:xaeros-minimap:fabric-26.3-26.6.2"
+	localRuntime "maven.modrinth:xaeros-world-map:fabric-26.3-1.47.2"
+	localRuntime "maven.modrinth:jade:26.3.5+fabric"
+	// REI, chosen when neither JEI nor EMI had a Fabric build (EMI still has none for 26.3); from its own maven, which brings its dependencies
+	localRuntime "me.shedaniel:RoughlyEnoughItems-fabric:26.3.824"
 	// Sodium for frame rate
-	localRuntime "maven.modrinth:sodium:mc26.2-0.9.2-fabric"
+	localRuntime "maven.modrinth:sodium:mc26.3-0.9.3-beta.1-fabric"
 	// Trinkets Updated, to try the kept-trinkets integration
 	localRuntime "maven.modrinth:trinkets-updated:${project.trinkets_version}"
 	// Distant Horizons and Chunky crash together (DH calls into Chunky before Chunky has started), so it's one or the
 	// other: Distant Horizons to see far out (the derelict sectors from the city), or with -Ppregen, Chunky to
 	// pregenerate chunks, e.g. /chunky world digitalfrontier:default, /chunky radius 3000, /chunky start.
-	// Both by version id: DH 3.3.3-26.2; Chunky 1.5.3, a number its Fabric, Forge and NeoForge builds share
+	// Both by version id: DH 3.3.4-26.3; Chunky 1.5.3, a number its Fabric, Forge and NeoForge builds share
 	if (project.hasProperty("pregen")) {
 		localRuntime "maven.modrinth:chunky:4Eotm6ov"
 	} else {
-		localRuntime "maven.modrinth:distanthorizons:aAow4a9f"
+		localRuntime "maven.modrinth:distanthorizons:TGgEbP9A"
 	}
 
 	// Runs JUnit tests inside Fabric Loader so Minecraft classes are available

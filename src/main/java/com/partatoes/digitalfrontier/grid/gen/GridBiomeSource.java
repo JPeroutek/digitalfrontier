@@ -9,6 +9,7 @@ import java.util.stream.Stream;
 import net.minecraft.core.Holder;
 import net.minecraft.core.QuartPos;
 import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.biome.BiomeResolver;
 import net.minecraft.world.level.biome.BiomeSource;
 import net.minecraft.world.level.biome.Climate;
 
@@ -52,11 +53,13 @@ public class GridBiomeSource extends BiomeSource {
     }
 
     @Override
-    public Holder<Biome> getNoiseBiome(int biomeX, int biomeY, int biomeZ, Climate.Sampler noise) {
-        int chunkX = QuartPos.toSection(biomeX);
-        int chunkZ = QuartPos.toSection(biomeZ);
-        // Only strong corruption changes the biome; lighter corruption just changes blocks
-        boolean corrupted = CorruptionTier.fromIntensity(layout.corruptionAt(chunkX, chunkZ)).compareTo(CorruptionTier.CORRUPTED) >= 0;
-        return biomes.forZone(layout.zoneAt(chunkX, chunkZ), corrupted);
+    public BiomeResolver createResolver(Climate.Sampler noise) {
+        return (biomeX, biomeY, biomeZ) -> {
+            int chunkX = QuartPos.toSection(biomeX);
+            int chunkZ = QuartPos.toSection(biomeZ);
+            // Only strong corruption changes the biome; lighter corruption just changes blocks
+            boolean corrupted = CorruptionTier.fromIntensity(layout.corruptionAt(chunkX, chunkZ)).compareTo(CorruptionTier.CORRUPTED) >= 0;
+            return biomes.forZone(layout.zoneAt(chunkX, chunkZ), corrupted);
+        };
     }
 }

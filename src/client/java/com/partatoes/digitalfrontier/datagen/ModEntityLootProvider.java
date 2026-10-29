@@ -16,8 +16,7 @@ import net.minecraft.world.level.storage.loot.entries.LootItem;
 import net.minecraft.world.level.storage.loot.functions.SetItemCountFunction;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.minecraft.world.level.storage.loot.predicates.LootItemRandomChanceCondition;
-import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
-import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
+import net.minecraft.world.level.storage.loot.providers.number.ints.ContextIntProviders;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 
@@ -41,15 +40,15 @@ public class ModEntityLootProvider extends SimpleFabricLootTableSubProvider {
     private static LootTable.Builder lieutenantLoot(Item rareDrop) {
         return LootTable.lootTable()
                 .withPool(LootPool.lootPool()
-                        .setRolls(ConstantValue.exactly(1))
+                        .setRolls(ContextIntProviders.exactly(1))
                         .add(LootItem.lootTableItem(ModItems.ESCAPE_KEY)))
                 .withPool(LootPool.lootPool()
-                        .setRolls(ConstantValue.exactly(1))
+                        .setRolls(ContextIntProviders.exactly(1))
                         .when(LootItemRandomChanceCondition.randomChance(0.25f))
                         .add(LootItem.lootTableItem(rareDrop)))
                 .withPool(LootPool.lootPool()
-                        .setRolls(ConstantValue.exactly(1))
+                        .setRolls(ContextIntProviders.exactly(1))
                         .add(LootItem.lootTableItem(ModItems.LUMINESSENCE)
-                                .apply(SetItemCountFunction.setCount(UniformGenerator.between(2, 5)))));
+                                .apply(SetItemCountFunction.setCount(ContextIntProviders.between(2, 5)))));
     }
 }

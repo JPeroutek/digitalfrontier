@@ -9,7 +9,7 @@ against, published, or bundled in the mod's jar.
 | WorldEdit | Building and editing templates (see [grid-structures.md](grid-structures.md)) |
 | Xaero's Minimap and World Map | Checking grid layouts from above |
 | Jade | Tooltips naming the block or entity you're looking at |
-| REI (Roughly Enough Items) | Item and recipe lookup; chosen when neither JEI nor EMI had a Fabric build (EMI still has none for 26.2) |
+| REI (Roughly Enough Items) | Item and recipe lookup; chosen when neither JEI nor EMI had a Fabric build (EMI still has none for 26.3) |
 | Sodium | Frame rate |
 | Trinkets Updated | Trying the kept-trinkets integration: equip a trinket, die in a grid holding a Core Dump |
 | Distant Horizons | Seeing far out, e.g. the derelict sectors from the city; set its render distance in its settings |

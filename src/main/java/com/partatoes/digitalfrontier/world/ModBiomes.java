@@ -6,6 +6,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.ARGB;
 import net.minecraft.world.attribute.AmbientParticle;
 import net.minecraft.world.attribute.AmbientSounds;
 import net.minecraft.world.attribute.EnvironmentAttributes;
@@ -43,10 +44,10 @@ public class ModBiomes {
                 .hasPrecipitation(false)
                 .temperature(0.5f)
                 .downfall(0.5f)
-                .setAttribute(EnvironmentAttributes.FOG_COLOR, fogColor)
-                .setAttribute(EnvironmentAttributes.SKY_COLOR, 0x000000)
+                .setAttribute(EnvironmentAttributes.FOG_COLOR, ARGB.vector3fFromRGB24(fogColor))
+                .setAttribute(EnvironmentAttributes.SKY_COLOR, ARGB.vector3fFromRGB24(0x000000))
                 // The Sea of Simulation: dark, and darker under the surface
-                .setAttribute(EnvironmentAttributes.WATER_FOG_COLOR, 0x02090C)
+                .setAttribute(EnvironmentAttributes.WATER_FOG_COLOR, ARGB.vector3fFromRGB24(0x02090C))
                 .setAttribute(EnvironmentAttributes.AMBIENT_SOUNDS, AmbientSounds.LEGACY_CAVE_SETTINGS)
                 .specialEffects(new BiomeSpecialEffects.Builder().waterColor(0x103842).build());
         if (particles != null) {
