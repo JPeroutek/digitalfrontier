@@ -26,7 +26,7 @@ public final class GridExit {
         player.resetFallDistance();
         target.newLevel().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BEACON_DEACTIVATE,
                 SoundSource.PLAYERS, 1.0f, 1.2f);
-        player.displayClientMessage(Component.translatable("message.digitalfrontier.exited_grid"), true);
+        player.sendOverlayMessage(Component.translatable("message.digitalfrontier.exited_grid"));
     }
 
     /** The world spawn, or the overworld at the same spot if a command has put the world spawn in a grid. */

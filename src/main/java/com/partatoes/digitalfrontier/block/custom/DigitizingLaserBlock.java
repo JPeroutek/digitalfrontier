@@ -108,17 +108,17 @@ public class DigitizingLaserBlock extends BaseEntityBlock {
         }
         Optional<TerminalRef> link = laser.linkOrNearest(serverWorld);
         if (link.isEmpty()) {
-            serverPlayer.displayClientMessage(Component.translatable("message.digitalfrontier.terminal_unreachable").withStyle(ChatFormatting.RED), true);
+            serverPlayer.sendOverlayMessage(Component.translatable("message.digitalfrontier.terminal_unreachable").withStyle(ChatFormatting.RED));
             return InteractionResult.SUCCESS;
         }
         laser.startScan(serverPlayer);
-        serverPlayer.displayClientMessage(Component.translatable("message.digitalfrontier.digitizing", GridArrival.terminalName(link.get().terminal())), true);
+        serverPlayer.sendOverlayMessage(Component.translatable("message.digitalfrontier.digitizing", GridArrival.terminalName(link.get().terminal())));
         return InteractionResult.SUCCESS;
     }
 
     private static boolean usable(ServerLevel world, ServerPlayer player) {
         if (ModDimensions.isGrid(world)) {
-            player.displayClientMessage(Component.translatable("message.digitalfrontier.laser_inside_grid").withStyle(ChatFormatting.RED), true);
+            player.sendOverlayMessage(Component.translatable("message.digitalfrontier.laser_inside_grid").withStyle(ChatFormatting.RED));
             return false;
         }
         return true;
@@ -132,7 +132,7 @@ public class DigitizingLaserBlock extends BaseEntityBlock {
         }
         Optional<TerminalRef> current = laser.linkOrNearest(world);
         if (current.isEmpty()) {
-            player.displayClientMessage(Component.translatable("message.digitalfrontier.terminal_unreachable").withStyle(ChatFormatting.RED), true);
+            player.sendOverlayMessage(Component.translatable("message.digitalfrontier.terminal_unreachable").withStyle(ChatFormatting.RED));
             return;
         }
         Identifier grid = current.get().grid();
@@ -150,7 +150,7 @@ public class DigitizingLaserBlock extends BaseEntityBlock {
         laser.setLink(next);
         world.playSound(null, laser.getBlockPos(), SoundEvents.NOTE_BLOCK_CHIME.value(), SoundSource.BLOCKS, 0.8f,
                 0.8f + 0.1f * (options.indexOf(next.terminal())));
-        player.displayClientMessage(Component.translatable("message.digitalfrontier.laser_tuned", GridArrival.terminalName(next.terminal()),
-                options.indexOf(next.terminal()) + 1, options.size()), true);
+        player.sendOverlayMessage(Component.translatable("message.digitalfrontier.laser_tuned", GridArrival.terminalName(next.terminal()),
+                options.indexOf(next.terminal()) + 1, options.size()));
     }
 }

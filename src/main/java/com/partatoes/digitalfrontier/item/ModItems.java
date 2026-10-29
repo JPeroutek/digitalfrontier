@@ -5,8 +5,8 @@ import com.partatoes.digitalfrontier.item.custom.DimensionTeleporterItem;
 import com.partatoes.digitalfrontier.item.custom.EscapeKeyItem;
 import com.partatoes.digitalfrontier.item.custom.LightCycleBaton;
 import com.partatoes.digitalfrontier.item.custom.LuminanceOreDetector;
-import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroupEntries;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTabOutput;
+import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -77,11 +77,11 @@ public class ModItems {
 
     public static void registerModItems() {
         DigitalFrontier.LOGGER.info("Registering Mod Items for " + DigitalFrontier.MOD_ID);
-        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.INGREDIENTS).register(ModItems::addItemsToIngredientTabItemGroup);
-        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.FOOD_AND_DRINKS).register(ModItems::addItemsToFoodTabItemGroup);
+        CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.INGREDIENTS).register(ModItems::addItemsToIngredientTabItemGroup);
+        CreativeModeTabEvents.modifyOutputEvent(CreativeModeTabs.FOOD_AND_DRINKS).register(ModItems::addItemsToFoodTabItemGroup);
     }
 
-    private static void addItemsToIngredientTabItemGroup(FabricItemGroupEntries entries) {
+    private static void addItemsToIngredientTabItemGroup(FabricCreativeModeTabOutput entries) {
         entries.accept(BINARY_0);
         entries.accept(BINARY_1);
         entries.accept(PIXEL_DUST);
@@ -89,7 +89,7 @@ public class ModItems {
         entries.accept(COAL_DUST);
     }
 
-    private static void addItemsToFoodTabItemGroup(FabricItemGroupEntries entries) {
+    private static void addItemsToFoodTabItemGroup(FabricCreativeModeTabOutput entries) {
         entries.accept(BYTE);
     }
 }

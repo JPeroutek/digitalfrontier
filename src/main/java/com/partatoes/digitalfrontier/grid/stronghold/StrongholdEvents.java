@@ -3,7 +3,7 @@ package com.partatoes.digitalfrontier.grid.stronghold;
 import com.partatoes.digitalfrontier.entity.custom.ProgramEntity;
 import com.partatoes.digitalfrontier.grid.arrival.GridArrival;
 import com.partatoes.digitalfrontier.grid.arrival.GridMemory;
-import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerEntityLevelChangeEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
@@ -21,7 +21,7 @@ public final class StrongholdEvents {
     }
 
     public static void register() {
-        ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register((player, origin, destination) -> {
+        ServerEntityLevelChangeEvents.AFTER_PLAYER_CHANGE_LEVEL.register((player, origin, destination) -> {
             if (GridArrival.generator(destination) != null) {
                 // Arriving through a laser records the terminal only after this, so a first visit still looks new
                 boolean newPlayer = player.getAttachedOrCreate(GridMemory.TYPE).discovered(destination.dimension().identifier()).isEmpty();

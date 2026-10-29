@@ -3,8 +3,8 @@ package com.partatoes.digitalfrontier.datagen;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.entity.ModEntities;
 import com.partatoes.digitalfrontier.item.ModItems;
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
-import net.fabricmc.fabric.api.datagen.v1.provider.SimpleFabricLootTableProvider;
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
+import net.fabricmc.fabric.api.datagen.v1.provider.SimpleFabricLootTableSubProvider;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
@@ -21,12 +21,12 @@ import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 
-public class ModEntityLootProvider extends SimpleFabricLootTableProvider {
+public class ModEntityLootProvider extends SimpleFabricLootTableSubProvider {
     // Named by the_sovereign.json's "loot_table"; any lieutenant definition can name a table like this
     public static final ResourceKey<LootTable> SOVEREIGN_LOOT = ResourceKey.create(Registries.LOOT_TABLE,
             Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "entities/lieutenant/the_sovereign"));
 
-    public ModEntityLootProvider(FabricDataOutput output, CompletableFuture<HolderLookup.Provider> registryLookup) {
+    public ModEntityLootProvider(FabricPackOutput output, CompletableFuture<HolderLookup.Provider> registryLookup) {
         super(output, registryLookup, LootContextParamSets.ENTITY);
     }
 

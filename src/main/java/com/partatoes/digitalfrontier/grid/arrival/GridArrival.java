@@ -89,7 +89,7 @@ public final class GridArrival {
                 SoundSource.PLAYERS, 1.0f, 1.5f);
         GridMemory memory = player.getAttachedOrCreate(GridMemory.TYPE);
         player.setAttached(GridMemory.TYPE, memory.withArrival(ref));
-        player.displayClientMessage(message, true);
+        player.sendOverlayMessage(message);
     }
 
     public static Component terminalName(String terminalId) {
@@ -123,8 +123,8 @@ public final class GridArrival {
         GridMemory memory = player.getAttachedOrCreate(GridMemory.TYPE);
         if (!memory.hasDiscovered(ref)) {
             player.setAttached(GridMemory.TYPE, memory.withDiscovered(ref));
-            player.displayClientMessage(Component.translatable("message.digitalfrontier.terminal_discovered", terminalName(terminal.id()))
-                    .withStyle(ChatFormatting.AQUA), true);
+            player.sendOverlayMessage(Component.translatable("message.digitalfrontier.terminal_discovered", terminalName(terminal.id()))
+                    .withStyle(ChatFormatting.AQUA));
         }
     }
 }

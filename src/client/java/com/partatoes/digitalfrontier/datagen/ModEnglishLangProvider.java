@@ -6,7 +6,7 @@ import com.partatoes.digitalfrontier.entity.ModVehicles;
 import com.partatoes.digitalfrontier.item.ModItemGroups;
 import com.partatoes.digitalfrontier.item.ModItems;
 import com.partatoes.digitalfrontier.tag.ModTags;
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricLanguageProvider;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
@@ -14,7 +14,7 @@ import net.minecraft.resources.ResourceKey;
 import java.util.concurrent.CompletableFuture;
 
 public class ModEnglishLangProvider extends FabricLanguageProvider {
-    public ModEnglishLangProvider(FabricDataOutput dataOutput, CompletableFuture<HolderLookup.Provider> registryLookup) {
+    public ModEnglishLangProvider(FabricPackOutput dataOutput, CompletableFuture<HolderLookup.Provider> registryLookup) {
         super(dataOutput, registryLookup);
     }
 

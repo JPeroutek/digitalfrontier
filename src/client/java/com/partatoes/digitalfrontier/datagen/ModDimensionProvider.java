@@ -8,7 +8,7 @@ import com.partatoes.digitalfrontier.grid.gen.GridChunkGenerator;
 import com.partatoes.digitalfrontier.grid.layout.GridLayoutSettings;
 import com.partatoes.digitalfrontier.world.ModBiomes;
 import com.partatoes.digitalfrontier.world.ModDimensions;
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
 import net.minecraft.core.HolderGetter;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.Registries;
@@ -26,7 +26,7 @@ public class ModDimensionProvider implements DataProvider {
     private final PackOutput.PathProvider pathResolver;
     private final CompletableFuture<HolderLookup.Provider> registriesFuture;
 
-    public ModDimensionProvider(FabricDataOutput output, CompletableFuture<HolderLookup.Provider> registriesFuture) {
+    public ModDimensionProvider(FabricPackOutput output, CompletableFuture<HolderLookup.Provider> registriesFuture) {
         this.pathResolver = output.createRegistryElementsPathProvider(Registries.LEVEL_STEM);
         this.registriesFuture = registriesFuture;
     }

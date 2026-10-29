@@ -84,7 +84,7 @@ public final class StrongholdManager {
             boolean countedHere = false;
             for (Trigger leaf : lieutenant.respawn().leaves()) {
                 if (leaf instanceof Trigger.EventTrigger eventTrigger && eventTrigger.matches(event, context)
-                        && grid.random.nextDouble() < context.chance(leaf)) {
+                        && grid.getRandom().nextDouble() < context.chance(leaf)) {
                     int index = lieutenant.respawn().index(leaf);
                     stronghold.progress.set(index, stronghold.progress.get(index) + 1);
                     countedHere = true;
@@ -224,7 +224,7 @@ public final class StrongholdManager {
     private static void latchStates(ServerLevel grid, Stronghold stronghold, Lieutenant lieutenant, Context context) {
         for (Trigger leaf : lieutenant.respawn().leaves()) {
             double chance = context.chance(leaf);
-            if (leaf instanceof Trigger.StateTrigger state && chance < 1 && state.holds(context) && grid.random.nextDouble() < chance) {
+            if (leaf instanceof Trigger.StateTrigger state && chance < 1 && state.holds(context) && grid.getRandom().nextDouble() < chance) {
                 int index = lieutenant.respawn().index(leaf);
                 if (stronghold.progress.get(index) == 0) {
                     stronghold.progress.set(index, 1);
@@ -270,7 +270,7 @@ public final class StrongholdManager {
         while (!grid.getBlockState(spawn).isAir() && spawn.getY() < center.getY() + 12) {
             spawn = spawn.above();
         }
-        entity.snapTo(spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, grid.random.nextFloat() * 360, 0);
+        entity.snapTo(spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, grid.getRandom().nextFloat() * 360, 0);
         entity.setup(lieutenant, site.id(), center);
         stronghold.entity = entity.getUUID();
         state.setDirty();
@@ -327,7 +327,7 @@ public final class StrongholdManager {
     }
 
     private static void broadcast(ServerLevel grid, Component message) {
-        grid.players().forEach(player -> player.displayClientMessage(message, false));
+        grid.players().forEach(player -> player.sendSystemMessage(message));
     }
 
     private record Context(ServerLevel grid, StrongholdState state, String stronghold, Stronghold record, Lieutenant lieutenantEntry,

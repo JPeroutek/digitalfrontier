@@ -80,7 +80,7 @@ public class DigitizingLaserBlockEntity extends BlockEntity {
                 || player.distanceToSqr(emitter) > MAX_RANGE * MAX_RANGE) {
             laser.scanning = null;
             if (player != null) {
-                player.displayClientMessage(Component.translatable("message.digitalfrontier.scan_interrupted").withStyle(ChatFormatting.RED), true);
+                player.sendOverlayMessage(Component.translatable("message.digitalfrontier.scan_interrupted").withStyle(ChatFormatting.RED));
             }
             return;
         }
@@ -94,7 +94,7 @@ public class DigitizingLaserBlockEntity extends BlockEntity {
         laser.scanning = null;
         TerminalRef target = laser.link;
         if (target == null || !GridArrival.teleport(player, target)) {
-            player.displayClientMessage(Component.translatable("message.digitalfrontier.terminal_unreachable").withStyle(ChatFormatting.RED), true);
+            player.sendOverlayMessage(Component.translatable("message.digitalfrontier.terminal_unreachable").withStyle(ChatFormatting.RED));
         }
     }
 

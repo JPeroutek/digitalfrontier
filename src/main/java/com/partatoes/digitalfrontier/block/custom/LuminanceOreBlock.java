@@ -93,7 +93,7 @@ public class LuminanceOreBlock extends Block {
 
     private static void spawnParticles(Level world, BlockPos pos) {
         double d = 0.5625;
-        RandomSource random = world.random;
+        RandomSource random = world.getRandom();
         for (Direction direction : Direction.values()) {
             BlockPos blockPos = pos.relative(direction);
             if (world.getBlockState(blockPos).isSolidRender()) continue;

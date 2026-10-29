@@ -71,8 +71,8 @@ public class LightCycleEntity extends VehicleEntity {
         passenger.setYHeadRot(passenger.getYRot());
     }
 
-    public InteractionResult interact(Player player, InteractionHand hand) {
-        InteractionResult actionResult = super.interact(player, hand);
+    public InteractionResult interact(Player player, InteractionHand hand, Vec3 location) {
+        InteractionResult actionResult = super.interact(player, hand, location);
         if (actionResult != InteractionResult.PASS) {
             return actionResult;
         } else {

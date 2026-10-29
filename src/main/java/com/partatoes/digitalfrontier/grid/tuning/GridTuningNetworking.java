@@ -63,8 +63,8 @@ public final class GridTuningNetworking {
     }
 
     public static void register() {
-        PayloadTypeRegistry.playS2C().register(OpenScreenPayload.ID, OpenScreenPayload.CODEC);
-        PayloadTypeRegistry.playC2S().register(TunePayload.ID, TunePayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(OpenScreenPayload.ID, OpenScreenPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(TunePayload.ID, TunePayload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(TunePayload.ID, (payload, context) -> tune(context.player(), payload));
     }
 
@@ -86,18 +86,18 @@ public final class GridTuningNetworking {
         }
         Optional<GridTuning> tuning = GridTuning.fromCode(payload.code());
         if (tuning.isEmpty()) {
-            player.displayClientMessage(Component.translatable("message.digitalfrontier.invalid_grid_code").withStyle(ChatFormatting.RED), true);
+            player.sendOverlayMessage(Component.translatable("message.digitalfrontier.invalid_grid_code").withStyle(ChatFormatting.RED));
             return;
         }
         Optional<ServerLevel> grid = GridManager.getOrCreate(player.level().getServer(), tuning.get().toSettings());
         if (grid.isEmpty()) {
-            player.displayClientMessage(Component.translatable("message.digitalfrontier.grid_limit",
-                    GridManager.maxTunedGrids(player.level().getServer())).withStyle(ChatFormatting.RED), true);
+            player.sendOverlayMessage(Component.translatable("message.digitalfrontier.grid_limit",
+                    GridManager.maxTunedGrids(player.level().getServer())).withStyle(ChatFormatting.RED));
             return;
         }
         Identifier gridId = grid.get().dimension().identifier();
         laser.setLink(new TerminalRef(gridId, GridLayout.MAIN_ARRIVAL_ID));
         world.playSound(null, pos, SoundEvents.BEACON_POWER_SELECT, SoundSource.BLOCKS, 1.0f, 0.8f);
-        player.displayClientMessage(Component.translatable("message.digitalfrontier.laser_tuned_grid", gridId.toString()).withStyle(ChatFormatting.AQUA), true);
+        player.sendOverlayMessage(Component.translatable("message.digitalfrontier.laser_tuned_grid", gridId.toString()).withStyle(ChatFormatting.AQUA));
     }
 }

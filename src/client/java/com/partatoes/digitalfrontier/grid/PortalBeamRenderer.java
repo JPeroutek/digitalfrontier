@@ -7,7 +7,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.partatoes.digitalfrontier.grid.exit.PortalBeams;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -49,7 +49,7 @@ public final class PortalBeamRenderer {
             world = null;
             beams = List.of();
         });
-        WorldRenderEvents.AFTER_ENTITIES.register(context -> render());
+        LevelRenderEvents.AFTER_SOLID_FEATURES.register(context -> render());
     }
 
     private static void render() {
@@ -60,7 +60,7 @@ public final class PortalBeamRenderer {
         }
         Vec3 camera = client.gameRenderer.getMainCamera().position();
         // Well inside the far plane (four times the view distance), and past the loaded terrain
-        double near = client.gameRenderer.getRenderDistance() * 1.5;
+        double near = client.options.getEffectiveRenderDistance() * 16 * 1.5;
         // Turning like a beacon's beam
         float rotation = Math.floorMod(clientWorld.getGameTime(), 40) + client.getDeltaTracker().getGameTimeDeltaPartialTick(false);
         PoseStack matrices = new PoseStack();
@@ -83,7 +83,8 @@ public final class PortalBeamRenderer {
         }
 
         for (SubmitNodeCollection queue : QUEUE.getSubmitsPerOrder().values()) {
-            CUSTOM_RENDERER.render(queue, BUFFERS);
+            CUSTOM_RENDERER.renderSolid(queue, BUFFERS);
+            CUSTOM_RENDERER.renderTranslucent(queue, BUFFERS);
         }
         QUEUE.clear();
         GpuBufferSlice fog = RenderSystem.getShaderFog();

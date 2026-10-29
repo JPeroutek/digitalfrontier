@@ -3,7 +3,7 @@ package com.partatoes.digitalfrontier.grid.exit;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.grid.arrival.GridArrival;
 import com.partatoes.digitalfrontier.grid.gen.GridChunkGenerator;
-import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerEntityLevelChangeEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -60,9 +60,9 @@ public final class PortalBeams {
     }
 
     public static void register() {
-        PayloadTypeRegistry.playS2C().register(BeamsPayload.ID, BeamsPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(BeamsPayload.ID, BeamsPayload.CODEC);
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> send(handler.player));
-        ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register((player, origin, destination) -> send(player));
+        ServerEntityLevelChangeEvents.AFTER_PLAYER_CHANGE_LEVEL.register((player, origin, destination) -> send(player));
         ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> send(newPlayer));
     }
 

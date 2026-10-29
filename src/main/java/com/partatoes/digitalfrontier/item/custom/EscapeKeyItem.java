@@ -21,7 +21,7 @@ public class EscapeKeyItem extends Item {
     public InteractionResult use(Level world, Player user, InteractionHand hand) {
         if (!ModDimensions.isGrid(world)) {
             if (user instanceof ServerPlayer player) {
-                player.displayClientMessage(Component.translatable("message.digitalfrontier.escape_key_outside_grid").withStyle(ChatFormatting.RED), true);
+                player.sendOverlayMessage(Component.translatable("message.digitalfrontier.escape_key_outside_grid").withStyle(ChatFormatting.RED));
             }
             return InteractionResult.FAIL;
         }

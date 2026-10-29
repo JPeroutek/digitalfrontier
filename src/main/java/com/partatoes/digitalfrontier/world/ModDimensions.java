@@ -12,9 +12,12 @@ import net.minecraft.util.valueproviders.ConstantInt;
 import net.minecraft.world.attribute.BedRule;
 import net.minecraft.world.attribute.EnvironmentAttributeMap;
 import net.minecraft.world.attribute.EnvironmentAttributes;
+import net.minecraft.world.level.CardinalLighting;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
+import java.util.Optional;
+
 public class ModDimensions {
     // One dimension type shared by every grid
     public static final Identifier DIGITAL_FRONTIER_TYPE_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "digitalfrontier");
@@ -34,22 +37,26 @@ public class ModDimensions {
                 true, // hasFixedTime: no day and night on the grid
                 false, // hasSkylight
                 false, // hasCeiling
+                false, // hasEnderDragonFight
                 1.0, // coordinateScale
                 -64, // minY
                 384, // height
                 384, // logicalHeight
                 BlockTags.INFINIBURN_OVERWORLD,
-                0.05f, // ambientLight: a faint floor, so unlit corners aren't pitch black
+                0.08f, // ambientLight: a faint floor, so unlit corners aren't pitch black (the lightmap uses AMBIENT_LIGHT_COLOR below)
                 new DimensionType.MonsterSettings(ConstantInt.of(0), 0),
                 DimensionType.Skybox.END,
-                DimensionType.CardinalLightType.DEFAULT,
+                CardinalLighting.Type.DEFAULT,
                 EnvironmentAttributeMap.builder()
+                        // The lightmap's floor: dark, faintly blue, but enough to make out unlit blocks
+                        .set(EnvironmentAttributes.AMBIENT_LIGHT_COLOR, 0x141A20)
                         // Beds explode and never set a spawn: players always respawn outside the grid unless something says otherwise
                         .set(EnvironmentAttributes.BED_RULE, BedRule.EXPLODES)
                         .set(EnvironmentAttributes.RESPAWN_ANCHOR_WORKS, false)
                         .set(EnvironmentAttributes.CAN_START_RAID, false)
                         .set(EnvironmentAttributes.PIGLINS_ZOMBIFY, false)
                         .build(),
-                HolderSet.empty())); // timelines: none, so nothing changes with the time of day
+                HolderSet.empty(), // timelines: none, so nothing changes with the time of day
+                Optional.empty())); // defaultClock: none, the time is fixed
     }
 }

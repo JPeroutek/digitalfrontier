@@ -126,7 +126,7 @@ public final class MemoryPaging {
                     Component.translatable(key, GridArrival.terminalName(target.terminal())).withStyle(ChatFormatting.AQUA));
         } else {
             // The grid or terminal couldn't be found when the player respawned, so they respawned as usual
-            player.displayClientMessage(Component.translatable("message.digitalfrontier.terminal_unreachable").withStyle(ChatFormatting.RED), true);
+            player.sendOverlayMessage(Component.translatable("message.digitalfrontier.terminal_unreachable").withStyle(ChatFormatting.RED));
         }
     }
 

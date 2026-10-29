@@ -10,7 +10,7 @@ import com.partatoes.digitalfrontier.grid.layout.StreetAxis.RoadClass;
 import com.partatoes.digitalfrontier.grid.layout.Zone;
 import com.partatoes.digitalfrontier.grid.parts.GridBuildingDef;
 import com.partatoes.digitalfrontier.grid.parts.SpiralStair;
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
@@ -62,7 +62,7 @@ public class ModGridStarterProvider implements DataProvider {
     private final PackOutput.PathProvider structures;
     private final PackOutput.PathProvider buildings;
 
-    public ModGridStarterProvider(FabricDataOutput output) {
+    public ModGridStarterProvider(FabricPackOutput output) {
         this.structures = output.createPathProvider(PackOutput.Target.DATA_PACK, "structure");
         this.buildings = output.createPathProvider(PackOutput.Target.DATA_PACK, "grid/building");
     }

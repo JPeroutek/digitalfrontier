@@ -7,7 +7,7 @@ import com.google.gson.JsonObject;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.block.ModBlocks;
 
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
@@ -28,10 +28,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ModTextureProvider implements DataProvider {
-    protected final FabricDataOutput dataOutput;
+    protected final FabricPackOutput dataOutput;
     private static final Logger LOGGER = LoggerFactory.getLogger(DigitalFrontier.MOD_ID);
 
-    public ModTextureProvider(FabricDataOutput output) {
+    public ModTextureProvider(FabricPackOutput output) {
         this.dataOutput = output;
     }
 

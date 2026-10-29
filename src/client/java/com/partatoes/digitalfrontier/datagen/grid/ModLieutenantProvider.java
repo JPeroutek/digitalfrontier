@@ -8,7 +8,7 @@ import com.partatoes.digitalfrontier.grid.stronghold.LieutenantDef;
 import com.partatoes.digitalfrontier.grid.stronghold.RegistryMatcher;
 import com.partatoes.digitalfrontier.grid.stronghold.Trigger;
 import com.partatoes.digitalfrontier.grid.stronghold.Triggers;
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
@@ -30,7 +30,7 @@ public class ModLieutenantProvider implements DataProvider {
 
     private final PackOutput.PathProvider lieutenants;
 
-    public ModLieutenantProvider(FabricDataOutput output) {
+    public ModLieutenantProvider(FabricPackOutput output) {
         this.lieutenants = output.createPathProvider(PackOutput.Target.DATA_PACK, "grid/lieutenant");
     }
 

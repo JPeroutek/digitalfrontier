@@ -2,7 +2,7 @@ package com.partatoes.digitalfrontier.item;
 
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.block.ModBlocks;
-import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
+import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -13,7 +13,7 @@ import net.minecraft.world.item.ItemStack;
 public class ModItemGroups {
     public static final Identifier DIGITAL_FRONTIER_GROUP_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "digitalfrontier");
     public static final CreativeModeTab DIGITAL_FRONTIER_GROUP = Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, DIGITAL_FRONTIER_GROUP_ID,
-            FabricItemGroup.builder()
+            FabricCreativeModeTab.builder()
                     .title(Component.translatable("itemgroup.digitalfrontier"))
                     .icon(() -> new ItemStack(ModItems.BINARY_1))
                     .displayItems((displayContext, entries) -> {

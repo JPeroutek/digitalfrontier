@@ -1,7 +1,7 @@
 # Development and testing
 
 `./gradlew runClient` and `./gradlew runServer` start the game with the mod and a set of testing mods. The testing
-mods are `modLocalRuntime` dependencies in `build.gradle`: they only load in these dev runs, and are never compiled
+mods are `localRuntime` dependencies in `build.gradle`: they only load in these dev runs, and are never compiled
 against, published, or bundled in the mod's jar.
 
 | Mod | What it's for |
@@ -9,8 +9,9 @@ against, published, or bundled in the mod's jar.
 | WorldEdit | Building and editing templates (see [grid-structures.md](grid-structures.md)) |
 | Xaero's Minimap and World Map | Checking grid layouts from above |
 | Jade | Tooltips naming the block or entity you're looking at |
-| REI (Roughly Enough Items) | Item and recipe lookup; chosen when neither JEI nor EMI had a Fabric build (EMI still has none for 1.21.11) |
+| REI (Roughly Enough Items) | Item and recipe lookup; chosen when neither JEI nor EMI had a Fabric build (EMI still has none for 26.1.2) |
 | Sodium | Frame rate |
+| Trinkets Updated | Trying the kept-trinkets integration: equip a trinket, die in a grid holding a Core Dump |
 | Distant Horizons | Seeing far out, e.g. the derelict sectors from the city; set its render distance in its settings |
 | Chunky | Pregenerating chunks (only with `-Ppregen`, see below) |
 
@@ -43,9 +44,5 @@ Distant Horizons time to build its distant terrain from them the first time.
 
 ## Notes on the testing mods
 
-- **Bundled libraries.** Loom drops the jars a dev dependency bundles. WorldEdit needs one that isn't published
-  anywhere, the WorldEdit CUI protocol: `build.gradle`'s `nestedLib` takes it out of the mod's jar into
-  `build/nestedlibs` and adds it as a module, so Loom remaps WorldEdit against it. (Newer builds of Xaero's maps bundle
-  XaeroLib the same way.)
 - **Version ids.** Chunky and Distant Horizons are pinned by Modrinth version id rather than version number: Chunky
   gives its Fabric, Forge and NeoForge builds the same number, and Modrinth's maven may otherwise serve the wrong one.

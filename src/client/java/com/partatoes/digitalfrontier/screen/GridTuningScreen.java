@@ -6,7 +6,7 @@ import com.partatoes.digitalfrontier.grid.layout.StreetAxis;
 import com.partatoes.digitalfrontier.grid.tuning.GridTuning;
 import com.partatoes.digitalfrontier.grid.tuning.GridTuningNetworking;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
@@ -137,16 +137,16 @@ public class GridTuningScreen extends Screen {
     }
 
     @Override
-    public void render(GuiGraphics context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
-        context.drawCenteredString(font, title, width / 2, top, WHITE);
-        context.drawString(font, Component.translatable("screen.digitalfrontier.grid_tuning.seed"), left, top + 22, GRAY);
+    public void extractRenderState(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
+        super.extractRenderState(context, mouseX, mouseY, delta);
+        context.centeredText(font, title, width / 2, top, WHITE);
+        context.text(font, Component.translatable("screen.digitalfrontier.grid_tuning.seed"), left, top + 22, GRAY);
         int colorsLabelY = top + 16 + 5 * ROW;
-        context.drawString(font, Component.translatable("screen.digitalfrontier.grid_tuning.districts",
+        context.text(font, Component.translatable("screen.digitalfrontier.grid_tuning.districts",
                 tuning.districtColors().size(), GridTuning.MAX_DISTRICT_COLORS), left, colorsLabelY, GRAY);
         int codeLabelY = colorsLabelY + 12 + SWATCH + 6;
-        context.drawString(font, Component.translatable("screen.digitalfrontier.grid_tuning.code"), left, codeLabelY, GRAY);
-        context.drawString(font, Component.translatable("screen.digitalfrontier.grid_tuning.grid_id",
+        context.text(font, Component.translatable("screen.digitalfrontier.grid_tuning.code"), left, codeLabelY, GRAY);
+        context.text(font, Component.translatable("screen.digitalfrontier.grid_tuning.grid_id",
                 GridKey.of(tuning.toSettings()).toString()), left, codeLabelY + 12 + ROW, WHITE);
     }
 
@@ -216,7 +216,7 @@ public class GridTuningScreen extends Screen {
         }
 
         @Override
-        protected void renderContents(GuiGraphics context, int mouseX, int mouseY, float delta) {
+        protected void extractContents(GuiGraphicsExtractor context, int mouseX, int mouseY, float delta) {
             boolean selected = tuning.districtColors().contains(color);
             int border = selected ? WHITE : (isHovered() ? GRAY : 0xFF303030);
             context.fill(getX(), getY(), getX() + width, getY() + height, border);

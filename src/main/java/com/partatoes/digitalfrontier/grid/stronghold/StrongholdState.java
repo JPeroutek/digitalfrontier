@@ -8,6 +8,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
+import com.partatoes.digitalfrontier.world.ModSavedData;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
 import org.jetbrains.annotations.Nullable;
@@ -24,13 +25,13 @@ public final class StrongholdState extends SavedData {
     private static final String STRONGHOLDS_KEY = "strongholds";
     private static final Codec<Map<String, Stronghold>> CODEC = Codec.unboundedMap(Codec.STRING, Stronghold.CODEC);
     // Saved through the same NBT as before 1.21.5, so a bad entry only drops that stronghold
-    private static final SavedDataType<StrongholdState> TYPE = new SavedDataType<>(DigitalFrontier.MOD_ID + "_strongholds",
+    private static final SavedDataType<StrongholdState> TYPE = new SavedDataType<>(Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "strongholds"),
             StrongholdState::new, CompoundTag.CODEC.xmap(StrongholdState::fromNbt, state -> state.writeNbt(new CompoundTag())), null);
 
     private final Map<String, Stronghold> strongholds = new HashMap<>();
 
     public static StrongholdState of(ServerLevel grid) {
-        return grid.getDataStorage().computeIfAbsent(TYPE);
+        return ModSavedData.computeIfAbsent(grid.getDataStorage(), TYPE);
     }
 
     @Nullable

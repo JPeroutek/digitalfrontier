@@ -6,7 +6,7 @@ import com.partatoes.digitalfrontier.block.ModBlocks;
 import com.partatoes.digitalfrontier.block.custom.PatternBlock;
 import com.partatoes.digitalfrontier.item.ModItems;
 import net.fabricmc.fabric.api.client.datagen.v1.provider.FabricModelProvider;
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
+import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
 import net.minecraft.client.data.models.*;
 import net.minecraft.client.data.models.blockstates.*;
 import net.minecraft.client.data.models.model.*;
@@ -22,8 +22,8 @@ import net.minecraft.client.data.models.model.ModelTemplates;
 import net.minecraft.client.data.models.model.TextureMapping;
 import net.minecraft.client.data.models.model.TextureSlot;
 import net.minecraft.client.data.models.model.TexturedModel;
-import net.minecraft.client.renderer.block.model.Variant;
-import net.minecraft.client.renderer.block.model.VariantMutator;
+import net.minecraft.client.renderer.block.dispatch.Variant;
+import net.minecraft.client.renderer.block.dispatch.VariantMutator;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.DyeColor;
@@ -40,7 +40,7 @@ public class ModModelProvider extends FabricModelProvider {
     private static final ModelTemplate EMISSIVE_CUBE_ALL = new ModelTemplate(
             Optional.of(Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "block/emissive_cube_all")), Optional.empty(), TextureSlot.ALL, GLOW);
 
-    public ModModelProvider(FabricDataOutput output) {
+    public ModModelProvider(FabricPackOutput output) {
         super(output);
     }
 

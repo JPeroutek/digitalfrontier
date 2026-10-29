@@ -34,7 +34,7 @@ public class LuminanceOreDetector extends Item {
                 BlockState state = context.getLevel().getBlockState(positionClicked.below(i));
 
                 if (state.is(ModBlocks.LUMINANCE_ORE)) {
-                    player.displayClientMessage(Component.literal("Found Luminance Ore at Y level " + positionClicked.below(i).getY()), false);
+                    player.sendSystemMessage(Component.literal("Found Luminance Ore at Y level " + positionClicked.below(i).getY()));
                     break;
                 }
             }

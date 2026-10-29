@@ -62,8 +62,8 @@ public final class GridSpawner {
         if (nearby >= CAP) {
             return;
         }
-        double angle = world.random.nextDouble() * Math.PI * 2;
-        double distance = MIN_DISTANCE + world.random.nextDouble() * (MAX_DISTANCE - MIN_DISTANCE);
+        double angle = world.getRandom().nextDouble() * Math.PI * 2;
+        double distance = MIN_DISTANCE + world.getRandom().nextDouble() * (MAX_DISTANCE - MIN_DISTANCE);
         int x = (int) Math.floor(player.getX() + Math.cos(angle) * distance);
         int z = (int) Math.floor(player.getZ() + Math.sin(angle) * distance);
         if (!world.hasChunk(x >> 4, z >> 4)) {
@@ -85,15 +85,15 @@ public final class GridSpawner {
             }
             case UNSTABLE -> spawn(world, ModEntities.CORRUPTED_PROGRAM, pos, program -> program.setProvokable(false));
             case CORRUPTED -> {
-                if (!hostilesAllowed || world.random.nextFloat() < 0.6f) {
+                if (!hostilesAllowed || world.getRandom().nextFloat() < 0.6f) {
                     spawn(world, ModEntities.CORRUPTED_PROGRAM, pos, program -> program.setProvokable(true));
                 } else {
-                    spawnPatrol(world, pos, 2 + world.random.nextInt(2));
+                    spawnPatrol(world, pos, 2 + world.getRandom().nextInt(2));
                 }
             }
             case SEVERE -> {
                 if (hostilesAllowed) {
-                    spawnPatrol(world, pos, 2 + world.random.nextInt(3));
+                    spawnPatrol(world, pos, 2 + world.getRandom().nextInt(3));
                 }
             }
         }
@@ -101,7 +101,7 @@ public final class GridSpawner {
 
     private static void spawnPatrol(ServerLevel world, BlockPos pos, int size) {
         for (int i = 0; i < size; i++) {
-            spawn(world, ModEntities.ENFORCER, pos.offset(world.random.nextInt(3) - 1, 0, world.random.nextInt(3) - 1), enforcer -> { });
+            spawn(world, ModEntities.ENFORCER, pos.offset(world.getRandom().nextInt(3) - 1, 0, world.getRandom().nextInt(3) - 1), enforcer -> { });
         }
     }
 
@@ -110,7 +110,7 @@ public final class GridSpawner {
         if (mob == null) {
             return;
         }
-        mob.snapTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, world.random.nextFloat() * 360, 0);
+        mob.snapTo(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, world.getRandom().nextFloat() * 360, 0);
         mob.finalizeSpawn(world, world.getCurrentDifficultyAt(pos), EntitySpawnReason.NATURAL, null);
         setup.accept(mob);
         world.addFreshEntity(mob);

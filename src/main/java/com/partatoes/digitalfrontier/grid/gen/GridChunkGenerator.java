@@ -77,7 +77,7 @@ public class GridChunkGenerator extends ChunkGenerator {
     @Override
     public CompletableFuture<ChunkAccess> fillFromNoise(Blender blender, RandomState noiseConfig, StructureManager structureAccessor, ChunkAccess chunk) {
         ChunkPos chunkPos = chunk.getPos();
-        GridChunkBuild build = build(chunkPos.x, chunkPos.z);
+        GridChunkBuild build = build(chunkPos.x(), chunkPos.z());
         Heightmap oceanFloor = chunk.getOrCreateHeightmapUnprimed(Heightmap.Types.OCEAN_FLOOR_WG);
         Heightmap worldSurface = chunk.getOrCreateHeightmapUnprimed(Heightmap.Types.WORLD_SURFACE_WG);
         int top = Math.min(build.maxY(), chunk.getMaxY());
@@ -147,8 +147,14 @@ public class GridChunkGenerator extends ChunkGenerator {
         return new NoiseColumn(worldBottom, states);
     }
 
+    // The grid's lines have their own F3 section, digitalfrontier:grid, rather than joining chunk_generation_stats
     @Override
     public void addDebugScreenInfo(List<String> text, RandomState noiseConfig, BlockPos pos) {
+    }
+
+    /** What the grid generates at a position, for the digitalfrontier:grid F3 section. */
+    public List<String> debugLines(BlockPos pos) {
+        List<String> text = new ArrayList<>();
         GridChunkBuild build = build(pos.getX() >> 4, pos.getZ() >> 4);
         ChunkPlan plan = build.plan();
         text.add(String.format("Grid: %s %s floors=%d district=%s", plan.zone(), plan.type(), plan.floors(), plan.district().getSerializedName()));
@@ -167,6 +173,7 @@ public class GridChunkGenerator extends ChunkGenerator {
         if (!levels.isEmpty()) {
             text.add("Grid levels: " + levels);
         }
+        return text;
     }
 
     /**
@@ -235,7 +242,7 @@ public class GridChunkGenerator extends ChunkGenerator {
     @Override
     public void spawnOriginalMobs(WorldGenRegion region) {
         ChunkPos chunkPos = region.getCenter();
-        GridChunkBuild build = build(chunkPos.x, chunkPos.z);
+        GridChunkBuild build = build(chunkPos.x(), chunkPos.z());
         ChunkPlan plan = build.plan();
         spawnInPassage(region, build, plan);
         boolean inhabited = plan.zone() == Zone.CITY_CORE || plan.zone() == Zone.CITY || plan.zone() == Zone.WAYPOINT;
@@ -244,12 +251,12 @@ public class GridChunkGenerator extends ChunkGenerator {
             return;
         }
         long seed = layout().settings().gridSeed();
-        if (GridRandom.unit(GridRandom.hash(seed, chunkPos.x, chunkPos.z, SALT_PROGRAMS)) >= PROGRAM_CHANCE) {
+        if (GridRandom.unit(GridRandom.hash(seed, chunkPos.x(), chunkPos.z(), SALT_PROGRAMS)) >= PROGRAM_CHANCE) {
             return;
         }
-        int count = 1 + GridRandom.nextInt(GridRandom.hash(seed, chunkPos.x, chunkPos.z, SALT_PROGRAMS + 1), 2);
+        int count = 1 + GridRandom.nextInt(GridRandom.hash(seed, chunkPos.x(), chunkPos.z(), SALT_PROGRAMS + 1), 2);
         for (int i = 0; i < count; i++) {
-            long spot = GridRandom.hash(seed, chunkPos.x, chunkPos.z, SALT_PROGRAMS + 2 + i);
+            long spot = GridRandom.hash(seed, chunkPos.x(), chunkPos.z(), SALT_PROGRAMS + 2 + i);
             int localX = 2 + GridRandom.nextInt(spot, 12);
             int localZ = 2 + GridRandom.nextInt(spot >>> 20, 12);
             ProgramEntity program = ModEntities.PROGRAM.create(region.getLevel(), EntitySpawnReason.CHUNK_GENERATION);
