@@ -9,7 +9,7 @@ against, published, or bundled in the mod's jar.
 | WorldEdit | Building and editing templates (see [grid-structures.md](grid-structures.md)) |
 | Xaero's Minimap and World Map | Checking grid layouts from above |
 | Jade | Tooltips naming the block or entity you're looking at |
-| REI (Roughly Enough Items) | Item and recipe lookup; JEI and EMI have no Fabric build for 1.21.7 |
+| REI (Roughly Enough Items) | Item and recipe lookup; JEI and EMI have no Fabric build for 1.21.8 |
 | Sodium | Frame rate |
 | Distant Horizons | Seeing far out, e.g. the derelict sectors from the city; set its render distance in its settings |
 | Chunky | Pregenerating chunks (only with `-Ppregen`, see below) |
