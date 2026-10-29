@@ -8,7 +8,7 @@ import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.levelgen.VerticalAnchor;
-import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
+import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.placement.HeightRangePlacement;
 import net.minecraft.world.level.levelgen.placement.PlacedFeature;
 import net.minecraft.world.level.levelgen.placement.PlacementModifier;
@@ -17,7 +17,7 @@ public class ModPlacedFeatures {
     public static final ResourceKey<PlacedFeature> LUMINANCE_ORE_PLACED_KEY = registerKey("luminance_ore_placed");
 
     public static void bootstrap(BootstrapContext<PlacedFeature> context) {
-        var configuredFeatureRegistryEntryLookup = context.lookup(Registries.CONFIGURED_FEATURE);
+        var configuredFeatureRegistryEntryLookup = context.lookup(Registries.FEATURE);
 
         register(context, LUMINANCE_ORE_PLACED_KEY,
                 configuredFeatureRegistryEntryLookup.getOrThrow(
@@ -32,7 +32,7 @@ public class ModPlacedFeatures {
 
     private static void register(BootstrapContext<PlacedFeature> context,
                                  ResourceKey<PlacedFeature> key,
-                                 Holder<ConfiguredFeature<?,?>> configuration,
+                                 Holder<Feature> configuration,
                                  List<PlacementModifier> modifiers) {
         context.register(key, new PlacedFeature(configuration, List.copyOf(modifiers)));
     }

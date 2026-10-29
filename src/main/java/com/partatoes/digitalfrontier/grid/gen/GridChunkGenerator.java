@@ -12,6 +12,7 @@ import com.partatoes.digitalfrontier.grid.layout.Site;
 import com.partatoes.digitalfrontier.grid.layout.Zone;
 import com.partatoes.digitalfrontier.grid.parts.GridAssets;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
@@ -21,6 +22,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.NoiseColumn;
 import net.minecraft.world.level.StructureManager;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.CrossCollisionBlock;
@@ -34,11 +36,13 @@ import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.RandomState;
 import net.minecraft.world.level.levelgen.blending.Blender;
+import net.minecraft.world.level.levelgen.densityfunction.SamplerContext;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import com.partatoes.digitalfrontier.entity.custom.CorruptedProgramEntity;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -75,7 +79,8 @@ public class GridChunkGenerator extends ChunkGenerator {
     }
 
     @Override
-    public CompletableFuture<ChunkAccess> fillFromNoise(Blender blender, RandomState noiseConfig, StructureManager structureAccessor, ChunkAccess chunk) {
+    public CompletableFuture<ChunkAccess> buildTerrain(ChunkAccess chunk, Blender blender, RandomState noiseConfig, StructureManager structureAccessor,
+                                                    BiomeManager biomeAccess, WorldGenRegion region, Set<Holder<Biome>> biomes) {
         ChunkPos chunkPos = chunk.getPos();
         GridChunkBuild build = build(chunkPos.x(), chunkPos.z());
         Heightmap oceanFloor = chunk.getOrCreateHeightmapUnprimed(Heightmap.Types.OCEAN_FLOOR_WG);
@@ -123,7 +128,7 @@ public class GridChunkGenerator extends ChunkGenerator {
             nbt.putInt("y", pos.getY());
             nbt.putInt("z", pos.getZ());
             nbt.putBoolean("is_waxed", true);
-            SignText.DIRECT_CODEC.encodeStart(NbtOps.INSTANCE, sign.text()).ifSuccess(text -> nbt.put("front_text", text));
+            SignText.CODEC.encodeStart(NbtOps.INSTANCE, sign.text()).ifSuccess(text -> nbt.put("front_text", text));
             chunk.setBlockEntityNbt(nbt);
         }
     }
@@ -149,7 +154,7 @@ public class GridChunkGenerator extends ChunkGenerator {
 
     // The grid's lines have their own F3 section, digitalfrontier:grid, rather than joining chunk_generation_stats
     @Override
-    public void addDebugScreenInfo(List<String> text, RandomState noiseConfig, BlockPos pos) {
+    public void addDebugScreenInfo(List<String> text, RandomState noiseConfig, BlockPos pos, SamplerContext samplerContext) {
     }
 
     /** What the grid generates at a position, for the digitalfrontier:grid F3 section. */
@@ -225,14 +230,6 @@ public class GridChunkGenerator extends ChunkGenerator {
     @Override
     public int getGenDepth() {
         return WORLD_HEIGHT;
-    }
-
-    @Override
-    public void applyCarvers(WorldGenRegion chunkRegion, long seed, RandomState noiseConfig, BiomeManager biomeAccess, StructureManager structureAccessor, ChunkAccess chunk) {
-    }
-
-    @Override
-    public void buildSurface(WorldGenRegion region, StructureManager structures, RandomState noiseConfig, ChunkAccess chunk) {
     }
 
     /**

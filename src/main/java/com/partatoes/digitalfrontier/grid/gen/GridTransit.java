@@ -751,21 +751,27 @@ final class GridTransit {
 
     private static SignText nameText(StationInfo info) {
         String[] words = info.name().split(" ", 2);
-        return new SignText()
-                .setMessage(1, Component.literal(words[0]))
-                .setMessage(2, Component.literal(words.length > 1 ? words[1] : ""))
-                .setColor(DyeColor.WHITE).setHasGlowingText(true);
+        return glowingText(DyeColor.WHITE, Component.empty(), Component.literal(words[0]),
+                Component.literal(words.length > 1 ? words[1] : ""));
     }
 
     private static SignText lineText(StationInfo info) {
-        SignText text = new SignText().setColor(info.color()).setHasGlowingText(true);
         if (info.waypoint() > 0) {
-            return text.setMessage(1, Component.translatable("sign.digitalfrontier.express"))
-                    .setMessage(2, Component.translatable("sign.digitalfrontier.express_to", info.waypoint()));
+            return glowingText(info.color(), Component.empty(), Component.translatable("sign.digitalfrontier.express"),
+                    Component.translatable("sign.digitalfrontier.express_to", info.waypoint()));
         }
-        return text.setMessage(1, Component.translatable("color.minecraft." + info.color().getSerializedName()))
-                .setMessage(2, Component.translatable("sign.digitalfrontier.line"))
-                .setMessage(3, Component.translatable(info.elevated() ? "sign.digitalfrontier.elevated" : "sign.digitalfrontier.subway"));
+        return glowingText(info.color(), Component.empty(), Component.translatable("color.minecraft." + info.color().getSerializedName()),
+                Component.translatable("sign.digitalfrontier.line"),
+                Component.translatable(info.elevated() ? "sign.digitalfrontier.elevated" : "sign.digitalfrontier.subway"));
+    }
+
+    // The lines from the top, the rest left blank
+    private static SignText glowingText(DyeColor color, Component... lines) {
+        List<Component> messages = new ArrayList<>(List.of(lines));
+        while (messages.size() < SignText.LINES) {
+            messages.add(Component.empty());
+        }
+        return new SignText(messages, messages, color, true);
     }
 
     // ---- Skyways ----

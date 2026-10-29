@@ -1,8 +1,5 @@
 package com.partatoes.digitalfrontier.block.custom;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.partatoes.digitalfrontier.block.entity.DigitizingLaserBlockEntity;
 import com.partatoes.digitalfrontier.block.entity.ModBlockEntities;
 import com.partatoes.digitalfrontier.grid.arrival.GridArrival;
@@ -43,11 +40,6 @@ import net.minecraft.world.phys.BlockHitResult;
  * inside a grid. The tunable version (the Grid Tuning Laser) can also be tuned to any grid through a screen.
  */
 public class DigitizingLaserBlock extends BaseEntityBlock {
-    public static final MapCodec<DigitizingLaserBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            Codec.BOOL.fieldOf("tunable").forGetter(DigitizingLaserBlock::isTunable),
-            propertiesCodec()
-    ).apply(instance, DigitizingLaserBlock::new));
-
     // The Grid Tuning Laser: sneak-use opens a screen to tune it to a different grid
     private final boolean tunable;
 
@@ -58,11 +50,6 @@ public class DigitizingLaserBlock extends BaseEntityBlock {
 
     public boolean isTunable() {
         return tunable;
-    }
-
-    @Override
-    protected MapCodec<? extends BaseEntityBlock> codec() {
-        return CODEC;
     }
 
     @Override

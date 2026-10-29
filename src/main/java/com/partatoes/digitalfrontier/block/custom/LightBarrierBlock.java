@@ -1,6 +1,5 @@
 package com.partatoes.digitalfrontier.block.custom;
 
-import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockGetter;
@@ -36,10 +35,6 @@ public class LightBarrierBlock extends HorizontalDirectionalBlock {
     public LightBarrierBlock(BlockBehaviour.Properties settings) {
         super(settings);
         this.registerDefaultState((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(FACING, Direction.NORTH)).setValue(FACE, AttachFace.WALL));
-    }
-
-    protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
-        return null;
     }
 
     public VoxelShape getShape(BlockState state, BlockGetter view, BlockPos pos, CollisionContext context) {

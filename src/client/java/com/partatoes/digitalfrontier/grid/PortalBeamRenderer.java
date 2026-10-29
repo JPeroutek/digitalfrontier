@@ -1,8 +1,10 @@
 package com.partatoes.digitalfrontier.grid;
 
-import com.mojang.blaze3d.buffers.GpuBufferSlice;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
+import com.mojang.renderpearl.api.commands.RenderPass;
 import com.partatoes.digitalfrontier.grid.exit.PortalBeams;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -16,7 +18,10 @@ import net.minecraft.client.renderer.feature.FeatureRenderDispatcher;
 import net.minecraft.client.renderer.fog.FogRenderer;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 import java.util.List;
+import java.util.Optional;
+import java.util.OptionalDouble;
 
 /**
  * Draws the Portal's beam of light (see {@link PortalBeams}) from anywhere in the grid. A beam further away than the
@@ -28,10 +33,13 @@ public final class PortalBeamRenderer {
     // The beam never looks thinner than this many blocks per block of distance, so it stays a visible line far away
     private static final double MIN_ANGULAR_RADIUS = 0.0015;
 
-    // The beacon renderer only queues its beam; this queue is drawn on its own after the main pass, with fog off
+    // The beacon renderer only queues its beam; this queue is drawn on its own, with fog off
     private static final SubmitNodeStorage QUEUE = new SubmitNodeStorage();
-    // Our own, since vanilla's is still drawing the frame when the main pass ends; made on the first beam
+    // Our own, since vanilla's is busy with the frame; made on the first beam
     private static FeatureRenderDispatcher dispatcher;
+    // This frame's beams, prepared before any drawing starts and drawn once
+    @Nullable
+    private static FeatureRenderDispatcher.PreparedFrame prepared;
     private static Identifier world;
     private static List<PortalBeams.Beam> beams = List.of();
 
@@ -47,10 +55,35 @@ public final class PortalBeamRenderer {
             world = null;
             beams = List.of();
         });
-        LevelRenderEvents.END_MAIN.register(context -> render());
+        // Normally drawn just before translucent terrain (see LevelRendererMixin), so water in front of a beam covers
+        // it; with Fabulous transparency that never happens, so the beams are drawn at the end of the main pass instead
+        LevelRenderEvents.END_MAIN.register(context -> {
+            if (prepared != null) {
+                RenderTarget target = Minecraft.getInstance().gameRenderer.mainRenderTarget();
+                // Into the world's colour and depth, so terrain still hides it
+                try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "Portal beams",
+                        target.getColorTextureView(), Optional.empty(), target.getDepthTextureView(), OptionalDouble.empty())) {
+                    draw(pass);
+                }
+            }
+        });
     }
 
-    private static void render() {
+    /** Draws this frame's beams into a render pass on the world's colour and depth, if they haven't been yet. */
+    public static void draw(RenderPass pass) {
+        if (prepared == null) {
+            return;
+        }
+        GpuBufferSlice fog = RenderSystem.getShaderFog();
+        RenderSystem.setShaderFog(Minecraft.getInstance().gameRenderer.fogRenderer.getBuffer(FogRenderer.FogMode.NONE));
+        FeatureRenderDispatcher.renderAllFeatures(pass, prepared);
+        RenderSystem.setShaderFog(fog);
+        prepared.close();
+        prepared = null;
+    }
+
+    /** Queues and prepares this frame's beams; called as vanilla prepares its own frame, before any drawing starts. */
+    public static void prepare() {
         Minecraft client = Minecraft.getInstance();
         ClientLevel clientWorld = client.level;
         if (beams.isEmpty() || clientWorld == null || !clientWorld.dimension().identifier().equals(world)) {
@@ -80,14 +113,14 @@ public final class PortalBeamRenderer {
             matrices.popPose();
         }
 
-        GpuBufferSlice fog = RenderSystem.getShaderFog();
-        RenderSystem.setShaderFog(client.gameRenderer.fogRenderer.getBuffer(FogRenderer.FogMode.NONE));
         if (dispatcher == null) {
             dispatcher = new FeatureRenderDispatcher(new RenderBuffers(1), client.getModelManager(), client.getAtlasManager(),
                     client.font, client.gameRenderer.gameRenderState());
         }
-        // Draws and empties the queue
-        dispatcher.renderAllFeatures(QUEUE);
-        RenderSystem.setShaderFog(fog);
+        if (prepared != null) {
+            prepared.close();
+        }
+        // Uploads the beams' vertices and empties the queue
+        prepared = dispatcher.prepareFrame(QUEUE);
     }
 }

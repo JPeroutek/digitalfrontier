@@ -43,14 +43,14 @@ public class LightCycleRenderer extends EntityRenderer<LightCycleEntity, LightCy
     @Override
     public void submit(LightCycleEntityRenderState renderState, PoseStack matrices, SubmitNodeCollector queue, CameraRenderState cameraState) {
         matrices.pushPose();
-        matrices.mulPose(Axis.YP.rotationDegrees(-renderState.yaw));
+        matrices.rotateDegrees(Axis.YP, -renderState.yaw);
 
         // Flip it rightside-up
-        matrices.mulPose(Axis.XP.rotationDegrees(180f));
+        matrices.rotateDegrees(Axis.XP, 180f);
         // Shift it back into position
         matrices.translate(0f, -1.5f, 0f);
         queue.submitModel(this.MODEL, renderState, matrices, this.MODEL.renderType(TEXTURE), renderState.lightCoords, OverlayTexture.NO_OVERLAY,
-                renderState.outlineColor, null);
+                renderState.outlineColor);
 
         matrices.popPose();
         super.submit(renderState, matrices, queue, cameraState);

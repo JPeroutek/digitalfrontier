@@ -8,6 +8,7 @@ import net.minecraft.data.worldgen.BootstrapContext;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.util.ARGB;
 import net.minecraft.util.valueproviders.ConstantInt;
 import net.minecraft.world.attribute.BedRule;
 import net.minecraft.world.attribute.EnvironmentAttributeMap;
@@ -49,9 +50,10 @@ public class ModDimensions {
                 CardinalLighting.Type.DEFAULT,
                 EnvironmentAttributeMap.builder()
                         // The lightmap's floor: dark, faintly blue, but enough to make out unlit blocks
-                        .set(EnvironmentAttributes.AMBIENT_LIGHT_COLOR, 0x141A20)
+                        .set(EnvironmentAttributes.AMBIENT_LIGHT_COLOR, ARGB.vector3fFromRGB24(0x141A20))
                         // Beds explode and never set a spawn: players always respawn outside the grid unless something says otherwise
-                        .set(EnvironmentAttributes.BED_RULE, BedRule.EXPLODES)
+                        .set(EnvironmentAttributes.BED_RULE, BedRule.DESTROY_ON_USE)
+                        .set(EnvironmentAttributes.STRAW_BED_RULE, BedRule.DESTROY_ON_USE)
                         .set(EnvironmentAttributes.RESPAWN_ANCHOR_WORKS, false)
                         .set(EnvironmentAttributes.CAN_START_RAID, false)
                         .set(EnvironmentAttributes.PIGLINS_ZOMBIFY, false)

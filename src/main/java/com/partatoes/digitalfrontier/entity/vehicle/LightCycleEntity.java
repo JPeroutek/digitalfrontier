@@ -14,6 +14,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.InterpolationHandler;
+import net.minecraft.world.entity.LinearInterpolationHandler;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.player.Player;
@@ -35,8 +36,6 @@ public class LightCycleEntity extends VehicleEntity {
 
     // Velocity and positions
     private float yawVelocity;
-    // Smooths the position updates from the server, as for boats
-    private final InterpolationHandler interpolator = new InterpolationHandler(this, 3);
 
     public LightCycleEntity(EntityType<? extends  LightCycleEntity> entityType, Level world) {
         super(entityType, world);
@@ -163,9 +162,10 @@ public class LightCycleEntity extends VehicleEntity {
         }
     }
 
+    // Smooths the position updates from the server, as for boats
     @Override
-    public InterpolationHandler getInterpolation() {
-        return interpolator;
+    protected InterpolationHandler createInterpolationHandler() {
+        return LinearInterpolationHandler.create(this, 3);
     }
 
     @Override
@@ -179,7 +179,6 @@ public class LightCycleEntity extends VehicleEntity {
         }
 
         super.tick();
-        this.interpolator.interpolate();
         if (this.isLocalInstanceAuthoritative()) {
             this.updateVelocity();
 

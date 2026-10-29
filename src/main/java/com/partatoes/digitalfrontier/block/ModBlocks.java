@@ -263,7 +263,7 @@ public class ModBlocks {
                     .noLootTable()
                     .lightLevel(state -> 15)
                     .isSuffocating(Blocks::never)
-                    .isViewBlocking(Blocks::never)
+                    .isViewBlocking((state, world, pos, box) -> false)
                     .setId(ResourceKey.create(Registries.BLOCK, GRID_PORTAL_ID))));
 
 

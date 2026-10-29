@@ -1,6 +1,5 @@
 package com.partatoes.digitalfrontier.block.custom;
 
-import com.mojang.serialization.MapCodec;
 import com.partatoes.digitalfrontier.block.ModBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -67,10 +66,6 @@ public class LightBarrierEmitterBlock extends FaceAttachedHorizontalDirectionalB
     public LightBarrierEmitterBlock(BlockBehaviour.Properties settings) {
         super(settings);
         this.registerDefaultState((BlockState)((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(FACING, Direction.NORTH)).setValue(POWERED, false)).setValue(FACE, AttachFace.WALL));
-    }
-
-    protected MapCodec<? extends FaceAttachedHorizontalDirectionalBlock> codec() {
-        return null;
     }
 
     public void GenerateBridge(Direction dir, LevelAccessor world, int length, BlockPos pos, BlockState state) {

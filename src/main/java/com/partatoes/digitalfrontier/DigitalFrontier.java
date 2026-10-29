@@ -15,7 +15,6 @@ import com.partatoes.digitalfrontier.grid.tuning.GridTuningNetworking;
 import com.partatoes.digitalfrontier.grid.arrival.GridArrival;
 import com.partatoes.digitalfrontier.grid.exit.MemoryPaging;
 import com.partatoes.digitalfrontier.grid.exit.PortalBeams;
-import com.partatoes.digitalfrontier.item.ModFuelItems;
 import com.partatoes.digitalfrontier.item.ModItemGroups;
 import com.partatoes.digitalfrontier.item.ModItems;
 import com.partatoes.digitalfrontier.world.gen.ModWorldGeneration;
@@ -45,7 +44,6 @@ public class DigitalFrontier implements ModInitializer {
 		ModItems.registerModItems();
 		ModBlocks.registerModBlocks();
 		ModBlockEntities.registerModBlockEntities();
-		ModFuelItems.registerModFuelItems();
 
 		// Vehicle Registration
 		ModVehicles.registerModVehicles();
