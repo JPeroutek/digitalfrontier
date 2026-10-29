@@ -71,7 +71,7 @@ public class LightCycleBaton extends Item {
                 if (!world.isSpaceEmpty(lightCyle, lightCyle.getBoundingBox())) {
                     return ActionResult.PASS;
                 } else {
-                    if (!world.isClient) {
+                    if (!world.isClient()) {
                         world.spawnEntity(lightCyle);
                         world.emitGameEvent(user, GameEvent.ENTITY_PLACE, hitResult.getPos());
                         itemStack.decrementUnlessCreative(1, user);

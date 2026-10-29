@@ -1,10 +1,11 @@
 package com.partatoes.digitalfrontier.entity;
 
 import com.partatoes.digitalfrontier.DigitalFrontier;
-import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.render.entity.BipedEntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
-import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
+import net.minecraft.client.render.entity.state.BipedEntityRenderState;
+import net.minecraft.client.render.state.CameraRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.util.Identifier;
@@ -17,12 +18,12 @@ import java.util.function.Function;
  * and then a frame is drawn a little off where the entity really is, more often and further the more corrupted
  * the creature, like a signal breaking up.
  */
-// ProgramModel is a PlayerEntityModel, which fixes the render state type; State extends it to carry the texture
-public class GridMobRenderer<T extends MobEntity> extends BipedEntityRenderer<T, PlayerEntityRenderState, ProgramModel<PlayerEntityRenderState>> {
+// State carries the chosen texture; it must not be a player render state, which the player renderer would take over
+public class GridMobRenderer<T extends MobEntity> extends BipedEntityRenderer<T, BipedEntityRenderState, ProgramModel> {
     private final Function<T, Identifier> texture;
     private final float jitter;
 
-    public static class State extends PlayerEntityRenderState {
+    public static class State extends BipedEntityRenderState {
         Identifier texture;
     }
 
@@ -30,7 +31,7 @@ public class GridMobRenderer<T extends MobEntity> extends BipedEntityRenderer<T,
      * @param jitter 0 for none; around 0.5 for corrupted programs, 1 for the most corrupted
      */
     public GridMobRenderer(EntityRendererFactory.Context context, Function<T, Identifier> texture, float jitter) {
-        super(context, new ProgramModel<>(context.getPart(ModModelLayers.PROGRAM)), 0.5f);
+        super(context, new ProgramModel(context.getPart(ModModelLayers.PROGRAM)), 0.5f);
         this.texture = texture;
         this.jitter = jitter;
     }
@@ -45,23 +46,23 @@ public class GridMobRenderer<T extends MobEntity> extends BipedEntityRenderer<T,
     }
 
     @Override
-    public PlayerEntityRenderState createRenderState() {
+    public BipedEntityRenderState createRenderState() {
         return new State();
     }
 
     @Override
-    public void updateRenderState(T entity, PlayerEntityRenderState state, float tickDelta) {
+    public void updateRenderState(T entity, BipedEntityRenderState state, float tickDelta) {
         super.updateRenderState(entity, state, tickDelta);
         ((State) state).texture = texture.apply(entity);
     }
 
     @Override
-    public Identifier getTexture(PlayerEntityRenderState state) {
+    public Identifier getTexture(BipedEntityRenderState state) {
         return ((State) state).texture;
     }
 
     @Override
-    public void render(PlayerEntityRenderState state, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+    public void render(BipedEntityRenderState state, MatrixStack matrices, OrderedRenderCommandQueue queue, CameraRenderState cameraState) {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         boolean glitch = jitter > 0 && random.nextFloat() < 0.12f * jitter;
         if (glitch) {
@@ -69,7 +70,7 @@ public class GridMobRenderer<T extends MobEntity> extends BipedEntityRenderer<T,
             float offset = 0.15f * jitter;
             matrices.translate((random.nextFloat() - 0.5f) * offset, (random.nextFloat() - 0.5f) * offset * 0.5f, (random.nextFloat() - 0.5f) * offset);
         }
-        super.render(state, matrices, vertexConsumers, light);
+        super.render(state, matrices, queue, cameraState);
         if (glitch) {
             matrices.pop();
         }

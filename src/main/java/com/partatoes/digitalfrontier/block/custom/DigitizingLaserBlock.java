@@ -78,7 +78,7 @@ public class DigitizingLaserBlock extends BlockWithEntity {
     @Nullable
     @Override
     public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
-        return world.isClient ? null : validateTicker(type, ModBlockEntities.DIGITIZING_LASER, DigitizingLaserBlockEntity::tick);
+        return world.isClient() ? null : validateTicker(type, ModBlockEntities.DIGITIZING_LASER, DigitizingLaserBlockEntity::tick);
     }
 
     @Override

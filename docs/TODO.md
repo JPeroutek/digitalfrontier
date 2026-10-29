@@ -36,7 +36,7 @@ Ideas and planned work for the grid world generator that aren't scheduled into a
 - **Real art.** Corrupted programs, enforcers and lieutenants use the Program model with existing or generated
   skins; corruption shows as a render jitter.
 - **Trinkets.** Core Dumps keep Accessories slots (which also covers Trinkets mods through Accessories'
-  compatibility layer). Trinkets itself has no 1.21.8 release; add direct support if it updates.
+  compatibility layer). Trinkets itself has no 1.21.9 release; add direct support if it updates.
 - **More trigger ideas.** Each trigger type is one record in `Triggers`; candidates: an advancement earned, the
   number of corrupted programs near the stronghold, a Grid Tuning Laser retuned to this grid.
 

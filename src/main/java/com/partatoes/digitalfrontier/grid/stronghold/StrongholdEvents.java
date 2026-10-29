@@ -29,7 +29,7 @@ public final class StrongholdEvents {
             }
         });
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
-            if (!(entity.getWorld() instanceof ServerWorld world)) {
+            if (!(entity.getEntityWorld() instanceof ServerWorld world)) {
                 return;
             }
             if (entity instanceof ServerPlayerEntity) {

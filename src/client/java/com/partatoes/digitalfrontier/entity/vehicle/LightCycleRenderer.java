@@ -4,11 +4,11 @@ import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.entity.ModModelLayers;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.model.EntityModelLayer;
+import net.minecraft.client.render.state.CameraRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.RotationAxis;
@@ -41,7 +41,7 @@ public class LightCycleRenderer extends EntityRenderer<LightCycleEntity, LightCy
     }
 
     @Override
-    public void render(LightCycleEntityRenderState renderState, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+    public void render(LightCycleEntityRenderState renderState, MatrixStack matrices, OrderedRenderCommandQueue queue, CameraRenderState cameraState) {
         matrices.push();
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(-renderState.yaw));
 
@@ -49,10 +49,10 @@ public class LightCycleRenderer extends EntityRenderer<LightCycleEntity, LightCy
         matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(180f));
         // Shift it back into position
         matrices.translate(0f, -1.5f, 0f);
-        VertexConsumer vertexConsumer = vertexConsumers.getBuffer(this.MODEL.getLayer(TEXTURE));
-        this.MODEL.render(matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV);
+        queue.submitModel(this.MODEL, renderState, matrices, this.MODEL.getLayer(TEXTURE), renderState.light, OverlayTexture.DEFAULT_UV,
+                renderState.outlineColor, null);
 
         matrices.pop();
-        super.render(renderState, matrices, vertexConsumers, light);
+        super.render(renderState, matrices, queue, cameraState);
     }
 }

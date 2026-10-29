@@ -110,7 +110,7 @@ public final class StrongholdManager {
     }
 
     public static void onDefeated(LieutenantEntity entity) {
-        if (!(entity.getWorld() instanceof ServerWorld grid) || entity.strongholdId() == null) {
+        if (!(entity.getEntityWorld() instanceof ServerWorld grid) || entity.strongholdId() == null) {
             return;
         }
         StrongholdState state = StrongholdState.of(grid);
@@ -151,7 +151,7 @@ public final class StrongholdManager {
 
     /** Whether this lieutenant entity is the one its stronghold expects; stray copies remove themselves. */
     public static boolean isCurrent(LieutenantEntity entity) {
-        if (!(entity.getWorld() instanceof ServerWorld grid) || entity.strongholdId() == null) {
+        if (!(entity.getEntityWorld() instanceof ServerWorld grid) || entity.strongholdId() == null) {
             return false;
         }
         Stronghold stronghold = StrongholdState.of(grid).get(entity.strongholdId());

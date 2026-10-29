@@ -78,11 +78,11 @@ public final class MemoryPaging {
         if (target == null || !player.isDead()) {
             return null;
         }
-        return GridArrival.arrivalTarget(player.getServer(), target, player.getYaw(), player.getPitch()).orElse(null);
+        return GridArrival.arrivalTarget(player.getEntityWorld().getServer(), target, player.getYaw(), player.getPitch()).orElse(null);
     }
 
     private static void pageOut(ServerPlayerEntity player) {
-        if (!ModDimensions.isGrid(player.getWorld()) || holdsDeathProtector(player)) {
+        if (!ModDimensions.isGrid(player.getEntityWorld()) || holdsDeathProtector(player)) {
             return;
         }
         // A Core Dump does everything Memory Paging does and more, so it's used first
@@ -95,12 +95,12 @@ public final class MemoryPaging {
         if (!coreDump.isEmpty()) {
             player.setAttached(KEEP_INVENTORY, true);
         }
-        Identifier grid = player.getWorld().getRegistryKey().getValue();
+        Identifier grid = player.getEntityWorld().getRegistryKey().getValue();
         TerminalRef target = player.getAttachedOrCreate(GridMemory.TYPE).lastArrival()
                 .filter(terminal -> terminal.grid().equals(grid))
                 .orElse(new TerminalRef(grid, GridLayout.MAIN_ARRIVAL_ID));
         player.setAttached(PENDING, target);
-        StrongholdManager.fire(player.getWorld(), new GridEvent.MemoryPaged());
+        StrongholdManager.fire(player.getEntityWorld(), new GridEvent.MemoryPaged());
     }
 
     // What the keepInventory game rule copies; vanilla skips it for a death without that rule
@@ -120,7 +120,7 @@ public final class MemoryPaging {
         if (target == null) {
             return;
         }
-        if (player.getWorld().getRegistryKey().getValue().equals(target.grid())) {
+        if (player.getEntityWorld().getRegistryKey().getValue().equals(target.grid())) {
             String key = keepsInventory(oldPlayer) ? "message.digitalfrontier.core_dumped" : "message.digitalfrontier.memory_paged";
             GridArrival.recordArrival(player, target,
                     Text.translatable(key, GridArrival.terminalName(target.terminal())).formatted(Formatting.AQUA));

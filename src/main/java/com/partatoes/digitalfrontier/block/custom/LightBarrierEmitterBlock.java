@@ -122,7 +122,7 @@ public class LightBarrierEmitterBlock extends WallMountedBlock {
     }
 
     protected void neighborUpdate(BlockState state, World world, BlockPos pos, Block sourceBlock, @Nullable WireOrientation wireOrientation, boolean notify) {
-        if (!world.isClient) {
+        if (!world.isClient()) {
             int redstonePower = world.getReceivedRedstonePower(pos);
             Direction dir = (Direction)state.get(FACING);
             boolean bl = (Boolean)state.get(POWERED);
@@ -142,7 +142,7 @@ public class LightBarrierEmitterBlock extends WallMountedBlock {
     }
 
     public void scheduledTick(BlockState state, ServerWorld world, BlockPos pos, Random random) {
-        if (!world.isClient) {
+        if (!world.isClient()) {
             if ((Boolean)state.get(POWERED)) {
                 Direction dir = (Direction)state.get(FACING);
                 if (!world.isReceivingRedstonePower(pos)) {
@@ -159,7 +159,7 @@ public class LightBarrierEmitterBlock extends WallMountedBlock {
     }
 
     public void onPlaced(World world, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack itemStack) {
-        if (!world.isClient) {
+        if (!world.isClient()) {
             boolean bl = (Boolean)state.get(POWERED);
             if (bl != world.isReceivingRedstonePower(pos)) {
                 if (bl) {
@@ -177,7 +177,7 @@ public class LightBarrierEmitterBlock extends WallMountedBlock {
     }
 
     public BlockState onBreak(World world, BlockPos pos, BlockState state, PlayerEntity player) {
-        if (!world.isClient) {
+        if (!world.isClient()) {
             world.playSound((PlayerEntity)null, pos, SoundEvents.BLOCK_METAL_BREAK, SoundCategory.BLOCKS, 0.8F, 0.8F);
         }
 

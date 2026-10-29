@@ -71,14 +71,14 @@ public final class GridTuningNetworking {
 
     public static void openScreen(ServerPlayerEntity player, DigitizingLaserBlockEntity laser) {
         GridTuning current = Optional.ofNullable(laser.link())
-                .flatMap(link -> GridArrival.gridWorld(player.getServer(), link.grid()))
+                .flatMap(link -> GridArrival.gridWorld(player.getEntityWorld().getServer(), link.grid()))
                 .flatMap(world -> GridTuning.fromSettings(GridArrival.generator(world).layout().settings()))
                 .orElse(GridTuning.DEFAULT);
         ServerPlayNetworking.send(player, new OpenScreenPayload(laser.getPos(), current.code()));
     }
 
     private static void tune(ServerPlayerEntity player, TunePayload payload) {
-        ServerWorld world = player.getWorld();
+        ServerWorld world = player.getEntityWorld();
         BlockPos pos = payload.pos();
         if (!(world.getBlockState(pos).getBlock() instanceof DigitizingLaserBlock block) || !block.isTunable()
                 || !(world.getBlockEntity(pos) instanceof DigitizingLaserBlockEntity laser)
@@ -90,10 +90,10 @@ public final class GridTuningNetworking {
             player.sendMessage(Text.translatable("message.digitalfrontier.invalid_grid_code").formatted(Formatting.RED), true);
             return;
         }
-        Optional<ServerWorld> grid = GridManager.getOrCreate(player.getServer(), tuning.get().toSettings());
+        Optional<ServerWorld> grid = GridManager.getOrCreate(player.getEntityWorld().getServer(), tuning.get().toSettings());
         if (grid.isEmpty()) {
             player.sendMessage(Text.translatable("message.digitalfrontier.grid_limit",
-                    player.getServer().getGameRules().getInt(GridManager.MAX_TUNED_GRIDS)).formatted(Formatting.RED), true);
+                    player.getEntityWorld().getServer().getGameRules().getInt(GridManager.MAX_TUNED_GRIDS)).formatted(Formatting.RED), true);
             return;
         }
         Identifier gridId = grid.get().getRegistryKey().getValue();

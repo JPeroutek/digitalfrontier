@@ -45,7 +45,7 @@ public class ModDimensions {
                 384, // logicalHeight
                 BlockTags.INFINIBURN_OVERWORLD,
                 DimensionTypes.THE_END_ID, // effects
-.0f, // ambientLight
+                0.05f, // ambientLight: a faint floor, so unlit corners aren't pitch black
                 Optional.empty(), // cloudHeight: no clouds over the grid
                 new DimensionType.MonsterSettings(true, false, ConstantIntProvider.create(0), 0)));
     }

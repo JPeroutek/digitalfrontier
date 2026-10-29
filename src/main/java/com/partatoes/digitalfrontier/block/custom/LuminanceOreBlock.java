@@ -48,7 +48,7 @@ public class LuminanceOreBlock extends Block {
     }
     @Override
     protected ActionResult onUseWithItem(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if (world.isClient) {
+        if (world.isClient()) {
             LuminanceOreBlock.spawnParticles(world, pos);
         } else {
             LuminanceOreBlock.light(state, world, pos);

@@ -76,7 +76,7 @@ public class LightCycleEntity extends VehicleEntity {
         if (actionResult != ActionResult.PASS) {
             return actionResult;
         } else {
-            return (player.shouldCancelInteraction() || !this.getWorld().isClient && !player.startRiding(this) ? ActionResult.PASS : ActionResult.SUCCESS);
+            return (player.shouldCancelInteraction() || !this.getEntityWorld().isClient() && !player.startRiding(this) ? ActionResult.PASS : ActionResult.SUCCESS);
         }
     }
 
@@ -156,7 +156,7 @@ public class LightCycleEntity extends VehicleEntity {
         if (!this.hasVehicle()) {
             if (onGround) {
                 this.onLanding();
-            } else if (!this.getWorld().getFluidState(this.getBlockPos().down()).isIn(FluidTags.WATER) && heightDifference < 0.0) {
+            } else if (!this.getEntityWorld().getFluidState(this.getBlockPos().down()).isIn(FluidTags.WATER) && heightDifference < 0.0) {
                 this.fallDistance -= (float)heightDifference;
             }
 
@@ -183,7 +183,7 @@ public class LightCycleEntity extends VehicleEntity {
         if (this.isLogicalSideForUpdatingMovement()) {
             this.updateVelocity();
 
-            if (this.getWorld().isClient) {
+            if (this.getEntityWorld().isClient()) {
                 this.updateStateFromInput();
             }
 

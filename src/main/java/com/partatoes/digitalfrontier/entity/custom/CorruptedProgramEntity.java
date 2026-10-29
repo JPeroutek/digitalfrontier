@@ -119,7 +119,7 @@ public class CorruptedProgramEntity extends PathAwareEntity {
     @Override
     public void tick() {
         super.tick();
-        if (getWorld().isClient) {
+        if (getEntityWorld().isClient()) {
             return;
         }
         if (angerTicks > 0 && --angerTicks == 0) {
@@ -129,7 +129,7 @@ public class CorruptedProgramEntity extends PathAwareEntity {
             playAmbientSound();
             repeatSoundIn = -1;
         }
-        PlayerEntity nearest = getWorld().getClosestPlayer(this, 16);
+        PlayerEntity nearest = getEntityWorld().getClosestPlayer(this, 16);
         if (nearest != null) {
             // Stutter: stop dead for half a second
             if (stutterTicks > 0) {
@@ -165,7 +165,7 @@ public class CorruptedProgramEntity extends PathAwareEntity {
             double z = getZ() + (random.nextDouble() - 0.5) * 2 * range;
             BlockPos target = BlockPos.ofFloored(x, getY(), z);
             if (teleport(target.getX() + 0.5, target.getY(), target.getZ() + 0.5, true)) {
-                getWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_ENDERMAN_TELEPORT, SoundCategory.NEUTRAL, 0.4f, 2.0f);
+                getEntityWorld().playSound(null, getX(), getY(), getZ(), SoundEvents.ENTITY_ENDERMAN_TELEPORT, SoundCategory.NEUTRAL, 0.4f, 2.0f);
                 return;
             }
         }
@@ -207,7 +207,7 @@ public class CorruptedProgramEntity extends PathAwareEntity {
 
     @Nullable
     private PlayerEntity findWatcher() {
-        for (PlayerEntity player : getWorld().getPlayers()) {
+        for (PlayerEntity player : getEntityWorld().getPlayers()) {
             if (player.isSpectator() || player.squaredDistanceTo(this) > 24 * 24) {
                 continue;
             }
@@ -262,7 +262,7 @@ public class CorruptedProgramEntity extends PathAwareEntity {
             if (!hasQuirk(Quirk.ECHO) || getTarget() != null) {
                 return false;
             }
-            subject = getWorld().getClosestPlayer(CorruptedProgramEntity.this, 10);
+            subject = getEntityWorld().getClosestPlayer(CorruptedProgramEntity.this, 10);
             return subject != null && !subject.isSpectator();
         }
 
@@ -282,11 +282,11 @@ public class CorruptedProgramEntity extends PathAwareEntity {
                 return;
             }
             if (echoTrailSize < echoTrail.length) {
-                echoTrail[echoTrailSize++] = subject.getPos();
+                echoTrail[echoTrailSize++] = subject.getEntityPos();
                 return;
             }
             System.arraycopy(echoTrail, 1, echoTrail, 0, echoTrail.length - 1);
-            echoTrail[echoTrail.length - 1] = subject.getPos();
+            echoTrail[echoTrail.length - 1] = subject.getEntityPos();
             // Move the way the player moved ECHO_DELAY ticks ago
             Vec3d step = echoTrail[1].subtract(echoTrail[0]);
             if (step.horizontalLengthSquared() > 4.0E-4) {
@@ -312,7 +312,7 @@ public class CorruptedProgramEntity extends PathAwareEntity {
             if (getTarget() != null || random.nextInt(60) != 0) {
                 return false;
             }
-            subject = getWorld().getClosestPlayer(CorruptedProgramEntity.this, 20);
+            subject = getEntityWorld().getClosestPlayer(CorruptedProgramEntity.this, 20);
             return subject != null && !subject.isSpectator() && subject.squaredDistanceTo(CorruptedProgramEntity.this) > 16;
         }
 
