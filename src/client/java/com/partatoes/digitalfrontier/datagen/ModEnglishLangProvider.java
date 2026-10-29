@@ -90,7 +90,7 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
 
         // Tuned grids
         translationBuilder.add(ModBlocks.GRID_TUNING_LASER, "Grid Tuning Laser");
-        translationBuilder.add("gamerule.digitalfrontierMaxTunedGrids", "Digital Frontier: maximum tuned grids");
+        translationBuilder.add("gamerule.digitalfrontier.max_tuned_grids", "Digital Frontier: maximum tuned grids");
         translationBuilder.add("message.digitalfrontier.invalid_grid_code", "That isn't a valid grid code");
         translationBuilder.add("message.digitalfrontier.grid_limit", "This server can't hold more than %s tuned grids");
         translationBuilder.add("message.digitalfrontier.laser_tuned_grid", "Laser tuned to grid %s");

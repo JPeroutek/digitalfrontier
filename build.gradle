@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.11-SNAPSHOT'
+	id 'fabric-loom' version '1.16-SNAPSHOT'
 	id 'maven-publish'
 }
 
@@ -87,7 +87,7 @@ fabricApi {
 	}
 }
 
-def xaero_minimap = "fabric-1.21.10-26.6.0"
+def xaero_minimap = "fabric-1.21.11-26.6.2"
 
 // Loom strips the jars a dev dependency bundles, so a library a testing mod needs but that isn't published anywhere is
 // taken out of the mod's jar into build/nestedlibs, and added as a module (not files(), so Loom remaps the mod against it)
@@ -129,27 +129,27 @@ dependencies {
 
 	// For testing purposes...
 	// Release jar from Modrinth bundles worldedit-core; the EngineHub SNAPSHOTs drift out of sync with each other
-	modLocalRuntime "maven.modrinth:worldedit:7.4.0-beta-01"
+	modLocalRuntime "maven.modrinth:worldedit:7.4.2"
 	// It bundles the WorldEdit CUI protocol, published nowhere
-	modLocalRuntime nestedLib("maven.modrinth:worldedit:7.4.0-beta-01", "worldeditcui-protocol-fabric")
+	modLocalRuntime nestedLib("maven.modrinth:worldedit:7.4.2", "worldeditcui-protocol-fabric")
 	// Maps (handy for checking grid layouts), block/entity tooltips, and recipe/item lookup
 	modLocalRuntime "maven.modrinth:xaeros-minimap:${xaero_minimap}"
-	modLocalRuntime "maven.modrinth:xaeros-world-map:fabric-1.21.10-1.47.0"
+	modLocalRuntime "maven.modrinth:xaeros-world-map:fabric-1.21.11-1.47.2"
 	// Both need XaeroLib, which they bundle and which isn't published for Fabric
 	modLocalRuntime nestedLib("maven.modrinth:xaeros-minimap:${xaero_minimap}", "xaerolib")
-	modLocalRuntime "maven.modrinth:jade:20.1.0+fabric"
-	// REI, chosen when neither JEI nor EMI had a Fabric build (EMI still has none for 1.21.10); from its own maven, which brings its dependencies
-	modLocalRuntime "me.shedaniel:RoughlyEnoughItems-fabric:21.9.813"
+	modLocalRuntime "maven.modrinth:jade:21.1.6+fabric"
+	// REI, chosen when neither JEI nor EMI had a Fabric build (EMI still has none for 1.21.11); from its own maven, which brings its dependencies
+	modLocalRuntime "me.shedaniel:RoughlyEnoughItems-fabric:21.11.816"
 	// Sodium for frame rate
-	modLocalRuntime "maven.modrinth:sodium:mc1.21.10-0.7.3-fabric"
+	modLocalRuntime "maven.modrinth:sodium:mc1.21.11-0.8.14-fabric"
 	// Distant Horizons and Chunky crash together (DH calls into Chunky before Chunky has started), so it's one or the
 	// other: Distant Horizons to see far out (the derelict sectors from the city), or with -Ppregen, Chunky to
 	// pregenerate chunks, e.g. /chunky world digitalfrontier:default, /chunky radius 3000, /chunky start.
-	// Both by version id: DH 3.3.3-1.21.10; Chunky 1.4.52, a number its Fabric, Forge and NeoForge builds share
+	// Both by version id: DH 3.3.3-1.21.11; Chunky 1.4.55, a number its Fabric, Forge and NeoForge builds share
 	if (project.hasProperty("pregen")) {
-		modLocalRuntime "maven.modrinth:chunky:F3FNq8Q9"
+		modLocalRuntime "maven.modrinth:chunky:1CpEkmcD"
 	} else {
-		modLocalRuntime "maven.modrinth:distanthorizons:dXJr1PPw"
+		modLocalRuntime "maven.modrinth:distanthorizons:oNqCUHFk"
 	}
 
 	// Runs JUnit tests inside Fabric Loader so Minecraft classes are available

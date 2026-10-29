@@ -8,14 +8,14 @@ import com.partatoes.digitalfrontier.grid.gen.GridChunkGenerator;
 import com.partatoes.digitalfrontier.grid.layout.GridLayoutSettings;
 import com.partatoes.digitalfrontier.world.ModDimensions;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.fabricmc.fabric.api.gamerule.v1.GameRuleFactory;
-import net.fabricmc.fabric.api.gamerule.v1.GameRuleRegistry;
+import net.fabricmc.fabric.api.gamerule.v1.GameRuleBuilder;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
-import net.minecraft.world.GameRules;
+import net.minecraft.world.rule.GameRule;
+import net.minecraft.world.rule.GameRuleCategory;
 import net.minecraft.world.PersistentState;
 import net.minecraft.world.PersistentStateType;
 import xyz.nucleoid.fantasy.Fantasy;
@@ -33,10 +33,15 @@ import java.util.Optional;
  * The default grid is an ordinary datapack dimension and isn't managed here.
  */
 public final class GridManager {
-    public static final GameRules.Key<GameRules.IntRule> MAX_TUNED_GRIDS = GameRuleRegistry.register(
-            "digitalfrontierMaxTunedGrids", GameRules.Category.MISC, GameRuleFactory.createIntRule(8, 0));
+    public static final GameRule<Integer> MAX_TUNED_GRIDS = GameRuleBuilder.forInteger(8).minValue(0).category(GameRuleCategory.MISC)
+            .buildAndRegister(Identifier.of(DigitalFrontier.MOD_ID, "max_tuned_grids"));
 
     private GridManager() {
+    }
+
+    /** How many tuned grids the server may have (the {@code digitalfrontier:max_tuned_grids} game rule). */
+    public static int maxTunedGrids(MinecraftServer server) {
+        return server.getOverworld().getGameRules().getValue(MAX_TUNED_GRIDS);
     }
 
     public static void register() {
@@ -48,7 +53,7 @@ public final class GridManager {
 
     /**
      * The grid with these settings, opening or creating it if needed. Empty if it would be a new tuned grid and the
-     * server already has as many as the {@code digitalfrontierMaxTunedGrids} game rule allows.
+     * server already has as many as the {@code digitalfrontier:max_tuned_grids} game rule allows.
      */
     public static Optional<ServerWorld> getOrCreate(MinecraftServer server, GridLayoutSettings settings) {
         Identifier id = GridKey.of(settings);
@@ -57,7 +62,7 @@ public final class GridManager {
         }
         State state = state(server);
         if (!state.grids.containsKey(id)) {
-            if (state.grids.size() >= server.getGameRules().getInt(MAX_TUNED_GRIDS)) {
+            if (state.grids.size() >= maxTunedGrids(server)) {
                 return Optional.empty();
             }
             state.grids.put(id, settings);

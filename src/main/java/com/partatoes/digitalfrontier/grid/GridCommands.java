@@ -19,6 +19,7 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.IdentifierArgumentType;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -54,10 +55,10 @@ public final class GridCommands {
                 .then(literal("list").executes(GridCommands::list))
                 .then(literal("code").executes(GridCommands::code))
                 .then(literal("open")
-                        .requires(source -> source.hasPermissionLevel(2))
+                        .requires(CommandManager.requirePermissionLevel(CommandManager.GAMEMASTERS_CHECK))
                         .then(argument("code", StringArgumentType.word()).executes(GridCommands::open)))
                 .then(literal("delete")
-                        .requires(source -> source.hasPermissionLevel(2))
+                        .requires(CommandManager.requirePermissionLevel(CommandManager.GAMEMASTERS_CHECK))
                         .then(argument("grid", IdentifierArgumentType.identifier())
                                 .suggests((context, builder) -> CommandSource.suggestIdentifiers(
                                         GridManager.tunedGrids(context.getSource().getServer()).keySet(), builder))
@@ -66,17 +67,17 @@ public final class GridCommands {
                         .then(literal("status")
                                 .then(gridArgument().executes(GridCommands::lieutenantStatus)))
                         .then(literal("trigger")
-                                .requires(source -> source.hasPermissionLevel(2))
+                                .requires(CommandManager.requirePermissionLevel(CommandManager.GAMEMASTERS_CHECK))
                                 .then(gridArgument()
                                         .executes(context -> lieutenantTrigger(context, null))
                                         .then(argument("signal", StringArgumentType.word())
                                                 .executes(context -> lieutenantTrigger(context, StringArgumentType.getString(context, "signal"))))))
                         .then(literal("respawn")
-                                .requires(source -> source.hasPermissionLevel(2))
+                                .requires(CommandManager.requirePermissionLevel(CommandManager.GAMEMASTERS_CHECK))
                                 .then(gridArgument()
                                         .then(strongholdArgument().executes(GridCommands::lieutenantRespawn))))
                         .then(literal("defeat")
-                                .requires(source -> source.hasPermissionLevel(2))
+                                .requires(CommandManager.requirePermissionLevel(CommandManager.GAMEMASTERS_CHECK))
                                 .then(gridArgument()
                                         .then(strongholdArgument().executes(GridCommands::lieutenantDefeat))))));
     }
@@ -169,7 +170,7 @@ public final class GridCommands {
     private static int list(CommandContext<ServerCommandSource> context) {
         MinecraftServer server = context.getSource().getServer();
         context.getSource().sendFeedback(() -> Text.translatable("commands.digitalfrontier.grid.list",
-                GridManager.tunedGrids(server).size(), server.getGameRules().getInt(GridManager.MAX_TUNED_GRIDS)), false);
+                GridManager.tunedGrids(server).size(), GridManager.maxTunedGrids(server)), false);
         context.getSource().sendFeedback(() -> gridLine(server, ModDimensions.DEFAULT_GRID_ID, GridLayoutSettings.DEFAULT), false);
         GridManager.tunedGrids(server).forEach((id, settings) ->
                 context.getSource().sendFeedback(() -> gridLine(server, id, settings), false));
@@ -201,7 +202,7 @@ public final class GridCommands {
         Optional<ServerWorld> grid = GridManager.getOrCreate(source.getServer(), tuning.get().toSettings());
         if (grid.isEmpty()) {
             source.sendError(Text.translatable("message.digitalfrontier.grid_limit",
-                    source.getServer().getGameRules().getInt(GridManager.MAX_TUNED_GRIDS)));
+                    GridManager.maxTunedGrids(source.getServer())));
             return 0;
         }
         Identifier id = grid.get().getRegistryKey().getValue();

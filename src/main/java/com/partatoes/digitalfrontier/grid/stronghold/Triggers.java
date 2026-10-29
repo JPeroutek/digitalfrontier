@@ -13,6 +13,7 @@ import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.attribute.EnvironmentAttributes;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -114,7 +115,7 @@ public final class Triggers {
 
         public boolean holds(TriggerContext context) {
             ServerWorld overworld = context.grid().getServer().getOverworld();
-            return phases.contains(overworld.getDimension().getMoonPhase(overworld.getLunarTime()));
+            return phases.contains(overworld.getEnvironmentAttributes().getAttributeValue(EnvironmentAttributes.MOON_PHASE_VISUAL).getIndex());
         }
     }
 
