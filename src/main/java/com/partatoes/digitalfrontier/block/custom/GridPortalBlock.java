@@ -38,7 +38,7 @@ public class GridPortalBlock extends Block {
     }
 
     @Override
-    protected void onEntityCollision(BlockState state, World world, BlockPos pos, Entity entity, EntityCollisionHandler handler) {
+    protected void onEntityCollision(BlockState state, World world, BlockPos pos, Entity entity, EntityCollisionHandler handler, boolean bl) {
         // A player touches several portal blocks in one tick; only the first one, while they're still here, counts
         if (entity instanceof ServerPlayerEntity player && player.getEntityWorld() == world && ModDimensions.isGrid(world)) {
             StrongholdManager.fire(player.getEntityWorld(), new GridEvent.PortalUsed());

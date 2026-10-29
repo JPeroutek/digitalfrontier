@@ -64,7 +64,7 @@ public class ModModelProvider extends FabricModelProvider {
                                 BlockStateModelGenerator.createWeightedVariant(TexturedModel.CUBE_ALL.upload(ModBlocks.PIXEL_LAMP, blockStateModelGenerator.modelCollector))))
         );
 
-        blockStateModelGenerator.registerNorthDefaultHorizontalRotation(ModBlocks.KEYBOARD_BLOCK);
+        blockStateModelGenerator.registerNorthDefaultHorizontalRotatable(ModBlocks.KEYBOARD_BLOCK);
 
         // This will need to be replaced later to support directionality and stuff
         ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS
@@ -96,11 +96,11 @@ public class ModModelProvider extends FabricModelProvider {
                         .with(BlockStateModelGenerator.createBooleanModelMap(Properties.POWERED,
                                 BlockStateModelGenerator.createWeightedVariant(ModelIds.getBlockSubModelId(ModBlocks.LIGHT_BARRIER_EMITTER, "_powered")),
                                 BlockStateModelGenerator.createWeightedVariant(ModelIds.getBlockModelId(ModBlocks.LIGHT_BARRIER_EMITTER))))
-                        .coordinate(faceRotations())
+                        .apply(faceRotations())
         );
         blockStateModelGenerator.blockStateCollector.accept(
                 VariantsBlockModelDefinitionCreator.of(ModBlocks.LIGHT_BARRIER, BlockStateModelGenerator.createWeightedVariant(ModelIds.getBlockModelId(ModBlocks.LIGHT_BARRIER)))
-                        .coordinate(faceRotations())
+                        .apply(faceRotations())
         );
     }
 

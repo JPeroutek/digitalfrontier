@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.partatoes.digitalfrontier.grid.exit.PortalBeams;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.BeaconBlockEntityRenderer;
@@ -49,10 +50,10 @@ public final class PortalBeamRenderer {
             world = null;
             beams = List.of();
         });
+        WorldRenderEvents.AFTER_ENTITIES.register(context -> render());
     }
 
-    /** Called from the world renderer's main pass, after entities (see WorldRendererMixin). */
-    public static void render() {
+    private static void render() {
         MinecraftClient client = MinecraftClient.getInstance();
         ClientWorld clientWorld = client.world;
         if (beams.isEmpty() || clientWorld == null || !clientWorld.getRegistryKey().getValue().equals(world)) {
