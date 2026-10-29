@@ -11,21 +11,20 @@ import com.partatoes.digitalfrontier.grid.layout.Zone;
 import com.partatoes.digitalfrontier.grid.parts.GridBuildingDef;
 import com.partatoes.digitalfrontier.grid.parts.SpiralStair;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.PoweredRailBlock;
-import net.minecraft.block.RailBlock;
-import net.minecraft.block.SlabBlock;
-import net.minecraft.block.enums.RailShape;
-import net.minecraft.block.enums.SlabType;
-import net.minecraft.data.DataOutput;
+import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
-import net.minecraft.data.DataWriter;
+import net.minecraft.data.PackOutput;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.util.BlockRotation;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.PoweredRailBlock;
+import net.minecraft.world.level.block.RailBlock;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.SlabBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.RailShape;
+import net.minecraft.world.level.block.state.properties.SlabType;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -43,38 +42,38 @@ import java.util.concurrent.CompletableFuture;
  * {@code src/main/resources} under other names (see docs/grid-structures.md).
  */
 public class ModGridStarterProvider implements DataProvider {
-    private static final BlockState AIR = Blocks.AIR.getDefaultState();
-    private static final BlockState BRICKS = ModBlocks.GRIDSTONE_BRICKS_BLOCK.getDefaultState();
-    private static final BlockState WALL = ModBlocks.GRIDSTONE_BRICKS_WALL.getDefaultState();
+    private static final BlockState AIR = Blocks.AIR.defaultBlockState();
+    private static final BlockState BRICKS = ModBlocks.GRIDSTONE_BRICKS_BLOCK.defaultBlockState();
+    private static final BlockState WALL = ModBlocks.GRIDSTONE_BRICKS_WALL.defaultBlockState();
     // White blocks are recolored to the district's color at generation time
-    private static final BlockState GLASS = Blocks.WHITE_STAINED_GLASS.getDefaultState();
+    private static final BlockState GLASS = Blocks.WHITE_STAINED_GLASS.defaultBlockState();
     private static final BlockState LIGHT = pattern("full");
     private static final BlockState STRIPE = pattern("center_stripe");
     private static final BlockState TARGET = pattern("thick_target");
-    private static final BlockState PAD = ModBlocks.ARRIVAL_PAD.getDefaultState();
-    private static final BlockState PORTAL = ModBlocks.GRID_PORTAL.getDefaultState();
-    private static final BlockState SLAB = ModBlocks.GRIDSTONE_BRICKS_SLAB.getDefaultState().with(SlabBlock.TYPE, SlabType.BOTTOM);
-    private static final BlockState DARK_GLASS = Blocks.BLACK_STAINED_GLASS.getDefaultState();
-    private static final BlockState UPLINK = ModBlocks.STRONGHOLD_UPLINK.getDefaultState();
+    private static final BlockState PAD = ModBlocks.ARRIVAL_PAD.defaultBlockState();
+    private static final BlockState PORTAL = ModBlocks.GRID_PORTAL.defaultBlockState();
+    private static final BlockState SLAB = ModBlocks.GRIDSTONE_BRICKS_SLAB.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.BOTTOM);
+    private static final BlockState DARK_GLASS = Blocks.BLACK_STAINED_GLASS.defaultBlockState();
+    private static final BlockState UPLINK = ModBlocks.STRONGHOLD_UPLINK.defaultBlockState();
     private static final BlockState RED_LIGHT = pattern("full", DyeColor.RED);
     private static final BlockState RED_STRIPE = pattern("center_stripe", DyeColor.RED);
     private static final BlockState RED_TARGET = pattern("thick_target", DyeColor.RED);
 
-    private final DataOutput.PathResolver structures;
-    private final DataOutput.PathResolver buildings;
+    private final PackOutput.PathProvider structures;
+    private final PackOutput.PathProvider buildings;
 
     public ModGridStarterProvider(FabricDataOutput output) {
-        this.structures = output.getResolver(DataOutput.OutputType.DATA_PACK, "structure");
-        this.buildings = output.getResolver(DataOutput.OutputType.DATA_PACK, "grid/building");
+        this.structures = output.createPathProvider(PackOutput.Target.DATA_PACK, "structure");
+        this.buildings = output.createPathProvider(PackOutput.Target.DATA_PACK, "grid/building");
     }
 
     @Override
-    public CompletableFuture<?> run(DataWriter writer) {
+    public CompletableFuture<?> run(CachedOutput writer) {
         List<CompletableFuture<?>> futures = new ArrayList<>();
-        parts().forEach((path, part) -> futures.add(writeNbt(writer, structures.resolve(id(path), "nbt"), part)));
+        parts().forEach((path, part) -> futures.add(writeNbt(writer, structures.file(id(path), "nbt"), part)));
         buildingDefs().forEach((name, def) -> {
             JsonElement json = GridBuildingDef.CODEC.encodeStart(JsonOps.INSTANCE, def).getOrThrow();
-            futures.add(DataProvider.writeToPath(writer, json, buildings.resolveJson(id(name))));
+            futures.add(DataProvider.saveStable(writer, json, buildings.json(id(name))));
         });
         return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new));
     }
@@ -220,13 +219,13 @@ public class ModGridStarterProvider implements DataProvider {
         StarterPart railStation = guideway(new StarterPart(16, 26), 1, 14)
                 .box(0, 22, 1, 15, 22, 3, BRICKS).box(0, 22, 12, 15, 22, 14, BRICKS);
         // Placed turned clockwise, so the staircases land in the chunk's corners
-        stationStairs(railStation, 0, 22, BlockRotation.CLOCKWISE_90);
+        stationStairs(railStation, 0, 22, Rotation.CLOCKWISE_90);
         parts.put("grid/starter/level/guideway_station", railStation);
 
         // Subway: tracks along X at Z = 6 and 9, on the tunnel floor (Y 47, part Y 0)
         parts.put("grid/starter/level/subway", subway(new StarterPart(16, 8), 3, 12));
         StarterPart subwayStation = subway(new StarterPart(16, 21), 0, 15);
-        stationStairs(subwayStation, 1, 16, BlockRotation.NONE);
+        stationStairs(subwayStation, 1, 16, Rotation.NONE);
         parts.put("grid/starter/level/subway_station", subwayStation);
         parts.put("grid/starter/level/subway_corner", subwayCorner());
         parts.put("grid/starter/level/subway_passage", subwayPassage());
@@ -291,11 +290,11 @@ public class ModGridStarterProvider implements DataProvider {
     // Two tracks along X at Z = 6 and 9; powered rails on redstone at X = 0 and 8 (every 8 blocks in the world)
     private static void tracks(StarterPart part, int bedY, int railY) {
         for (int z : new int[]{6, 9}) {
-            part.box(0, railY, z, 15, railY, z, Blocks.RAIL.getDefaultState().with(RailBlock.SHAPE, RailShape.EAST_WEST));
+            part.box(0, railY, z, 15, railY, z, Blocks.RAIL.defaultBlockState().setValue(RailBlock.SHAPE, RailShape.EAST_WEST));
             for (int x : new int[]{0, 8}) {
-                part.box(x, bedY, z, x, bedY, z, Blocks.REDSTONE_BLOCK.getDefaultState())
-                        .box(x, railY, z, x, railY, z, Blocks.POWERED_RAIL.getDefaultState()
-                                .with(PoweredRailBlock.SHAPE, RailShape.EAST_WEST).with(PoweredRailBlock.POWERED, true));
+                part.box(x, bedY, z, x, bedY, z, Blocks.REDSTONE_BLOCK.defaultBlockState())
+                        .box(x, railY, z, x, railY, z, Blocks.POWERED_RAIL.defaultBlockState()
+                                .setValue(PoweredRailBlock.SHAPE, RailShape.EAST_WEST).setValue(PoweredRailBlock.POWERED, true));
             }
         }
     }
@@ -304,9 +303,9 @@ public class ModGridStarterProvider implements DataProvider {
      * A station's two spiral staircases, in the corners of the chunk it's placed in: (0..3, 0..3) and the opposite
      * one. {@code placed} is how the generator turns the station, so the stairs are written turned back.
      */
-    private static void stationStairs(StarterPart part, int bottomY, int rise, BlockRotation placed) {
-        boolean turned = placed == BlockRotation.CLOCKWISE_90;
-        BlockRotation back = turned ? BlockRotation.COUNTERCLOCKWISE_90 : BlockRotation.NONE;
+    private static void stationStairs(StarterPart part, int bottomY, int rise, Rotation placed) {
+        boolean turned = placed == Rotation.CLOCKWISE_90;
+        Rotation back = turned ? Rotation.COUNTERCLOCKWISE_90 : Rotation.NONE;
         for (int x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
                 // Where this part position ends up in the chunk
@@ -318,7 +317,7 @@ public class ModGridStarterProvider implements DataProvider {
                         state = SpiralStair.blockAt(chunkX, y, chunkZ, rise, LIGHT);
                     } else if (chunkX >= 12 && chunkZ >= 12) {
                         state = SpiralStair.blockAt(15 - chunkX, y, 15 - chunkZ, rise, LIGHT);
-                        state = state == null ? null : state.rotate(BlockRotation.CLOCKWISE_180);
+                        state = state == null ? null : state.rotate(Rotation.CLOCKWISE_180);
                     }
                     if (state != null) {
                         part.box(x, bottomY + y, z, x, bottomY + y, z, state.rotate(back));
@@ -352,9 +351,9 @@ public class ModGridStarterProvider implements DataProvider {
         }
         part.box(7, 7, 7, 8, 7, 8, LIGHT);
         for (int track : new int[]{6, 9}) {
-            part.box(track, 1, track + 1, track, 1, 15, Blocks.RAIL.getDefaultState().with(RailBlock.SHAPE, RailShape.NORTH_SOUTH))
-                    .box(track + 1, 1, track, 15, 1, track, Blocks.RAIL.getDefaultState().with(RailBlock.SHAPE, RailShape.EAST_WEST))
-                    .box(track, 1, track, track, 1, track, Blocks.RAIL.getDefaultState().with(RailBlock.SHAPE, RailShape.SOUTH_EAST));
+            part.box(track, 1, track + 1, track, 1, 15, Blocks.RAIL.defaultBlockState().setValue(RailBlock.SHAPE, RailShape.NORTH_SOUTH))
+                    .box(track + 1, 1, track, 15, 1, track, Blocks.RAIL.defaultBlockState().setValue(RailBlock.SHAPE, RailShape.EAST_WEST))
+                    .box(track, 1, track, track, 1, track, Blocks.RAIL.defaultBlockState().setValue(RailBlock.SHAPE, RailShape.SOUTH_EAST));
         }
         return part;
     }
@@ -443,13 +442,13 @@ public class ModGridStarterProvider implements DataProvider {
                 Optional.of(id("grid/starter/level/" + name)), List.of(), Optional.empty(), 0, 0));
     }
 
-    private static CompletableFuture<?> writeNbt(DataWriter writer, Path path, StarterPart part) {
+    private static CompletableFuture<?> writeNbt(CachedOutput writer, Path path, StarterPart part) {
         return CompletableFuture.runAsync(() -> {
             try {
                 ByteArrayOutputStream bytes = new ByteArrayOutputStream();
                 HashingOutputStream hashing = new HashingOutputStream(Hashing.sha1(), bytes);
                 NbtIo.writeCompressed(part.toNbt(), hashing);
-                writer.write(path, bytes.toByteArray(), hashing.hash());
+                writer.writeIfNeeded(path, bytes.toByteArray(), hashing.hash());
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
@@ -461,11 +460,11 @@ public class ModGridStarterProvider implements DataProvider {
     }
 
     private static BlockState pattern(String name, DyeColor color) {
-        return ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get(name).get(color).getDefaultState();
+        return ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get(name).get(color).defaultBlockState();
     }
 
     private static Identifier id(String path) {
-        return Identifier.of(DigitalFrontier.MOD_ID, path);
+        return Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, path);
     }
 
     @Override

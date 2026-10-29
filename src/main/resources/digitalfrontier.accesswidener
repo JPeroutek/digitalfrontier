@@ -1,4 +1,3 @@
-accessWidener v2 named
-
-accessible field net/minecraft/client/network/ClientPlayerEntity riding Z
-accessible field net/minecraft/client/render/GameRenderer fogRenderer Lnet/minecraft/client/render/fog/FogRenderer;
+accessWidener	v2	named
+accessible	field	net/minecraft/client/player/LocalPlayer	handsBusy	Z
+accessible	field	net/minecraft/client/renderer/GameRenderer	fogRenderer	Lnet/minecraft/client/renderer/fog/FogRenderer;

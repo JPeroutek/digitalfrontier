@@ -2,34 +2,34 @@ package com.partatoes.digitalfrontier.world;
 
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.grid.GridKey;
-import net.minecraft.registry.Registerable;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.entry.RegistryEntryList;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.intprovider.ConstantIntProvider;
-import net.minecraft.world.World;
+import net.minecraft.core.HolderSet;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.data.worldgen.BootstrapContext;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.util.valueproviders.ConstantInt;
 import net.minecraft.world.attribute.BedRule;
 import net.minecraft.world.attribute.EnvironmentAttributeMap;
 import net.minecraft.world.attribute.EnvironmentAttributes;
-import net.minecraft.world.dimension.DimensionOptions;
-import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.dimension.LevelStem;
 public class ModDimensions {
     // One dimension type shared by every grid
-    public static final Identifier DIGITAL_FRONTIER_TYPE_ID = Identifier.of(DigitalFrontier.MOD_ID, "digitalfrontier");
-    public static final RegistryKey<DimensionType> DIGITAL_FRONTIER_TYPE_KEY = RegistryKey.of(RegistryKeys.DIMENSION_TYPE, DIGITAL_FRONTIER_TYPE_ID);
+    public static final Identifier DIGITAL_FRONTIER_TYPE_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "digitalfrontier");
+    public static final ResourceKey<DimensionType> DIGITAL_FRONTIER_TYPE_KEY = ResourceKey.create(Registries.DIMENSION_TYPE, DIGITAL_FRONTIER_TYPE_ID);
 
     // The default grid; tuned grids get their ids from GridKey at runtime
-    public static final Identifier DEFAULT_GRID_ID = Identifier.of(DigitalFrontier.MOD_ID, GridKey.DEFAULT_PATH);
-    public static final RegistryKey<DimensionOptions> DEFAULT_GRID_KEY = RegistryKey.of(RegistryKeys.DIMENSION, DEFAULT_GRID_ID);
-    public static final RegistryKey<World> DEFAULT_GRID_WORLD_KEY = RegistryKey.of(RegistryKeys.WORLD, DEFAULT_GRID_ID);
+    public static final Identifier DEFAULT_GRID_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, GridKey.DEFAULT_PATH);
+    public static final ResourceKey<LevelStem> DEFAULT_GRID_KEY = ResourceKey.create(Registries.LEVEL_STEM, DEFAULT_GRID_ID);
+    public static final ResourceKey<Level> DEFAULT_GRID_WORLD_KEY = ResourceKey.create(Registries.DIMENSION, DEFAULT_GRID_ID);
 
-    public static boolean isGrid(World world) {
-        return world.getDimensionEntry().matchesKey(DIGITAL_FRONTIER_TYPE_KEY);
+    public static boolean isGrid(Level world) {
+        return world.dimensionTypeRegistration().is(DIGITAL_FRONTIER_TYPE_KEY);
     }
 
-    public static void bootstrapType(Registerable<DimensionType> context) {
+    public static void bootstrapType(BootstrapContext<DimensionType> context) {
         context.register(DIGITAL_FRONTIER_TYPE_KEY, new DimensionType(
                 true, // hasFixedTime: no day and night on the grid
                 false, // hasSkylight
@@ -40,16 +40,16 @@ public class ModDimensions {
                 384, // logicalHeight
                 BlockTags.INFINIBURN_OVERWORLD,
                 0.05f, // ambientLight: a faint floor, so unlit corners aren't pitch black
-                new DimensionType.MonsterSettings(ConstantIntProvider.create(0), 0),
+                new DimensionType.MonsterSettings(ConstantInt.of(0), 0),
                 DimensionType.Skybox.END,
                 DimensionType.CardinalLightType.DEFAULT,
                 EnvironmentAttributeMap.builder()
                         // Beds explode and never set a spawn: players always respawn outside the grid unless something says otherwise
-                        .with(EnvironmentAttributes.BED_RULE_GAMEPLAY, BedRule.OTHER_DIMENSION)
-                        .with(EnvironmentAttributes.RESPAWN_ANCHOR_WORKS_GAMEPLAY, false)
-                        .with(EnvironmentAttributes.CAN_START_RAID_GAMEPLAY, false)
-                        .with(EnvironmentAttributes.PIGLINS_ZOMBIFY_GAMEPLAY, false)
+                        .set(EnvironmentAttributes.BED_RULE, BedRule.EXPLODES)
+                        .set(EnvironmentAttributes.RESPAWN_ANCHOR_WORKS, false)
+                        .set(EnvironmentAttributes.CAN_START_RAID, false)
+                        .set(EnvironmentAttributes.PIGLINS_ZOMBIFY, false)
                         .build(),
-                RegistryEntryList.empty())); // timelines: none, so nothing changes with the time of day
+                HolderSet.empty())); // timelines: none, so nothing changes with the time of day
     }
 }

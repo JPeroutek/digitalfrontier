@@ -1,17 +1,16 @@
 package com.partatoes.digitalfrontier.entity;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.partatoes.digitalfrontier.DigitalFrontier;
-import net.minecraft.client.render.command.OrderedRenderCommandQueue;
-import net.minecraft.client.render.entity.BipedEntityRenderer;
-import net.minecraft.client.render.entity.EntityRendererFactory;
-import net.minecraft.client.render.entity.state.BipedEntityRenderState;
-import net.minecraft.client.render.state.CameraRenderState;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.util.Identifier;
-
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
+import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
+import net.minecraft.client.renderer.entity.state.HumanoidRenderState;
+import net.minecraft.client.renderer.state.CameraRenderState;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.Mob;
 
 /**
  * The grid's creatures on the Program model: each picks its texture per entity, and corrupted ones jitter. Now
@@ -19,60 +18,60 @@ import java.util.function.Function;
  * the creature, like a signal breaking up.
  */
 // State carries the chosen texture; it must not be a player render state, which the player renderer would take over
-public class GridMobRenderer<T extends MobEntity> extends BipedEntityRenderer<T, BipedEntityRenderState, ProgramModel> {
+public class GridMobRenderer<T extends Mob> extends HumanoidMobRenderer<T, HumanoidRenderState, ProgramModel> {
     private final Function<T, Identifier> texture;
     private final float jitter;
 
-    public static class State extends BipedEntityRenderState {
+    public static class State extends HumanoidRenderState {
         Identifier texture;
     }
 
     /**
      * @param jitter 0 for none; around 0.5 for corrupted programs, 1 for the most corrupted
      */
-    public GridMobRenderer(EntityRendererFactory.Context context, Function<T, Identifier> texture, float jitter) {
-        super(context, new ProgramModel(context.getPart(ModModelLayers.PROGRAM)), 0.5f);
+    public GridMobRenderer(EntityRendererProvider.Context context, Function<T, Identifier> texture, float jitter) {
+        super(context, new ProgramModel(context.bakeLayer(ModModelLayers.PROGRAM)), 0.5f);
         this.texture = texture;
         this.jitter = jitter;
     }
 
     /** One of a few textures, chosen per entity so a crowd isn't all identical. */
-    public static <T extends MobEntity> Function<T, Identifier> variants(String... names) {
+    public static <T extends Mob> Function<T, Identifier> variants(String... names) {
         Identifier[] textures = new Identifier[names.length];
         for (int i = 0; i < names.length; i++) {
-            textures[i] = Identifier.of(DigitalFrontier.MOD_ID, "textures/entity/" + names[i] + ".png");
+            textures[i] = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "textures/entity/" + names[i] + ".png");
         }
-        return entity -> textures[Math.floorMod(entity.getUuid().hashCode(), textures.length)];
+        return entity -> textures[Math.floorMod(entity.getUUID().hashCode(), textures.length)];
     }
 
     @Override
-    public BipedEntityRenderState createRenderState() {
+    public HumanoidRenderState createRenderState() {
         return new State();
     }
 
     @Override
-    public void updateRenderState(T entity, BipedEntityRenderState state, float tickDelta) {
-        super.updateRenderState(entity, state, tickDelta);
+    public void extractRenderState(T entity, HumanoidRenderState state, float tickDelta) {
+        super.extractRenderState(entity, state, tickDelta);
         ((State) state).texture = texture.apply(entity);
     }
 
     @Override
-    public Identifier getTexture(BipedEntityRenderState state) {
+    public Identifier getTextureLocation(HumanoidRenderState state) {
         return ((State) state).texture;
     }
 
     @Override
-    public void render(BipedEntityRenderState state, MatrixStack matrices, OrderedRenderCommandQueue queue, CameraRenderState cameraState) {
+    public void submit(HumanoidRenderState state, PoseStack matrices, SubmitNodeCollector queue, CameraRenderState cameraState) {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         boolean glitch = jitter > 0 && random.nextFloat() < 0.12f * jitter;
         if (glitch) {
-            matrices.push();
+            matrices.pushPose();
             float offset = 0.15f * jitter;
             matrices.translate((random.nextFloat() - 0.5f) * offset, (random.nextFloat() - 0.5f) * offset * 0.5f, (random.nextFloat() - 0.5f) * offset);
         }
-        super.render(state, matrices, queue, cameraState);
+        super.submit(state, matrices, queue, cameraState);
         if (glitch) {
-            matrices.pop();
+            matrices.popPose();
         }
     }
 }

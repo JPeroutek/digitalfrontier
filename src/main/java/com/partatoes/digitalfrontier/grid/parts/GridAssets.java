@@ -2,13 +2,13 @@ package com.partatoes.digitalfrontier.grid.parts;
 
 import com.partatoes.digitalfrontier.grid.layout.StreetAxis.RoadClass;
 import com.partatoes.digitalfrontier.grid.layout.Zone;
-import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import net.minecraft.resources.Identifier;
 
 /**
  * An immutable snapshot of the loaded parts and building definitions. Worldgen threads read {@link #current()};

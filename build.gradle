@@ -107,12 +107,7 @@ def nestedLib = { String mod, String name ->
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	// Yarn names NbtList's get(int) and remove(int), but Loom leaves them unnamed in the game jar (they clash with the
-	// bridge methods) while still renaming calls in remapped mods, which then crash (Xaero's World Map). Keep both unnamed
-	mappings loom.layered {
-		mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-		mappings file("mappings/nbt-list-fix.tiny")
-	}
+	mappings loom.officialMojangMappings()
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// Fabric API. This is technically optional, but you probably want it anyway.

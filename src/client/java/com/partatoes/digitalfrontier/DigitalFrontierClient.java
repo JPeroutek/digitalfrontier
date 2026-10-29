@@ -13,10 +13,10 @@ import com.partatoes.digitalfrontier.screen.GridTuningScreen;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockRenderLayerMap;
-import net.minecraft.block.Block;
-import net.minecraft.client.render.BlockRenderLayer;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
+import net.minecraft.world.level.block.Block;
 
 public class DigitalFrontierClient implements ClientModInitializer {
 	@Override
@@ -40,10 +40,10 @@ public class DigitalFrontierClient implements ClientModInitializer {
 
 		// Pattern blocks draw a transparent glow overlay over their base texture, which needs cutout rendering
 		ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.values().forEach(colorMapping ->
-				BlockRenderLayerMap.putBlocks(BlockRenderLayer.CUTOUT, colorMapping.values().toArray(Block[]::new)));
-		BlockRenderLayerMap.putBlocks(BlockRenderLayer.CUTOUT, ModBlocks.ARRIVAL_PAD, ModBlocks.GRID_PORTAL, ModBlocks.STATIC_BLOCK,
+				BlockRenderLayerMap.putBlocks(ChunkSectionLayer.CUTOUT, colorMapping.values().toArray(Block[]::new)));
+		BlockRenderLayerMap.putBlocks(ChunkSectionLayer.CUTOUT, ModBlocks.ARRIVAL_PAD, ModBlocks.GRID_PORTAL, ModBlocks.STATIC_BLOCK,
 				ModBlocks.STRONGHOLD_UPLINK);
-		BlockRenderLayerMap.putBlocks(BlockRenderLayer.CUTOUT, ModBlocks.GLITCHED_GRIDSTONE.values().toArray(Block[]::new));
+		BlockRenderLayerMap.putBlocks(ChunkSectionLayer.CUTOUT, ModBlocks.GLITCHED_GRIDSTONE.values().toArray(Block[]::new));
 
 		// The Portal's beam, seen from anywhere in the grid
 		PortalBeamRenderer.register();

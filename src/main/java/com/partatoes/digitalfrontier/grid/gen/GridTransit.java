@@ -16,27 +16,27 @@ import com.partatoes.digitalfrontier.grid.parts.GridAssets;
 import com.partatoes.digitalfrontier.grid.parts.GridBuildingDef.Kind;
 import com.partatoes.digitalfrontier.grid.parts.GridPart;
 import com.partatoes.digitalfrontier.grid.parts.SpiralStair;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.PoweredRailBlock;
-import net.minecraft.block.RailBlock;
-import net.minecraft.block.SignBlock;
-import net.minecraft.block.SlabBlock;
-import net.minecraft.block.WallSignBlock;
-import net.minecraft.block.entity.SignText;
-import net.minecraft.block.enums.RailShape;
-import net.minecraft.block.enums.SlabType;
-import net.minecraft.text.Text;
-import net.minecraft.util.BlockMirror;
-import net.minecraft.util.BlockRotation;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntBinaryOperator;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Mirror;
+import net.minecraft.world.level.block.PoweredRailBlock;
+import net.minecraft.world.level.block.RailBlock;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.SlabBlock;
+import net.minecraft.world.level.block.StandingSignBlock;
+import net.minecraft.world.level.block.WallSignBlock;
+import net.minecraft.world.level.block.entity.SignText;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.RailShape;
+import net.minecraft.world.level.block.state.properties.SlabType;
 
 import static com.partatoes.digitalfrontier.grid.layout.GridLayout.FLOOR_Y;
 
@@ -59,12 +59,12 @@ final class GridTransit {
     private static final int CITY_STAIR_RISE = FLOOR_Y - SUBWAY_FLOOR_Y - 1;
     private static final int RAIL_STAIR_RISE = GUIDEWAY_Y - FLOOR_Y - 1;
 
-    private static final BlockState BRICKS = ModBlocks.GRIDSTONE_BRICKS_BLOCK.getDefaultState();
-    private static final BlockState WALL = ModBlocks.GRIDSTONE_BRICKS_WALL.getDefaultState();
-    private static final BlockState AIR = Blocks.AIR.getDefaultState();
-    private static final BlockState SLAB = ModBlocks.GRIDSTONE_BRICKS_SLAB.getDefaultState().with(SlabBlock.TYPE, SlabType.BOTTOM);
-    private static final BlockState WALL_SIGN = Blocks.DARK_OAK_WALL_SIGN.getDefaultState();
-    private static final BlockState STANDING_SIGN = Blocks.DARK_OAK_SIGN.getDefaultState();
+    private static final BlockState BRICKS = ModBlocks.GRIDSTONE_BRICKS_BLOCK.defaultBlockState();
+    private static final BlockState WALL = ModBlocks.GRIDSTONE_BRICKS_WALL.defaultBlockState();
+    private static final BlockState AIR = Blocks.AIR.defaultBlockState();
+    private static final BlockState SLAB = ModBlocks.GRIDSTONE_BRICKS_SLAB.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.BOTTOM);
+    private static final BlockState WALL_SIGN = Blocks.DARK_OAK_WALL_SIGN.defaultBlockState();
+    private static final BlockState STANDING_SIGN = Blocks.DARK_OAK_SIGN.defaultBlockState();
 
     private GridTransit() {
     }
@@ -74,7 +74,7 @@ final class GridTransit {
     }
 
     /** A level template placed in this chunk: its part, where its Y = 0 goes, and how it's turned and flipped. */
-    record Placement(GridPart part, int bottomY, BlockRotation rotation, BlockMirror mirror) {
+    record Placement(GridPart part, int bottomY, Rotation rotation, Mirror mirror) {
         int topY() {
             return bottomY + part.sizeY() - 1;
         }
@@ -90,7 +90,7 @@ final class GridTransit {
      * @param alongBase the world coordinate along the line at canonical X = 0, for spacing the powered rails
      * @param stairRise for a station, how far its staircases climb from the platform
      */
-    record Tunnel(BlockRotation rotation, boolean corner, boolean station, int closedEnd, int passage, int alongBase,
+    record Tunnel(Rotation rotation, boolean corner, boolean station, int closedEnd, int passage, int alongBase,
                   int stairRise, @Nullable ExpressPiece express) {
     }
 
@@ -194,7 +194,7 @@ final class GridTransit {
         List<Skyway> codeSkyways = new ArrayList<>();
         for (Skyway skyway : skyways) {
             if (!templates.add(Kind.SKYWAY, skyway.standY() - 1,
-                    skyway.roadAlongX() ? BlockRotation.NONE : BlockRotation.CLOCKWISE_90, BlockMirror.NONE)) {
+                    skyway.roadAlongX() ? Rotation.NONE : Rotation.CLOCKWISE_90, Mirror.NONE)) {
                 codeSkyways.add(skyway);
             }
         }
@@ -202,22 +202,22 @@ final class GridTransit {
         boolean intersection = plan.roadX() != null && plan.roadZ() != null;
         boolean railTemplated = elevatedRail && templates.add(
                 railStation ? Kind.GUIDEWAY_STATION : intersection ? Kind.GUIDEWAY_CROSSING : Kind.GUIDEWAY,
-                Kind.GUIDEWAY.baseY(), BlockRotation.CLOCKWISE_90, BlockMirror.NONE);
+                Kind.GUIDEWAY.baseY(), Rotation.CLOCKWISE_90, Mirror.NONE);
         boolean passageTemplated = false;
         boolean subwayTemplated = false;
         if (tunnel != null) {
             // The passage goes first, so its doorway wins over the tunnel wall
             passageTemplated = tunnel.passage() >= 0 && templates.add(Kind.SUBWAY_PASSAGE, Kind.SUBWAY_PASSAGE.baseY(),
-                    tunnel.rotation(), tunnel.passage() == 1 ? BlockMirror.LEFT_RIGHT : BlockMirror.NONE);
+                    tunnel.rotation(), tunnel.passage() == 1 ? Mirror.LEFT_RIGHT : Mirror.NONE);
             // Express termini have staircases as tall as the ground above them, so they're always built in code
             boolean terminus = tunnel.station() && tunnel.express() != null;
             Kind kind = tunnel.corner() ? Kind.SUBWAY_CORNER : tunnel.station() ? Kind.SUBWAY_STATION : Kind.SUBWAY;
-            subwayTemplated = !terminus && templates.add(kind, kind.baseY(), tunnel.rotation(), BlockMirror.NONE);
+            subwayTemplated = !terminus && templates.add(kind, kind.baseY(), tunnel.rotation(), Mirror.NONE);
         }
         TransitLayout.DeckPiece deck = deckChunk ? layout.deckPiece(chunkX, chunkZ) : null;
         boolean deckTemplated = deck != null && (deck.junction()
-                ? templates.add(Kind.SKYROAD_JUNCTION, Kind.SKYROAD_JUNCTION.baseY(), junctionRotation(deck), BlockMirror.NONE)
-                : templates.add(Kind.SKYROAD, Kind.SKYROAD.baseY(), deckRotation(deck), BlockMirror.NONE));
+                ? templates.add(Kind.SKYROAD_JUNCTION, Kind.SKYROAD_JUNCTION.baseY(), junctionRotation(deck), Mirror.NONE)
+                : templates.add(Kind.SKYROAD, Kind.SKYROAD.baseY(), deckRotation(deck), Mirror.NONE));
 
         return new ChunkTransit(layout, plan, chunkX, chunkZ, elevatedRail, tunnel, railStation, List.copyOf(skyways),
                 List.copyOf(codeSkyways), List.copyOf(doors), deckChunk, List.copyOf(templates.placements), deckTemplated,
@@ -233,21 +233,21 @@ final class GridTransit {
                 return null;
             }
             boolean station = layout.subwayStation(chunkX, chunkZ);
-            return new Tunnel(BlockRotation.NONE, false, station, -1, station ? -1 : layout.passageSide(chunkX, chunkZ),
+            return new Tunnel(Rotation.NONE, false, station, -1, station ? -1 : layout.passageSide(chunkX, chunkZ),
                     chunkX * 16, CITY_STAIR_RISE, null);
         }
         if (express.corner()) {
             return new Tunnel(cornerRotation(express), true, false, -1, -1, 0, 0, express);
         }
         boolean alongX = express.from().getAxis() == Direction.Axis.X;
-        BlockRotation rotation = alongX ? BlockRotation.NONE : BlockRotation.CLOCKWISE_90;
+        Rotation rotation = alongX ? Rotation.NONE : Rotation.CLOCKWISE_90;
         // Canonical X runs along local X for a tunnel along X, along local Z for one turned onto Z
         int alongBase = alongX ? chunkX * 16 : chunkZ * 16;
         if (!express.station()) {
             return new Tunnel(rotation, false, false, -1, layout.passageSide(chunkX, chunkZ), alongBase, 0, express);
         }
         // A terminus: the line carries on toward whichever side has the next piece; the other end is walled off
-        Direction open = layout.expressAt(chunkX + express.to().getOffsetX(), chunkZ + express.to().getOffsetZ()) != null
+        Direction open = layout.expressAt(chunkX + express.to().getStepX(), chunkZ + express.to().getStepZ()) != null
                 ? express.to() : express.from();
         Direction closed = open.getOpposite();
         int closedEnd = closed == Direction.WEST || closed == Direction.NORTH ? 0 : 1;
@@ -263,13 +263,13 @@ final class GridTransit {
     }
 
     // Corners are written coming in from the south and leaving east
-    private static BlockRotation cornerRotation(ExpressPiece piece) {
+    private static Rotation cornerRotation(ExpressPiece piece) {
         boolean north = piece.from() == Direction.NORTH || piece.to() == Direction.NORTH;
         boolean west = piece.from() == Direction.WEST || piece.to() == Direction.WEST;
         if (north) {
-            return west ? BlockRotation.CLOCKWISE_180 : BlockRotation.COUNTERCLOCKWISE_90;
+            return west ? Rotation.CLOCKWISE_180 : Rotation.COUNTERCLOCKWISE_90;
         }
-        return west ? BlockRotation.CLOCKWISE_90 : BlockRotation.NONE;
+        return west ? Rotation.CLOCKWISE_90 : Rotation.NONE;
     }
 
     // Picks a template for each piece, the same way buildings are picked
@@ -291,7 +291,7 @@ final class GridTransit {
             this.chunkZ = chunkZ;
         }
 
-        boolean add(Kind kind, int bottomY, BlockRotation rotation, BlockMirror mirror) {
+        boolean add(Kind kind, int bottomY, Rotation rotation, Mirror mirror) {
             double roll = GridRandom.unit(GridRandom.hash(seed, chunkX, chunkZ, SALT + kind.ordinal()));
             GridAssets.Candidate candidate = assets.pick(kind, 1, plan.zone(), roll);
             GridPart part = candidate == null ? null : candidate.def().base().map(assets::part).orElse(null);
@@ -304,39 +304,39 @@ final class GridTransit {
     }
 
     // Deck templates are authored for a boulevard half along X: median at Z = 15, like boulevard street furniture
-    private static BlockRotation deckRotation(TransitLayout.DeckPiece deck) {
+    private static Rotation deckRotation(TransitLayout.DeckPiece deck) {
         if (deck.halfX() >= 0) {
-            return deck.halfX() == 0 ? BlockRotation.NONE : BlockRotation.CLOCKWISE_180;
+            return deck.halfX() == 0 ? Rotation.NONE : Rotation.CLOCKWISE_180;
         }
-        return deck.halfZ() == 0 ? BlockRotation.COUNTERCLOCKWISE_90 : BlockRotation.CLOCKWISE_90;
+        return deck.halfZ() == 0 ? Rotation.COUNTERCLOCKWISE_90 : Rotation.CLOCKWISE_90;
     }
 
     // Junction quarters are authored with the medians meeting at X = 15, Z = 15 (half 0 of both boulevards)
-    private static BlockRotation junctionRotation(TransitLayout.DeckPiece deck) {
+    private static Rotation junctionRotation(TransitLayout.DeckPiece deck) {
         if (deck.halfX() == 0) {
-            return deck.halfZ() == 0 ? BlockRotation.NONE : BlockRotation.CLOCKWISE_90;
+            return deck.halfZ() == 0 ? Rotation.NONE : Rotation.CLOCKWISE_90;
         }
-        return deck.halfZ() == 0 ? BlockRotation.COUNTERCLOCKWISE_90 : BlockRotation.CLOCKWISE_180;
+        return deck.halfZ() == 0 ? Rotation.COUNTERCLOCKWISE_90 : Rotation.CLOCKWISE_180;
     }
 
     // Ramps are authored in half 0's lane of a boulevard along X, climbing toward +X; flips cover the other ways
-    private static BlockRotation rampRotation(TransitLayout.RampPiece ramp) {
+    private static Rotation rampRotation(TransitLayout.RampPiece ramp) {
         if (ramp.alongX()) {
-            return ramp.half() == 1 && !ramp.risingPositive() ? BlockRotation.CLOCKWISE_180 : BlockRotation.NONE;
+            return ramp.half() == 1 && !ramp.risingPositive() ? Rotation.CLOCKWISE_180 : Rotation.NONE;
         }
-        return ramp.half() == 0 ? BlockRotation.COUNTERCLOCKWISE_90 : BlockRotation.CLOCKWISE_90;
+        return ramp.half() == 0 ? Rotation.COUNTERCLOCKWISE_90 : Rotation.CLOCKWISE_90;
     }
 
-    private static BlockMirror rampMirror(TransitLayout.RampPiece ramp) {
+    private static Mirror rampMirror(TransitLayout.RampPiece ramp) {
         if (ramp.alongX()) {
             if (ramp.half() == 0) {
-                return ramp.risingPositive() ? BlockMirror.NONE : BlockMirror.FRONT_BACK;
+                return ramp.risingPositive() ? Mirror.NONE : Mirror.FRONT_BACK;
             }
-            return ramp.risingPositive() ? BlockMirror.LEFT_RIGHT : BlockMirror.NONE;
+            return ramp.risingPositive() ? Mirror.LEFT_RIGHT : Mirror.NONE;
         }
         // Turned onto Z, the climb runs toward -Z for half 0 and +Z for half 1 unless flipped
         boolean flip = ramp.half() == 0 ? ramp.risingPositive() : !ramp.risingPositive();
-        return flip ? BlockMirror.FRONT_BACK : BlockMirror.NONE;
+        return flip ? Mirror.FRONT_BACK : Mirror.NONE;
     }
 
     @Nullable
@@ -348,8 +348,8 @@ final class GridTransit {
             // Undo the rotation, then the mirror, to find the template position
             int mx = canonicalX(placement.rotation(), localX, localZ);
             int mz = canonicalZ(placement.rotation(), localX, localZ);
-            int px = placement.mirror() == BlockMirror.FRONT_BACK ? 15 - mx : mx;
-            int pz = placement.mirror() == BlockMirror.LEFT_RIGHT ? 15 - mz : mz;
+            int px = placement.mirror() == Mirror.FRONT_BACK ? 15 - mx : mx;
+            int pz = placement.mirror() == Mirror.LEFT_RIGHT ? 15 - mz : mz;
             BlockState state = placement.part().get(px, y - placement.bottomY(), pz);
             if (state != null) {
                 return DistrictPalette.remap(state, transit.district()).mirror(placement.mirror()).rotate(placement.rotation());
@@ -359,7 +359,7 @@ final class GridTransit {
     }
 
     // Where a chunk position is in a piece authored along X and turned by a rotation, and back again
-    private static int canonicalX(BlockRotation rotation, int localX, int localZ) {
+    private static int canonicalX(Rotation rotation, int localX, int localZ) {
         return switch (rotation) {
             case CLOCKWISE_90 -> localZ;
             case CLOCKWISE_180 -> 15 - localX;
@@ -368,7 +368,7 @@ final class GridTransit {
         };
     }
 
-    private static int canonicalZ(BlockRotation rotation, int localX, int localZ) {
+    private static int canonicalZ(Rotation rotation, int localX, int localZ) {
         return switch (rotation) {
             case CLOCKWISE_90 -> 15 - localX;
             case CLOCKWISE_180 -> 15 - localZ;
@@ -377,7 +377,7 @@ final class GridTransit {
         };
     }
 
-    private static BlockPos toLocal(BlockRotation rotation, int x, int y, int z) {
+    private static BlockPos toLocal(Rotation rotation, int x, int y, int z) {
         return switch (rotation) {
             case CLOCKWISE_90 -> new BlockPos(15 - z, y, x);
             case CLOCKWISE_180 -> new BlockPos(15 - x, y, 15 - z);
@@ -513,7 +513,7 @@ final class GridTransit {
         if (y == GUIDEWAY_Y) {
             if (across >= 4 && across <= 11) {
                 if (track && powered) {
-                    return Blocks.REDSTONE_BLOCK.getDefaultState();
+                    return Blocks.REDSTONE_BLOCK.defaultBlockState();
                 }
                 return across == 4 || across == 11 ? pattern(transit.district()) : BRICKS;
             }
@@ -548,7 +548,7 @@ final class GridTransit {
         }
         if (localX >= 12 && localZ >= 12) {
             BlockState state = SpiralStair.blockAt(15 - localX, y - bottomY, 15 - localZ, rise, light);
-            return state == null ? null : state.rotate(BlockRotation.CLOCKWISE_180);
+            return state == null ? null : state.rotate(Rotation.CLOCKWISE_180);
         }
         return null;
     }
@@ -587,7 +587,7 @@ final class GridTransit {
         // A terminus is walled off at its far end
         boolean endWall = tunnel.closedEnd() == 0 && along == 0 || tunnel.closedEnd() == 1 && along == 15;
         if (y == SUBWAY_FLOOR_Y) {
-            return inside && track && powered && !endWall ? Blocks.REDSTONE_BLOCK.getDefaultState()
+            return inside && track && powered && !endWall ? Blocks.REDSTONE_BLOCK.defaultBlockState()
                     : across >= first - 1 && across <= last + 1 ? BRICKS : null;
         }
         if (y == SUBWAY_CEILING_Y) {
@@ -636,7 +636,7 @@ final class GridTransit {
         if (y == SUBWAY_FLOOR_Y + 1) {
             RailShape shape = cornerTrack(x, z);
             if (shape != null) {
-                return Blocks.RAIL.getDefaultState().with(RailBlock.SHAPE, shape);
+                return Blocks.RAIL.defaultBlockState().setValue(RailBlock.SHAPE, shape);
             }
         }
         return AIR;
@@ -710,7 +710,7 @@ final class GridTransit {
         if (tunnel != null && tunnel.station()) {
             StationInfo info = layout.stationInfo(transit.chunkX(), transit.chunkZ(), false);
             // On both walls: the name on the left and the line on the right, seen from the platform
-            BlockRotation rotation = tunnel.rotation();
+            Rotation rotation = tunnel.rotation();
             signs.add(new Sign(toLocal(rotation, 7, SUBWAY_SIGN_Y, 1), nameText(info)));
             signs.add(new Sign(toLocal(rotation, 8, SUBWAY_SIGN_Y, 1), lineText(info)));
             signs.add(new Sign(toLocal(rotation, 8, SUBWAY_SIGN_Y, 14), nameText(info)));
@@ -734,16 +734,16 @@ final class GridTransit {
             int x = canonicalX(tunnel.rotation(), localX, localZ);
             int z = canonicalZ(tunnel.rotation(), localX, localZ);
             if ((x == 7 || x == 8) && (z == 1 || z == 14)) {
-                return WALL_SIGN.with(WallSignBlock.FACING, z == 1 ? Direction.SOUTH : Direction.NORTH).rotate(tunnel.rotation());
+                return WALL_SIGN.setValue(WallSignBlock.FACING, z == 1 ? Direction.SOUTH : Direction.NORTH).rotate(tunnel.rotation());
             }
         }
         if (y == GUIDEWAY_Y + 1 && transit.railStation() && (localZ == 7 || localZ == 8)) {
             // Sign rotation 12 faces east, 4 west
             if (localX == 2) {
-                return STANDING_SIGN.with(SignBlock.ROTATION, 12);
+                return STANDING_SIGN.setValue(StandingSignBlock.ROTATION, 12);
             }
             if (localX == 13) {
-                return STANDING_SIGN.with(SignBlock.ROTATION, 4);
+                return STANDING_SIGN.setValue(StandingSignBlock.ROTATION, 4);
             }
         }
         return null;
@@ -752,20 +752,20 @@ final class GridTransit {
     private static SignText nameText(StationInfo info) {
         String[] words = info.name().split(" ", 2);
         return new SignText()
-                .withMessage(1, Text.literal(words[0]))
-                .withMessage(2, Text.literal(words.length > 1 ? words[1] : ""))
-                .withColor(DyeColor.WHITE).withGlowing(true);
+                .setMessage(1, Component.literal(words[0]))
+                .setMessage(2, Component.literal(words.length > 1 ? words[1] : ""))
+                .setColor(DyeColor.WHITE).setHasGlowingText(true);
     }
 
     private static SignText lineText(StationInfo info) {
-        SignText text = new SignText().withColor(info.color()).withGlowing(true);
+        SignText text = new SignText().setColor(info.color()).setHasGlowingText(true);
         if (info.waypoint() > 0) {
-            return text.withMessage(1, Text.translatable("sign.digitalfrontier.express"))
-                    .withMessage(2, Text.translatable("sign.digitalfrontier.express_to", info.waypoint()));
+            return text.setMessage(1, Component.translatable("sign.digitalfrontier.express"))
+                    .setMessage(2, Component.translatable("sign.digitalfrontier.express_to", info.waypoint()));
         }
-        return text.withMessage(1, Text.translatable("color.minecraft." + info.color().asString()))
-                .withMessage(2, Text.translatable("sign.digitalfrontier.line"))
-                .withMessage(3, Text.translatable(info.elevated() ? "sign.digitalfrontier.elevated" : "sign.digitalfrontier.subway"));
+        return text.setMessage(1, Component.translatable("color.minecraft." + info.color().getSerializedName()))
+                .setMessage(2, Component.translatable("sign.digitalfrontier.line"))
+                .setMessage(3, Component.translatable(info.elevated() ? "sign.digitalfrontier.elevated" : "sign.digitalfrontier.subway"));
     }
 
     // ---- Skyways ----
@@ -785,7 +785,7 @@ final class GridTransit {
             return BRICKS;
         }
         if (lateral == 5 || lateral == 10) {
-            return DistrictPalette.remap(Blocks.WHITE_STAINED_GLASS.getDefaultState(), transit.district());
+            return DistrictPalette.remap(Blocks.WHITE_STAINED_GLASS.defaultBlockState(), transit.district());
         }
         return AIR;
     }
@@ -816,14 +816,14 @@ final class GridTransit {
 
     private static BlockState rail(boolean powered, boolean alongZ) {
         if (powered) {
-            return Blocks.POWERED_RAIL.getDefaultState()
-                    .with(PoweredRailBlock.SHAPE, alongZ ? RailShape.NORTH_SOUTH : RailShape.EAST_WEST)
-                    .with(PoweredRailBlock.POWERED, true);
+            return Blocks.POWERED_RAIL.defaultBlockState()
+                    .setValue(PoweredRailBlock.SHAPE, alongZ ? RailShape.NORTH_SOUTH : RailShape.EAST_WEST)
+                    .setValue(PoweredRailBlock.POWERED, true);
         }
-        return Blocks.RAIL.getDefaultState().with(RailBlock.SHAPE, alongZ ? RailShape.NORTH_SOUTH : RailShape.EAST_WEST);
+        return Blocks.RAIL.defaultBlockState().setValue(RailBlock.SHAPE, alongZ ? RailShape.NORTH_SOUTH : RailShape.EAST_WEST);
     }
 
     private static BlockState pattern(DyeColor color) {
-        return ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("full").get(color).getDefaultState();
+        return ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("full").get(color).defaultBlockState();
     }
 }

@@ -11,47 +11,47 @@ import com.partatoes.digitalfrontier.grid.arrival.TerminalRef;
 import com.partatoes.digitalfrontier.grid.tuning.GridTuningNetworking;
 import com.partatoes.digitalfrontier.item.ModItems;
 import com.partatoes.digitalfrontier.world.ModDimensions;
-import net.minecraft.block.BlockRenderType;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.BlockWithEntity;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.BlockEntityTicker;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityTicker;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
 
 /**
  * Digitizes the player who uses it and sends them to its linked grid terminal. Use it with a Laser Tuner to
  * cycle the link through the nearest terminal and the terminals the player has discovered. Doesn't work
  * inside a grid. The tunable version (the Grid Tuning Laser) can also be tuned to any grid through a screen.
  */
-public class DigitizingLaserBlock extends BlockWithEntity {
+public class DigitizingLaserBlock extends BaseEntityBlock {
     public static final MapCodec<DigitizingLaserBlock> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
             Codec.BOOL.fieldOf("tunable").forGetter(DigitizingLaserBlock::isTunable),
-            createSettingsCodec()
+            propertiesCodec()
     ).apply(instance, DigitizingLaserBlock::new));
 
     // The Grid Tuning Laser: sneak-use opens a screen to tune it to a different grid
     private final boolean tunable;
 
-    public DigitizingLaserBlock(boolean tunable, Settings settings) {
+    public DigitizingLaserBlock(boolean tunable, Properties settings) {
         super(settings);
         this.tunable = tunable;
     }
@@ -61,83 +61,83 @@ public class DigitizingLaserBlock extends BlockWithEntity {
     }
 
     @Override
-    protected MapCodec<? extends BlockWithEntity> getCodec() {
+    protected MapCodec<? extends BaseEntityBlock> codec() {
         return CODEC;
     }
 
     @Override
-    protected BlockRenderType getRenderType(BlockState state) {
-        return BlockRenderType.MODEL;
+    protected RenderShape getRenderShape(BlockState state) {
+        return RenderShape.MODEL;
     }
 
     @Override
-    public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         return new DigitizingLaserBlockEntity(pos, state);
     }
 
     @Nullable
     @Override
-    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
-        return world.isClient() ? null : validateTicker(type, ModBlockEntities.DIGITIZING_LASER, DigitizingLaserBlockEntity::tick);
+    public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level world, BlockState state, BlockEntityType<T> type) {
+        return world.isClientSide() ? null : createTickerHelper(type, ModBlockEntities.DIGITIZING_LASER, DigitizingLaserBlockEntity::tick);
     }
 
     @Override
-    protected ActionResult onUseWithItem(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
-        if (!stack.isOf(ModItems.LASER_TUNER)) {
-            return ActionResult.PASS_TO_DEFAULT_BLOCK_ACTION;
+    protected InteractionResult useItemOn(ItemStack stack, BlockState state, Level world, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        if (!stack.is(ModItems.LASER_TUNER)) {
+            return InteractionResult.TRY_WITH_EMPTY_HAND;
         }
-        if (world instanceof ServerWorld serverWorld && player instanceof ServerPlayerEntity serverPlayer
+        if (world instanceof ServerLevel serverWorld && player instanceof ServerPlayer serverPlayer
                 && serverWorld.getBlockEntity(pos) instanceof DigitizingLaserBlockEntity laser && usable(serverWorld, serverPlayer)) {
             tune(serverWorld, serverPlayer, laser);
         }
-        return ActionResult.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
 
     @Override
-    protected ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, BlockHitResult hit) {
-        if (!(world instanceof ServerWorld serverWorld) || !(player instanceof ServerPlayerEntity serverPlayer)
+    protected InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos, Player player, BlockHitResult hit) {
+        if (!(world instanceof ServerLevel serverWorld) || !(player instanceof ServerPlayer serverPlayer)
                 || !(serverWorld.getBlockEntity(pos) instanceof DigitizingLaserBlockEntity laser)) {
-            return ActionResult.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
         if (!usable(serverWorld, serverPlayer) || laser.isScanning()) {
-            return ActionResult.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
-        if (tunable && serverPlayer.isSneaking()) {
+        if (tunable && serverPlayer.isShiftKeyDown()) {
             GridTuningNetworking.openScreen(serverPlayer, laser);
-            return ActionResult.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
         Optional<TerminalRef> link = laser.linkOrNearest(serverWorld);
         if (link.isEmpty()) {
-            serverPlayer.sendMessage(Text.translatable("message.digitalfrontier.terminal_unreachable").formatted(Formatting.RED), true);
-            return ActionResult.SUCCESS;
+            serverPlayer.displayClientMessage(Component.translatable("message.digitalfrontier.terminal_unreachable").withStyle(ChatFormatting.RED), true);
+            return InteractionResult.SUCCESS;
         }
         laser.startScan(serverPlayer);
-        serverPlayer.sendMessage(Text.translatable("message.digitalfrontier.digitizing", GridArrival.terminalName(link.get().terminal())), true);
-        return ActionResult.SUCCESS;
+        serverPlayer.displayClientMessage(Component.translatable("message.digitalfrontier.digitizing", GridArrival.terminalName(link.get().terminal())), true);
+        return InteractionResult.SUCCESS;
     }
 
-    private static boolean usable(ServerWorld world, ServerPlayerEntity player) {
+    private static boolean usable(ServerLevel world, ServerPlayer player) {
         if (ModDimensions.isGrid(world)) {
-            player.sendMessage(Text.translatable("message.digitalfrontier.laser_inside_grid").formatted(Formatting.RED), true);
+            player.displayClientMessage(Component.translatable("message.digitalfrontier.laser_inside_grid").withStyle(ChatFormatting.RED), true);
             return false;
         }
         return true;
     }
 
     // Cycles: the terminal nearest the laser, then every terminal the player has discovered in the same grid
-    private static void tune(ServerWorld world, ServerPlayerEntity player, DigitizingLaserBlockEntity laser) {
+    private static void tune(ServerLevel world, ServerPlayer player, DigitizingLaserBlockEntity laser) {
         // A laser tuned to a grid that has since been deleted falls back to the default grid
         if (laser.link() != null && GridArrival.gridWorld(world.getServer(), laser.link().grid()).isEmpty()) {
-            GridArrival.nearestTerminal(world.getServer(), ModDimensions.DEFAULT_GRID_ID, laser.getPos()).ifPresent(laser::setLink);
+            GridArrival.nearestTerminal(world.getServer(), ModDimensions.DEFAULT_GRID_ID, laser.getBlockPos()).ifPresent(laser::setLink);
         }
         Optional<TerminalRef> current = laser.linkOrNearest(world);
         if (current.isEmpty()) {
-            player.sendMessage(Text.translatable("message.digitalfrontier.terminal_unreachable").formatted(Formatting.RED), true);
+            player.displayClientMessage(Component.translatable("message.digitalfrontier.terminal_unreachable").withStyle(ChatFormatting.RED), true);
             return;
         }
         Identifier grid = current.get().grid();
         List<String> options = new ArrayList<>();
-        GridArrival.nearestTerminal(world.getServer(), grid, laser.getPos()).ifPresent(nearest -> options.add(nearest.terminal()));
+        GridArrival.nearestTerminal(world.getServer(), grid, laser.getBlockPos()).ifPresent(nearest -> options.add(nearest.terminal()));
         player.getAttachedOrCreate(GridMemory.TYPE).discovered(grid).stream()
                 .filter(id -> !options.contains(id))
                 .forEach(options::add);
@@ -148,9 +148,9 @@ public class DigitizingLaserBlock extends BlockWithEntity {
         int index = options.indexOf(current.get().terminal());
         TerminalRef next = new TerminalRef(grid, options.get((index + 1) % options.size()));
         laser.setLink(next);
-        world.playSound(null, laser.getPos(), SoundEvents.BLOCK_NOTE_BLOCK_CHIME.value(), SoundCategory.BLOCKS, 0.8f,
+        world.playSound(null, laser.getBlockPos(), SoundEvents.NOTE_BLOCK_CHIME.value(), SoundSource.BLOCKS, 0.8f,
                 0.8f + 0.1f * (options.indexOf(next.terminal())));
-        player.sendMessage(Text.translatable("message.digitalfrontier.laser_tuned", GridArrival.terminalName(next.terminal()),
+        player.displayClientMessage(Component.translatable("message.digitalfrontier.laser_tuned", GridArrival.terminalName(next.terminal()),
                 options.indexOf(next.terminal()) + 1, options.size()), true);
     }
 }

@@ -5,12 +5,11 @@ import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.minecraft.nbt.NbtAccounter;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.NbtSizeTracker;
-import net.minecraft.resource.Resource;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
 import java.io.InputStream;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -30,24 +29,24 @@ public class GridAssetsLoader implements SimpleSynchronousResourceReloadListener
 
     @Override
     public Identifier getFabricId() {
-        return Identifier.of(DigitalFrontier.MOD_ID, "grid_assets");
+        return Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "grid_assets");
     }
 
     @Override
-    public void reload(ResourceManager manager) {
+    public void onResourceManagerReload(ResourceManager manager) {
         Map<Identifier, GridPart> parts = new HashMap<>();
-        manager.findResources(PART_FOLDER, path -> path.getPath().endsWith(".nbt")).forEach((file, resource) -> {
+        manager.listResources(PART_FOLDER, path -> path.getPath().endsWith(".nbt")).forEach((file, resource) -> {
             // structure/grid/tower/floor.nbt -> grid/tower/floor, the same id a structure block or /place template uses
             Identifier id = file.withPath(path -> path.substring("structure/".length(), path.length() - ".nbt".length()));
-            try (InputStream input = resource.getInputStream()) {
-                parts.put(id, GridPart.fromNbt(NbtIo.readCompressed(input, NbtSizeTracker.ofUnlimitedBytes())));
+            try (InputStream input = resource.open()) {
+                parts.put(id, GridPart.fromNbt(NbtIo.readCompressed(input, NbtAccounter.unlimitedHeap())));
             } catch (Exception e) {
                 DigitalFrontier.LOGGER.error("Failed to load grid part {} from {}", id, file, e);
             }
         });
 
         Map<Identifier, GridBuildingDef> buildings = new HashMap<>();
-        manager.findResources(BUILDING_FOLDER, path -> path.getPath().endsWith(".json")).forEach((file, resource) -> {
+        manager.listResources(BUILDING_FOLDER, path -> path.getPath().endsWith(".json")).forEach((file, resource) -> {
             Identifier id = file.withPath(path -> path.substring(BUILDING_FOLDER.length() + 1, path.length() - ".json".length()));
             parseBuilding(id, resource).ifPresent(def -> {
                 List<String> problems = validate(def, parts);
@@ -64,7 +63,7 @@ public class GridAssetsLoader implements SimpleSynchronousResourceReloadListener
     }
 
     private static Optional<GridBuildingDef> parseBuilding(Identifier id, Resource resource) {
-        try (Reader reader = resource.getReader()) {
+        try (Reader reader = resource.openAsReader()) {
             JsonElement json = JsonParser.parseReader(reader);
             return GridBuildingDef.CODEC.parse(JsonOps.INSTANCE, json)
                     .resultOrPartial(error -> DigitalFrontier.LOGGER.error("Invalid grid building {}: {}", id, error));
@@ -83,7 +82,7 @@ public class GridAssetsLoader implements SimpleSynchronousResourceReloadListener
             problems.add("min_floors is greater than max_floors");
         }
         if (def.kind().isLevel() && (def.base().isEmpty() || def.footprint() != 1)) {
-            problems.add(def.kind().asString() + " is one of the city's levels: it needs a base part and a footprint of 1");
+            problems.add(def.kind().getSerializedName() + " is one of the city's levels: it needs a base part and a footprint of 1");
         }
         int width = def.footprint() * 16;
         def.allParts().distinct().forEach(partId -> {

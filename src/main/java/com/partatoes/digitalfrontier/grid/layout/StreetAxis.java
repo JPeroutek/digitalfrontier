@@ -1,9 +1,9 @@
 package com.partatoes.digitalfrontier.grid.layout;
 
-import net.minecraft.util.StringIdentifiable;
 import org.jetbrains.annotations.Nullable;
 
 import com.mojang.serialization.Codec;
+import net.minecraft.util.StringRepresentable;
 
 /**
  * The city's street pattern along one axis: which chunk rows (or columns) are roads, how wide each road is, and
@@ -20,11 +20,11 @@ import com.mojang.serialization.Codec;
  * Positions are precomputed out to just past the city edge; further out every chunk counts as part of a block.
  */
 public final class StreetAxis {
-    public enum StreetStyle implements StringIdentifiable {
+    public enum StreetStyle implements StringRepresentable {
         UNIFORM("uniform"),
         VARIED("varied");
 
-        public static final Codec<StreetStyle> CODEC = StringIdentifiable.createCodec(StreetStyle::values);
+        public static final Codec<StreetStyle> CODEC = StringRepresentable.fromEnum(StreetStyle::values);
 
         private final String name;
 
@@ -33,20 +33,20 @@ public final class StreetAxis {
         }
 
         @Override
-        public String asString() {
+        public String getSerializedName() {
             return name;
         }
     }
 
     /** How wide a road is. Lanes and streets are one chunk; boulevards two. */
-    public enum RoadClass implements StringIdentifiable {
+    public enum RoadClass implements StringRepresentable {
         /** A narrow lane down the middle of the chunk, between strips of walls and planters. */
         LANE("lane", 1),
         STREET("street", 1),
         /** Two chunks wide, with a lit median where its halves meet. */
         BOULEVARD("boulevard", 2);
 
-        public static final Codec<RoadClass> CODEC = StringIdentifiable.createCodec(RoadClass::values);
+        public static final Codec<RoadClass> CODEC = StringRepresentable.fromEnum(RoadClass::values);
 
         private final String name;
         private final int chunks;
@@ -61,7 +61,7 @@ public final class StreetAxis {
         }
 
         @Override
-        public String asString() {
+        public String getSerializedName() {
             return name;
         }
     }

@@ -4,14 +4,13 @@ import com.partatoes.digitalfrontier.block.ModBlocks;
 import com.partatoes.digitalfrontier.block.custom.PatternBlock;
 import com.partatoes.digitalfrontier.grid.layout.CorruptionTier;
 import com.partatoes.digitalfrontier.grid.layout.GridRandom;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.DyeColor;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 
 import static com.partatoes.digitalfrontier.grid.layout.GridLayout.FLOOR_Y;
 
@@ -106,28 +105,28 @@ final class GridCorruption {
             if (y > FLOOR_Y && roll(seed, Math.floorDiv(blockX, SPAN), Math.floorDiv(y, SPAN), Math.floorDiv(blockZ, SPAN), SALT_SPAN)
                     < (intensity - CORRUPTED) * 1.5) {
                 // A whole span of the deck, guideway or bridge is gone
-                return Blocks.AIR.getDefaultState();
+                return Blocks.AIR.defaultBlockState();
             }
             if (y < FLOOR_Y && source.blockAt(y).isAir() && roll(seed, blockX, y, blockZ, SALT_CAVE_IN) < (intensity - CORRUPTED) * 0.6) {
-                return ModBlocks.STATIC_BLOCK.getDefaultState();
+                return ModBlocks.STATIC_BLOCK.defaultBlockState();
             }
         }
         int sourceY = y;
         if (structural && intensity >= UNSTABLE && y > FLOOR_Y) {
             sourceY = y - shift(seed, intensity, blockX, blockZ);
             if (sourceY <= FLOOR_Y) {
-                return Blocks.AIR.getDefaultState();
+                return Blocks.AIR.defaultBlockState();
             }
             if (intensity >= CORRUPTED && brokenOff(seed, intensity, top, blockX, sourceY, blockZ)) {
-                return Blocks.AIR.getDefaultState();
+                return Blocks.AIR.defaultBlockState();
             }
         }
         BlockState state = source.blockAt(sourceY);
-        if (state.isAir() || state.isOf(ModBlocks.ARRIVAL_PAD) || state.isOf(ModBlocks.GRID_PORTAL) || state.isOf(ModBlocks.STRONGHOLD_UPLINK)) {
+        if (state.isAir() || state.is(ModBlocks.ARRIVAL_PAD) || state.is(ModBlocks.GRID_PORTAL) || state.is(ModBlocks.STRONGHOLD_UPLINK)) {
             return state;
         }
         if (structural && intensity >= UNSTABLE && hole(seed, intensity, blockX, y, blockZ)) {
-            return Blocks.AIR.getDefaultState();
+            return Blocks.AIR.defaultBlockState();
         }
         return material(seed, intensity, blockX, y, blockZ, state);
     }
@@ -167,26 +166,26 @@ final class GridCorruption {
 
     private static BlockState material(long seed, float intensity, int blockX, int y, int blockZ, BlockState state) {
         if (intensity >= CORRUPTED && roll(seed, blockX, y, blockZ, SALT_STATIC) < (intensity - CORRUPTED) * 1.2) {
-            return ModBlocks.STATIC_BLOCK.getDefaultState();
+            return ModBlocks.STATIC_BLOCK.defaultBlockState();
         }
         Pattern pattern = patterns().get(state.getBlock());
         if (pattern != null) {
             if (intensity >= UNSTABLE && roll(seed, blockX, y, blockZ, SALT_GLITCH) < (intensity - UNSTABLE) * 0.8) {
-                return ModBlocks.GLITCHED_GRIDSTONE.get(pattern.color()).getDefaultState();
+                return ModBlocks.GLITCHED_GRIDSTONE.get(pattern.color()).defaultBlockState();
             }
             if (intensity >= UNSTABLE && roll(seed, blockX, y, blockZ, SALT_RECOLOR) < (intensity - UNSTABLE) * 0.8) {
                 DyeColor wrong = strayColor(pattern.color(), intensity, roll(seed, blockX, y, blockZ, SALT_RECOLOR_PICK),
                         roll(seed, blockX, y, blockZ, SALT_RECOLOR_JUMP));
-                return ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get(pattern.name()).get(wrong).getDefaultState();
+                return ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get(pattern.name()).get(wrong).defaultBlockState();
             }
-            if (state.contains(PatternBlock.FLICKER) && roll(seed, blockX, y, blockZ, SALT_FLICKER) < Math.min(0.25, (intensity - LOW) * 0.5)) {
-                return state.with(PatternBlock.FLICKER, roll(seed, blockX, y, blockZ, SALT_FLICKER_TIMING) < 0.5 ? 1 : 2);
+            if (state.hasProperty(PatternBlock.FLICKER) && roll(seed, blockX, y, blockZ, SALT_FLICKER) < Math.min(0.25, (intensity - LOW) * 0.5)) {
+                return state.setValue(PatternBlock.FLICKER, roll(seed, blockX, y, blockZ, SALT_FLICKER_TIMING) < 0.5 ? 1 : 2);
             }
             return state;
         }
-        if ((state.isOf(ModBlocks.GRIDSTONE_BLOCK) || state.isOf(ModBlocks.GRIDSTONE_BRICKS_BLOCK))
+        if ((state.is(ModBlocks.GRIDSTONE_BLOCK) || state.is(ModBlocks.GRIDSTONE_BRICKS_BLOCK))
                 && intensity >= UNSTABLE && roll(seed, blockX, y, blockZ, SALT_CRACK) < (intensity - UNSTABLE) * 0.6) {
-            return ModBlocks.CRACKED_GRIDSTONE_BLOCK.getDefaultState();
+            return ModBlocks.CRACKED_GRIDSTONE_BLOCK.defaultBlockState();
         }
         return state;
     }

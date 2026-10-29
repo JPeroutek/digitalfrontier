@@ -3,24 +3,24 @@ package com.partatoes.digitalfrontier.block.entity;
 import com.partatoes.digitalfrontier.grid.arrival.GridArrival;
 import com.partatoes.digitalfrontier.grid.arrival.TerminalRef;
 import com.partatoes.digitalfrontier.world.ModDimensions;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.storage.ReadView;
-import net.minecraft.storage.WriteView;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 import java.util.UUID;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.phys.Vec3;
 
 /**
  * Remembers which grid terminal a Digitizing Laser sends players to, and runs the scan that digitizes a player.
@@ -49,13 +49,13 @@ public class DigitizingLaserBlockEntity extends BlockEntity {
 
     public void setLink(TerminalRef link) {
         this.link = link;
-        markDirty();
+        setChanged();
     }
 
     /** The linked terminal, linking to the default grid's nearest terminal first if there's none yet. */
-    public Optional<TerminalRef> linkOrNearest(ServerWorld world) {
+    public Optional<TerminalRef> linkOrNearest(ServerLevel world) {
         if (link == null) {
-            GridArrival.nearestTerminal(world.getServer(), ModDimensions.DEFAULT_GRID_ID, pos).ifPresent(this::setLink);
+            GridArrival.nearestTerminal(world.getServer(), ModDimensions.DEFAULT_GRID_ID, worldPosition).ifPresent(this::setLink);
         }
         return Optional.ofNullable(link);
     }
@@ -64,23 +64,23 @@ public class DigitizingLaserBlockEntity extends BlockEntity {
         return scanning != null;
     }
 
-    public void startScan(ServerPlayerEntity player) {
-        scanning = player.getUuid();
+    public void startScan(ServerPlayer player) {
+        scanning = player.getUUID();
         scanTicks = 0;
-        player.getEntityWorld().playSound(null, pos, SoundEvents.BLOCK_BEACON_POWER_SELECT, SoundCategory.BLOCKS, 1.0f, 1.2f);
+        player.level().playSound(null, worldPosition, SoundEvents.BEACON_POWER_SELECT, SoundSource.BLOCKS, 1.0f, 1.2f);
     }
 
-    public static void tick(World world, BlockPos pos, BlockState state, DigitizingLaserBlockEntity laser) {
-        if (laser.scanning == null || !(world instanceof ServerWorld serverWorld)) {
+    public static void tick(Level world, BlockPos pos, BlockState state, DigitizingLaserBlockEntity laser) {
+        if (laser.scanning == null || !(world instanceof ServerLevel serverWorld)) {
             return;
         }
-        ServerPlayerEntity player = serverWorld.getServer().getPlayerManager().getPlayer(laser.scanning);
-        Vec3d emitter = Vec3d.ofCenter(pos).add(0, 0.5, 0);
-        if (player == null || player.getEntityWorld() != serverWorld || !player.isAlive()
-                || player.squaredDistanceTo(emitter) > MAX_RANGE * MAX_RANGE) {
+        ServerPlayer player = serverWorld.getServer().getPlayerList().getPlayer(laser.scanning);
+        Vec3 emitter = Vec3.atCenterOf(pos).add(0, 0.5, 0);
+        if (player == null || player.level() != serverWorld || !player.isAlive()
+                || player.distanceToSqr(emitter) > MAX_RANGE * MAX_RANGE) {
             laser.scanning = null;
             if (player != null) {
-                player.sendMessage(Text.translatable("message.digitalfrontier.scan_interrupted").formatted(Formatting.RED), true);
+                player.displayClientMessage(Component.translatable("message.digitalfrontier.scan_interrupted").withStyle(ChatFormatting.RED), true);
             }
             return;
         }
@@ -94,35 +94,35 @@ public class DigitizingLaserBlockEntity extends BlockEntity {
         laser.scanning = null;
         TerminalRef target = laser.link;
         if (target == null || !GridArrival.teleport(player, target)) {
-            player.sendMessage(Text.translatable("message.digitalfrontier.terminal_unreachable").formatted(Formatting.RED), true);
+            player.displayClientMessage(Component.translatable("message.digitalfrontier.terminal_unreachable").withStyle(ChatFormatting.RED), true);
         }
     }
 
     // A beam from the emitter to the player, and a ring sweeping up the player as the scan progresses
-    private static void spawnScanParticles(ServerWorld world, Vec3d emitter, ServerPlayerEntity player, float progress) {
-        Vec3d target = player.getEntityPos().add(0, player.getHeight() * progress, 0);
-        Vec3d beam = target.subtract(emitter);
+    private static void spawnScanParticles(ServerLevel world, Vec3 emitter, ServerPlayer player, float progress) {
+        Vec3 target = player.position().add(0, player.getBbHeight() * progress, 0);
+        Vec3 beam = target.subtract(emitter);
         int steps = Math.max(1, (int) (beam.length() * 4));
         for (int i = 0; i <= steps; i++) {
-            Vec3d point = emitter.add(beam.multiply((double) i / steps));
-            world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, point.x, point.y, point.z, 1, 0, 0, 0, 0);
+            Vec3 point = emitter.add(beam.scale((double) i / steps));
+            world.sendParticles(ParticleTypes.ELECTRIC_SPARK, point.x, point.y, point.z, 1, 0, 0, 0, 0);
         }
         for (int i = 0; i < 12; i++) {
             double angle = i * Math.PI / 6;
-            world.spawnParticles(ParticleTypes.END_ROD, target.x + Math.cos(angle) * 0.6, target.y, target.z + Math.sin(angle) * 0.6,
+            world.sendParticles(ParticleTypes.END_ROD, target.x + Math.cos(angle) * 0.6, target.y, target.z + Math.sin(angle) * 0.6,
                     1, 0, 0, 0, 0);
         }
     }
 
     @Override
-    protected void writeData(WriteView view) {
-        super.writeData(view);
-        view.putNullable(LINK_KEY, TerminalRef.CODEC, link);
+    protected void saveAdditional(ValueOutput view) {
+        super.saveAdditional(view);
+        view.storeNullable(LINK_KEY, TerminalRef.CODEC, link);
     }
 
     @Override
-    protected void readData(ReadView view) {
-        super.readData(view);
+    protected void loadAdditional(ValueInput view) {
+        super.loadAdditional(view);
         link = view.read(LINK_KEY, TerminalRef.CODEC).orElse(null);
     }
 }

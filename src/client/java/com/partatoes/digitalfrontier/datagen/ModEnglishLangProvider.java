@@ -8,19 +8,18 @@ import com.partatoes.digitalfrontier.item.ModItems;
 import com.partatoes.digitalfrontier.tag.ModTags;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.datagen.v1.provider.FabricLanguageProvider;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.RegistryWrapper;
-
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
 import java.util.concurrent.CompletableFuture;
 
 public class ModEnglishLangProvider extends FabricLanguageProvider {
-    public ModEnglishLangProvider(FabricDataOutput dataOutput, CompletableFuture<RegistryWrapper.WrapperLookup> registryLookup) {
+    public ModEnglishLangProvider(FabricDataOutput dataOutput, CompletableFuture<HolderLookup.Provider> registryLookup) {
         super(dataOutput, registryLookup);
     }
 
     @Override
-    public void generateTranslations(RegistryWrapper.WrapperLookup wrapperLookup, TranslationBuilder translationBuilder) {
+    public void generateTranslations(HolderLookup.Provider wrapperLookup, TranslationBuilder translationBuilder) {
         translationBuilder.add(ModItems.BINARY_0, "Binary 0");
         translationBuilder.add(ModItems.BINARY_1, "Binary 1");
         translationBuilder.add(ModItems.PIXEL_DUST, "Pixel Dust");
@@ -55,7 +54,7 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         // Corruption
         translationBuilder.add(ModBlocks.STATIC_BLOCK, "Static");
         ModBlocks.GLITCHED_GRIDSTONE.forEach((color, block) ->
-                translationBuilder.add(block, String.format("%s Glitched Gridstone", toTitle(color.asString()))));
+                translationBuilder.add(block, String.format("%s Glitched Gridstone", toTitle(color.getSerializedName()))));
 
         // Inhabitants and strongholds
         translationBuilder.add(ModEntities.CORRUPTED_PROGRAM, "Corrupted Program");
@@ -140,7 +139,7 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add("message.digitalfrontier.terminal_unreachable", "No signal from the grid terminal");
         translationBuilder.add("message.digitalfrontier.laser_inside_grid", "The laser can't digitize from inside the grid");
 
-        translationBuilder.add(RegistryKey.of(RegistryKeys.ITEM_GROUP, ModItemGroups.DIGITAL_FRONTIER_GROUP_ID), "Digital Frontier");
+        translationBuilder.add(ResourceKey.create(Registries.CREATIVE_MODE_TAB, ModItemGroups.DIGITAL_FRONTIER_GROUP_ID), "Digital Frontier");
 
 
         translationBuilder.add(ModTags.Items.BIT, "Bit");
@@ -152,7 +151,7 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS
                 .forEach((patternName, dyeBlockMap) -> {
                     dyeBlockMap.forEach((color, block) -> {
-                        translationBuilder.add(block, String.format("%s %s Patterned Gridstone", toTitle(color.asString()), toTitle(patternName)));
+                        translationBuilder.add(block, String.format("%s %s Patterned Gridstone", toTitle(color.getSerializedName()), toTitle(patternName)));
                     });
                 });
 

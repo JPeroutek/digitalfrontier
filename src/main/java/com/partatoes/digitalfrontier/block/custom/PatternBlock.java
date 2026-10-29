@@ -1,9 +1,9 @@
 package com.partatoes.digitalfrontier.block.custom;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.IntProperty;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 
 /**
  * Gridstone with glowing pattern lines. Lightly corrupted ground makes some of them flicker: their glow drops out now
@@ -12,15 +12,15 @@ import net.minecraft.state.property.IntProperty;
  */
 public class PatternBlock extends Block {
     /** 0 for a steady glow; 1 and 2 flicker, on different timings. */
-    public static final IntProperty FLICKER = IntProperty.of("flicker", 0, 2);
+    public static final IntegerProperty FLICKER = IntegerProperty.create("flicker", 0, 2);
 
-    public PatternBlock(Settings settings) {
+    public PatternBlock(Properties settings) {
         super(settings);
-        setDefaultState(getDefaultState().with(FLICKER, 0));
+        registerDefaultState(defaultBlockState().setValue(FLICKER, 0));
     }
 
     @Override
-    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(FLICKER);
     }
 }

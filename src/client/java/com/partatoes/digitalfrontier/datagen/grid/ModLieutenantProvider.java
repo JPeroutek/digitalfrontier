@@ -9,12 +9,11 @@ import com.partatoes.digitalfrontier.grid.stronghold.RegistryMatcher;
 import com.partatoes.digitalfrontier.grid.stronghold.Trigger;
 import com.partatoes.digitalfrontier.grid.stronghold.Triggers;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
-import net.minecraft.data.DataOutput;
+import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
-import net.minecraft.data.DataWriter;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.data.PackOutput;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -29,18 +28,18 @@ import java.util.concurrent.CompletableFuture;
 public class ModLieutenantProvider implements DataProvider {
     private static final long DAY = 24000;
 
-    private final DataOutput.PathResolver lieutenants;
+    private final PackOutput.PathProvider lieutenants;
 
     public ModLieutenantProvider(FabricDataOutput output) {
-        this.lieutenants = output.getResolver(DataOutput.OutputType.DATA_PACK, "grid/lieutenant");
+        this.lieutenants = output.createPathProvider(PackOutput.Target.DATA_PACK, "grid/lieutenant");
     }
 
     @Override
-    public CompletableFuture<?> run(DataWriter writer) {
+    public CompletableFuture<?> run(CachedOutput writer) {
         List<CompletableFuture<?>> futures = new ArrayList<>();
         definitions().forEach((name, def) -> {
             JsonElement json = LieutenantDef.CODEC.encodeStart(JsonOps.INSTANCE, def).getOrThrow();
-            futures.add(DataProvider.writeToPath(writer, json, lieutenants.resolveJson(Identifier.of(DigitalFrontier.MOD_ID, name))));
+            futures.add(DataProvider.saveStable(writer, json, lieutenants.json(Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, name))));
         });
         return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new));
     }
@@ -50,7 +49,7 @@ public class ModLieutenantProvider implements DataProvider {
 
         // The ruler returns on its own after a week, or sooner if the grid feeds the regime
         defs.put("the_sovereign", new LieutenantDef(
-                Text.translatable("lieutenant.digitalfrontier.the_sovereign"),
+                Component.translatable("lieutenant.digitalfrontier.the_sovereign"),
                 LieutenantDef.Archetype.RULER, Optional.empty(), Optional.empty(), 10, 0f, 1f,
                 Optional.of(ModEntityLootProvider.SOVEREIGN_LOOT),
                 new LieutenantDef.Respawn(DAY, -1, anyOf(
@@ -68,7 +67,7 @@ public class ModLieutenantProvider implements DataProvider {
 
         // The duelist waits for its stronghold to be deserted, then for someone to come back, or for fresh blood
         defs.put("the_warden", new LieutenantDef(
-                Text.translatable("lieutenant.digitalfrontier.the_warden"),
+                Component.translatable("lieutenant.digitalfrontier.the_warden"),
                 LieutenantDef.Archetype.DUELIST, Optional.empty(), Optional.empty(), 10, 0f, 1f, Optional.empty(),
                 new LieutenantDef.Respawn(DAY / 2, -1, anyOf(
                         new Triggers.StrongholdEntered(DAY),
@@ -88,7 +87,7 @@ public class ModLieutenantProvider implements DataProvider {
 
     private static RegistryMatcher matcher(String text) {
         boolean tag = text.startsWith("#");
-        return new RegistryMatcher(tag, Identifier.of(tag ? text.substring(1) : text));
+        return new RegistryMatcher(tag, Identifier.parse(tag ? text.substring(1) : text));
     }
 
     @Override

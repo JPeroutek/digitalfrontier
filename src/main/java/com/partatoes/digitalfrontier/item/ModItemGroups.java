@@ -3,67 +3,67 @@ package com.partatoes.digitalfrontier.item;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.block.ModBlocks;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
 
 public class ModItemGroups {
-    public static final Identifier DIGITAL_FRONTIER_GROUP_ID = Identifier.of(DigitalFrontier.MOD_ID, "digitalfrontier");
-    public static final ItemGroup DIGITAL_FRONTIER_GROUP = Registry.register(Registries.ITEM_GROUP, DIGITAL_FRONTIER_GROUP_ID,
+    public static final Identifier DIGITAL_FRONTIER_GROUP_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "digitalfrontier");
+    public static final CreativeModeTab DIGITAL_FRONTIER_GROUP = Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, DIGITAL_FRONTIER_GROUP_ID,
             FabricItemGroup.builder()
-                    .displayName(Text.translatable("itemgroup.digitalfrontier"))
+                    .title(Component.translatable("itemgroup.digitalfrontier"))
                     .icon(() -> new ItemStack(ModItems.BINARY_1))
-                    .entries((displayContext, entries) -> {
-                        entries.add(ModItems.BINARY_0);
-                        entries.add(ModItems.BINARY_1);
-                        entries.add(ModItems.PIXEL_DUST);
-                        entries.add(ModItems.COAL_DUST);
-                        entries.add(ModItems.LUMINESSENCE);
-                        entries.add(ModItems.LUMINANCE_ORE_DETECTOR);
-                        entries.add(ModItems.BYTE);
-                        entries.add(ModItems.LIGHTCYCLE_BATON);
-                        entries.add(ModItems.DIMENSION_TELEPORTER);
-                        entries.add(ModItems.LASER_TUNER);
-                        entries.add(ModBlocks.DIGITIZING_LASER);
-                        entries.add(ModBlocks.GRID_TUNING_LASER);
-                        entries.add(ModBlocks.ARRIVAL_PAD);
-                        entries.add(ModItems.ESCAPE_KEY);
-                        entries.add(ModItems.MEMORY_PAGING);
-                        entries.add(ModItems.CORE_DUMP);
-                        entries.add(ModBlocks.GRID_PORTAL);
+                    .displayItems((displayContext, entries) -> {
+                        entries.accept(ModItems.BINARY_0);
+                        entries.accept(ModItems.BINARY_1);
+                        entries.accept(ModItems.PIXEL_DUST);
+                        entries.accept(ModItems.COAL_DUST);
+                        entries.accept(ModItems.LUMINESSENCE);
+                        entries.accept(ModItems.LUMINANCE_ORE_DETECTOR);
+                        entries.accept(ModItems.BYTE);
+                        entries.accept(ModItems.LIGHTCYCLE_BATON);
+                        entries.accept(ModItems.DIMENSION_TELEPORTER);
+                        entries.accept(ModItems.LASER_TUNER);
+                        entries.accept(ModBlocks.DIGITIZING_LASER);
+                        entries.accept(ModBlocks.GRID_TUNING_LASER);
+                        entries.accept(ModBlocks.ARRIVAL_PAD);
+                        entries.accept(ModItems.ESCAPE_KEY);
+                        entries.accept(ModItems.MEMORY_PAGING);
+                        entries.accept(ModItems.CORE_DUMP);
+                        entries.accept(ModBlocks.GRID_PORTAL);
 
-                        entries.add(ModBlocks.PIXEL_BLOCK);
-                        entries.add(ModBlocks.PIXEL_LAMP);
-                        entries.add(ModBlocks.GRIDSTONE_BLOCK);
-                        entries.add(ModBlocks.CRACKED_GRIDSTONE_BLOCK);
-                        entries.add(ModBlocks.GRIDSTONE_BRICKS_BLOCK);
-                        entries.add(ModBlocks.LUMINANCE_ORE);
-                        entries.add(ModBlocks.BOOSTER_BLOCK);
-                        entries.add(ModBlocks.KEYBOARD_BLOCK);
+                        entries.accept(ModBlocks.PIXEL_BLOCK);
+                        entries.accept(ModBlocks.PIXEL_LAMP);
+                        entries.accept(ModBlocks.GRIDSTONE_BLOCK);
+                        entries.accept(ModBlocks.CRACKED_GRIDSTONE_BLOCK);
+                        entries.accept(ModBlocks.GRIDSTONE_BRICKS_BLOCK);
+                        entries.accept(ModBlocks.LUMINANCE_ORE);
+                        entries.accept(ModBlocks.BOOSTER_BLOCK);
+                        entries.accept(ModBlocks.KEYBOARD_BLOCK);
 
-                        entries.add(ModBlocks.GRIDSTONE_STAIRS);
-                        entries.add(ModBlocks.GRIDSTONE_SLAB);
-                        entries.add(ModBlocks.GRIDSTONE_WALL);
-                        entries.add(ModBlocks.GRIDSTONE_PRESSURE_PLATE);
+                        entries.accept(ModBlocks.GRIDSTONE_STAIRS);
+                        entries.accept(ModBlocks.GRIDSTONE_SLAB);
+                        entries.accept(ModBlocks.GRIDSTONE_WALL);
+                        entries.accept(ModBlocks.GRIDSTONE_PRESSURE_PLATE);
 
-                        entries.add(ModBlocks.CRACKED_GRIDSTONE_STAIRS);
-                        entries.add(ModBlocks.CRACKED_GRIDSTONE_SLAB);
-                        entries.add(ModBlocks.CRACKED_GRIDSTONE_WALL);
+                        entries.accept(ModBlocks.CRACKED_GRIDSTONE_STAIRS);
+                        entries.accept(ModBlocks.CRACKED_GRIDSTONE_SLAB);
+                        entries.accept(ModBlocks.CRACKED_GRIDSTONE_WALL);
 
-                        entries.add(ModBlocks.GRIDSTONE_BRICKS_STAIRS);
-                        entries.add(ModBlocks.GRIDSTONE_BRICKS_SLAB);
-                        entries.add(ModBlocks.GRIDSTONE_BRICKS_WALL);
-                        entries.add(ModBlocks.LIGHT_BARRIER_EMITTER);
+                        entries.accept(ModBlocks.GRIDSTONE_BRICKS_STAIRS);
+                        entries.accept(ModBlocks.GRIDSTONE_BRICKS_SLAB);
+                        entries.accept(ModBlocks.GRIDSTONE_BRICKS_WALL);
+                        entries.accept(ModBlocks.LIGHT_BARRIER_EMITTER);
 
                         ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.values()
-                                .forEach(colorMapping -> colorMapping.values().forEach(entries::add));
+                                .forEach(colorMapping -> colorMapping.values().forEach(entries::accept));
 
-                        entries.add(ModBlocks.STATIC_BLOCK);
-                        entries.add(ModBlocks.STRONGHOLD_UPLINK);
-                        ModBlocks.GLITCHED_GRIDSTONE.values().forEach(entries::add);
+                        entries.accept(ModBlocks.STATIC_BLOCK);
+                        entries.accept(ModBlocks.STRONGHOLD_UPLINK);
+                        ModBlocks.GLITCHED_GRIDSTONE.values().forEach(entries::accept);
                     })
                     .build());
 

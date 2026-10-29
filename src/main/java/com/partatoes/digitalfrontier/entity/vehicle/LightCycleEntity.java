@@ -6,24 +6,24 @@
 package com.partatoes.digitalfrontier.entity.vehicle;
 
 import com.partatoes.digitalfrontier.item.ModItems;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.PositionInterpolator;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.MovementType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.vehicle.VehicleEntity;
-import net.minecraft.item.Item;
-import net.minecraft.storage.ReadView;
-import net.minecraft.storage.WriteView;
-import net.minecraft.registry.tag.FluidTags;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.util.Mth;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.InterpolationHandler;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.vehicle.VehicleEntity;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.ValueInput;
+import net.minecraft.world.level.storage.ValueOutput;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 public class LightCycleEntity extends VehicleEntity {
@@ -36,53 +36,53 @@ public class LightCycleEntity extends VehicleEntity {
     // Velocity and positions
     private float yawVelocity;
     // Smooths the position updates from the server, as for boats
-    private final PositionInterpolator interpolator = new PositionInterpolator(this, 3);
+    private final InterpolationHandler interpolator = new InterpolationHandler(this, 3);
 
-    public LightCycleEntity(EntityType<? extends  LightCycleEntity> entityType, World world) {
+    public LightCycleEntity(EntityType<? extends  LightCycleEntity> entityType, Level world) {
         super(entityType, world);
     }
 
     @Override
-    protected Item asItem() {
+    protected Item getDropItem() {
         return ModItems.LIGHTCYCLE_BATON;
     }
 
     @Override
-    protected void readCustomData(ReadView view) {
+    protected void readAdditionalSaveData(ValueInput view) {
 
     }
 
     @Override
-    protected void writeCustomData(WriteView view) {
+    protected void addAdditionalSaveData(ValueOutput view) {
 
     }
 
     @Override
-    public void onPassengerLookAround(Entity passenger) {
+    public void onPassengerTurned(Entity passenger) {
         this.clampPassengerYaw(passenger);
     }
 
     protected void clampPassengerYaw(Entity passenger) {
-        passenger.setBodyYaw(this.getYaw());
-        float f = MathHelper.wrapDegrees(passenger.getYaw() - this.getYaw());
-        float g = MathHelper.clamp(f, -105.0F, 105.0F);
-        passenger.lastYaw += g - f;
-        passenger.setYaw(passenger.getYaw() + g - f);
-        passenger.setHeadYaw(passenger.getYaw());
+        passenger.setYBodyRot(this.getYRot());
+        float f = Mth.wrapDegrees(passenger.getYRot() - this.getYRot());
+        float g = Mth.clamp(f, -105.0F, 105.0F);
+        passenger.yRotO += g - f;
+        passenger.setYRot(passenger.getYRot() + g - f);
+        passenger.setYHeadRot(passenger.getYRot());
     }
 
-    public ActionResult interact(PlayerEntity player, Hand hand) {
-        ActionResult actionResult = super.interact(player, hand);
-        if (actionResult != ActionResult.PASS) {
+    public InteractionResult interact(Player player, InteractionHand hand) {
+        InteractionResult actionResult = super.interact(player, hand);
+        if (actionResult != InteractionResult.PASS) {
             return actionResult;
         } else {
-            return (player.shouldCancelInteraction() || !this.getEntityWorld().isClient() && !player.startRiding(this) ? ActionResult.PASS : ActionResult.SUCCESS);
+            return (player.isSecondaryUseActive() || !this.level().isClientSide() && !player.startRiding(this) ? InteractionResult.PASS : InteractionResult.SUCCESS);
         }
     }
 
     @Override
     protected boolean canAddPassenger(Entity passenger) {
-        return this.getPassengerList().size() < this.getMaxPassengers() && !this.isSubmergedIn(FluidTags.WATER);
+        return this.getPassengers().size() < this.getMaxPassengers() && !this.isEyeInFluid(FluidTags.WATER);
     }
     protected int getMaxPassengers() {
         return 1;
@@ -110,27 +110,27 @@ public class LightCycleEntity extends VehicleEntity {
     }
 
     @Override
-    protected double getGravity() {
+    protected double getDefaultGravity() {
         return .04;
     }
 
     // Enough to ride up slab ramps, like the grid's skyroad ramps, without hopping full blocks
     @Override
-    public float getStepHeight() {
+    public float maxUpStep() {
         return 0.6f;
     }
 
     @Override
-    public boolean collidesWith(Entity other) {
+    public boolean canCollideWith(Entity other) {
         return canCollide(this, other);
     }
 
     public static boolean canCollide(Entity entity, Entity other) {
-        return (other.isCollidable(entity) || other.isPushable()) && !entity.isConnectedThroughVehicle(other);
+        return (other.canBeCollidedWith(entity) || other.isPushable()) && !entity.isPassengerOfSameVehicle(other);
     }
 
     @Override
-    public boolean isCollidable(@Nullable Entity entity) {
+    public boolean canBeCollidedWith(@Nullable Entity entity) {
         return true;
     }
 
@@ -140,23 +140,23 @@ public class LightCycleEntity extends VehicleEntity {
     }
 
     @Override
-    public void pushAwayFrom(Entity entity) {
+    public void push(Entity entity) {
         if (entity.getBoundingBox().minY <= this.getBoundingBox().minY) {
-            super.pushAwayFrom(entity);
+            super.push(entity);
         }
     }
 
     @Override
-    public boolean canHit() {
+    public boolean isPickable() {
         return !this.isRemoved();
     }
 
     @Override
-    protected void fall(double heightDifference, boolean onGround, BlockState state, BlockPos landedPosition) {
-        if (!this.hasVehicle()) {
+    protected void checkFallDamage(double heightDifference, boolean onGround, BlockState state, BlockPos landedPosition) {
+        if (!this.isPassenger()) {
             if (onGround) {
-                this.onLanding();
-            } else if (!this.getEntityWorld().getFluidState(this.getBlockPos().down()).isIn(FluidTags.WATER) && heightDifference < 0.0) {
+                this.resetFallDistance();
+            } else if (!this.level().getFluidState(this.blockPosition().below()).is(FluidTags.WATER) && heightDifference < 0.0) {
                 this.fallDistance -= (float)heightDifference;
             }
 
@@ -164,51 +164,51 @@ public class LightCycleEntity extends VehicleEntity {
     }
 
     @Override
-    public PositionInterpolator getInterpolator() {
+    public InterpolationHandler getInterpolation() {
         return interpolator;
     }
 
     @Override
     public void tick() {
-        if (this.getDamageWobbleTicks() > 0) {
-            this.setDamageWobbleTicks(this.getDamageWobbleTicks() - 1);
+        if (this.getHurtTime() > 0) {
+            this.setHurtTime(this.getHurtTime() - 1);
         }
 
-        if (this.getDamageWobbleStrength() > 0.0F) {
-            this.setDamageWobbleStrength(this.getDamageWobbleStrength() - 1.0F);
+        if (this.getDamage() > 0.0F) {
+            this.setDamage(this.getDamage() - 1.0F);
         }
 
         super.tick();
-        this.interpolator.tick();
-        if (this.isLogicalSideForUpdatingMovement()) {
+        this.interpolator.interpolate();
+        if (this.isLocalInstanceAuthoritative()) {
             this.updateVelocity();
 
-            if (this.getEntityWorld().isClient()) {
+            if (this.level().isClientSide()) {
                 this.updateStateFromInput();
             }
 
-            this.move(MovementType.SELF, this.getVelocity());
+            this.move(MoverType.SELF, this.getDeltaMovement());
         } else {
-            this.setVelocity(Vec3d.ZERO);
+            this.setDeltaMovement(Vec3.ZERO);
         }
 
-        this.tickBlockCollision();
-        this.tickBlockCollision();
+        this.applyEffectsFromBlocks();
+        this.applyEffectsFromBlocks();
 
         // Here is where you could add code for causing Programs to enter the vehicle
     }
 
     private void updateVelocity() {
-        double d = -this.getFinalGravity();
+        double d = -this.getGravity();
         float velocityDecay = 0.9F;  // Typical values for boats are .9 for Water/Air, with different values on ice etc
 
-        Vec3d vec3d = this.getVelocity();
-        this.setVelocity(vec3d.x * (double)velocityDecay, vec3d.y + d, vec3d.z * (double)velocityDecay);
+        Vec3 vec3d = this.getDeltaMovement();
+        this.setDeltaMovement(vec3d.x * (double)velocityDecay, vec3d.y + d, vec3d.z * (double)velocityDecay);
         this.yawVelocity = this.yawVelocity * velocityDecay;
     }
 
     private void updateStateFromInput() {
-        if (this.hasPassengers()) {
+        if (this.isVehicle()) {
             float f = 0.0F;
             if (this.pressingLeft) {
                 this.yawVelocity--;
@@ -222,7 +222,7 @@ public class LightCycleEntity extends VehicleEntity {
                 f += 0.005F;
             }
 
-            this.setYaw(this.getYaw() + this.yawVelocity);
+            this.setYRot(this.getYRot() + this.yawVelocity);
             if (this.pressingForward) {
                 f += 0.04F;
             }
@@ -231,12 +231,12 @@ public class LightCycleEntity extends VehicleEntity {
                 f -= 0.005F;
             }
 
-            this.setVelocity(
-                    this.getVelocity()
+            this.setDeltaMovement(
+                    this.getDeltaMovement()
                             .add(
-                                    (MathHelper.sin(-this.getYaw() * (float) (Math.PI / 180.0)) * f),
+                                    (Mth.sin(-this.getYRot() * (float) (Math.PI / 180.0)) * f),
                                     0.0,
-                                    (MathHelper.cos(this.getYaw() * (float) (Math.PI / 180.0)) * f)
+                                    (Mth.cos(this.getYRot() * (float) (Math.PI / 180.0)) * f)
                             )
             );
         }

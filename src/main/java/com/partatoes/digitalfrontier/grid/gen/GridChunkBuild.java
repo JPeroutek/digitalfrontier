@@ -14,16 +14,16 @@ import com.partatoes.digitalfrontier.grid.parts.DistrictPalette;
 import com.partatoes.digitalfrontier.grid.parts.GridAssets;
 import com.partatoes.digitalfrontier.grid.parts.GridBuildingDef;
 import com.partatoes.digitalfrontier.grid.parts.GridPart;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.BlockRotation;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockBox;
-import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
 import static com.partatoes.digitalfrontier.grid.layout.GridLayout.FLOOR_Y;
 
@@ -35,7 +35,7 @@ import static com.partatoes.digitalfrontier.grid.layout.GridLayout.FLOOR_Y;
 final class GridChunkBuild {
     private static final int MAX_Y = 319;
     private static final double STREET_FURNITURE_CHANCE = 0.35;
-    private static final BlockRotation[] ROTATIONS = BlockRotation.values();
+    private static final Rotation[] ROTATIONS = Rotation.values();
 
     private final GridLayout layout;
     private final GridAssets assets;
@@ -48,7 +48,7 @@ final class GridChunkBuild {
     private final int footprintX;
     private final int footprintZ;
     private final int footprintSize;
-    private final BlockRotation rotation;
+    private final Rotation rotation;
     // Ground columns, worked out on first use: a height lookup only needs one of them
     private final GridTerrain.Column[] columns = new GridTerrain.Column[256];
     @Nullable
@@ -63,7 +63,7 @@ final class GridChunkBuild {
     }
 
     private GridChunkBuild(GridLayout layout, GridAssets assets, ChunkPlan plan, int chunkX, int chunkZ, @Nullable Identifier buildingId, List<Layer> layers,
-                           int footprintChunkX, int footprintChunkZ, int footprintChunks, BlockRotation rotation) {
+                           int footprintChunkX, int footprintChunkZ, int footprintChunks, Rotation rotation) {
         this.layout = layout;
         this.assets = assets;
         this.plan = plan;
@@ -107,7 +107,7 @@ final class GridChunkBuild {
             candidate = kind == null ? null : assets.pick(kind, 1, plan.zone(), roll(seed, chunkX, chunkZ, 0));
         }
         if (candidate == null) {
-            return new GridChunkBuild(layout, assets, plan, chunkX, chunkZ, null, List.of(), chunkX, chunkZ, 1, BlockRotation.NONE);
+            return new GridChunkBuild(layout, assets, plan, chunkX, chunkZ, null, List.of(), chunkX, chunkZ, 1, Rotation.NONE);
         }
         return stacked(layout, plan, chunkX, chunkZ, assets, candidate, chunkX, chunkZ, 1, seed);
     }
@@ -131,16 +131,16 @@ final class GridChunkBuild {
      * Street furniture is authored for a road along X, with a boulevard's outer edge at Z = 0 and its median at
      * Z = 15. Turn it for roads along Z, and so each boulevard half faces outward.
      */
-    private static BlockRotation streetRotation(ChunkPlan plan) {
+    private static Rotation streetRotation(ChunkPlan plan) {
         boolean alongX = plan.streetX();
         Road road = alongX ? plan.roadX() : plan.roadZ();
         if (road.roadClass() == RoadClass.BOULEVARD) {
             if (alongX) {
-                return road.half() == 0 ? BlockRotation.NONE : BlockRotation.CLOCKWISE_180;
+                return road.half() == 0 ? Rotation.NONE : Rotation.CLOCKWISE_180;
             }
-            return road.half() == 0 ? BlockRotation.COUNTERCLOCKWISE_90 : BlockRotation.CLOCKWISE_90;
+            return road.half() == 0 ? Rotation.COUNTERCLOCKWISE_90 : Rotation.CLOCKWISE_90;
         }
-        return alongX ? BlockRotation.NONE : BlockRotation.CLOCKWISE_90;
+        return alongX ? Rotation.NONE : Rotation.CLOCKWISE_90;
     }
 
     @Nullable
@@ -174,7 +174,7 @@ final class GridChunkBuild {
         }
         addLayer(layers, assets, def.roof().orElse(null), y);
 
-        BlockRotation rotation = def.kind() == GridBuildingDef.Kind.STREET
+        Rotation rotation = def.kind() == GridBuildingDef.Kind.STREET
                 ? streetRotation(plan)
                 : ROTATIONS[(int) (roll(seed, originX, originZ, 2) * ROTATIONS.length)];
         return new GridChunkBuild(layout, assets, plan, chunkX, chunkZ, candidate.id(), List.copyOf(layers), originX, originZ, footprintChunks, rotation);
@@ -238,24 +238,24 @@ final class GridChunkBuild {
      * Null if there are none.
      */
     @Nullable
-    BlockBox portalBeam() {
+    BoundingBox portalBeam() {
         if (!isPortal()) {
             return null;
         }
         Layer top = layers.getLast();
         int y = partsTop();
-        BlockBox box = null;
+        BoundingBox box = null;
         for (int localX = 0; localX < 16; localX++) {
             for (int localZ = 0; localZ < 16; localZ++) {
-                if (!partBlock(top, localX, y, localZ).isOf(ModBlocks.GRID_PORTAL)) {
+                if (!partBlock(top, localX, y, localZ).is(ModBlocks.GRID_PORTAL)) {
                     continue;
                 }
                 int bottom = y;
-                while (bottom > top.bottomY() && partBlock(top, localX, bottom - 1, localZ).isOf(ModBlocks.GRID_PORTAL)) {
+                while (bottom > top.bottomY() && partBlock(top, localX, bottom - 1, localZ).is(ModBlocks.GRID_PORTAL)) {
                     bottom--;
                 }
                 BlockPos pos = new BlockPos(chunkX * 16 + localX, bottom, chunkZ * 16 + localZ);
-                box = box == null ? new BlockBox(pos) : box.encompass(pos);
+                box = box == null ? new BoundingBox(pos) : box.encapsulate(pos);
             }
         }
         return box;
@@ -440,11 +440,11 @@ final class GridChunkBuild {
         if (isPortal() && y > partsTop()) {
             // Grid Portal blocks in the top row of the building go on up
             BlockState top = partBlock(layers.getLast(), localX, partsTop(), localZ);
-            if (top.isOf(ModBlocks.GRID_PORTAL)) {
+            if (top.is(ModBlocks.GRID_PORTAL)) {
                 return top;
             }
         }
-        return Blocks.AIR.getDefaultState();
+        return Blocks.AIR.defaultBlockState();
     }
 
     private BlockState partBlock(Layer layer, int localX, int y, int localZ) {
@@ -462,7 +462,7 @@ final class GridChunkBuild {
         }
         BlockState state = layer.part().get(px, y - layer.bottomY(), pz);
         if (state == null) {
-            return Blocks.AIR.getDefaultState();
+            return Blocks.AIR.defaultBlockState();
         }
         return DistrictPalette.remap(state, plan.district()).rotate(rotation);
     }

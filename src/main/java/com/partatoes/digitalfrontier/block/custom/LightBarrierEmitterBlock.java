@@ -2,40 +2,39 @@ package com.partatoes.digitalfrontier.block.custom;
 
 import com.mojang.serialization.MapCodec;
 import com.partatoes.digitalfrontier.block.ModBlocks;
-import net.minecraft.block.AbstractBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.ShapeContext;
-import net.minecraft.block.WallMountedBlock;
-import net.minecraft.block.enums.BlockFace;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.state.StateManager;
-import net.minecraft.state.property.BooleanProperty;
-import net.minecraft.state.property.EnumProperty;
-import net.minecraft.state.property.Properties;
-import net.minecraft.state.property.Property;
-import net.minecraft.util.function.BooleanBiFunction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Direction.Axis;
-import net.minecraft.util.math.random.Random;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldAccess;
-import net.minecraft.world.WorldView;
-import net.minecraft.world.block.WireOrientation;
-import net.minecraft.world.tick.ScheduledTickView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.ScheduledTickAccess;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.FaceAttachedHorizontalDirectionalBlock;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.AttachFace;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.redstone.Orientation;
+import net.minecraft.world.phys.shapes.BooleanOp;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
-public class LightBarrierEmitterBlock extends WallMountedBlock {
+public class LightBarrierEmitterBlock extends FaceAttachedHorizontalDirectionalBlock {
     public float volume = 0.5F;
     public float pitch = 1.0F;
     public static final EnumProperty<Direction> FACING;
@@ -65,25 +64,25 @@ public class LightBarrierEmitterBlock extends WallMountedBlock {
     protected static final VoxelShape WEST_POWERED_SHAPE;
     protected static final VoxelShape EAST_POWERED_SHAPE;
 
-    public LightBarrierEmitterBlock(AbstractBlock.Settings settings) {
+    public LightBarrierEmitterBlock(BlockBehaviour.Properties settings) {
         super(settings);
-        this.setDefaultState((BlockState)((BlockState)((BlockState)((BlockState)this.stateManager.getDefaultState()).with(FACING, Direction.NORTH)).with(POWERED, false)).with(FACE, BlockFace.WALL));
+        this.registerDefaultState((BlockState)((BlockState)((BlockState)((BlockState)this.stateDefinition.any()).setValue(FACING, Direction.NORTH)).setValue(POWERED, false)).setValue(FACE, AttachFace.WALL));
     }
 
-    protected MapCodec<? extends WallMountedBlock> getCodec() {
+    protected MapCodec<? extends FaceAttachedHorizontalDirectionalBlock> codec() {
         return null;
     }
 
-    public void GenerateBridge(Direction dir, WorldAccess world, int length, BlockPos pos, BlockState state) {
+    public void GenerateBridge(Direction dir, LevelAccessor world, int length, BlockPos pos, BlockState state) {
         Boolean bridgeEnded = false;
 
         for(int i = 1; i < 15; ++i) {
             BlockPos addPos;
             BlockState bs;
             addPos = new BlockPos(0, 0, 0);
-            bs = (BlockState)((BlockState) ModBlocks.LIGHT_BARRIER.getDefaultState().with(FACING, dir)).with(FACE, (BlockFace)state.get(FACE));
+            bs = (BlockState)((BlockState) ModBlocks.LIGHT_BARRIER.defaultBlockState().setValue(FACING, dir)).setValue(FACE, (AttachFace)state.getValue(FACE));
             label30:
-            switch ((BlockFace)state.get(FACE)) {
+            switch ((AttachFace)state.getValue(FACE)) {
                 case FLOOR:
                     addPos = new BlockPos(0, i, 0);
                     break;
@@ -107,50 +106,50 @@ public class LightBarrierEmitterBlock extends WallMountedBlock {
                     addPos = new BlockPos(0, -i, 0);
             }
 
-            if (!world.getBlockState(pos.add(addPos)).isAir() && !world.getBlockState(pos.add(addPos)).equals(bs)) {
+            if (!world.getBlockState(pos.offset(addPos)).isAir() && !world.getBlockState(pos.offset(addPos)).equals(bs)) {
                 return;
             }
 
             if (!bridgeEnded && i < length) {
-                world.setBlockState(pos.add(addPos), bs, 3);
+                world.setBlock(pos.offset(addPos), bs, 3);
             } else {
                 bridgeEnded = true;
-                world.setBlockState(pos.add(addPos), Blocks.AIR.getDefaultState(), 3);
+                world.setBlock(pos.offset(addPos), Blocks.AIR.defaultBlockState(), 3);
             }
         }
 
     }
 
-    protected void neighborUpdate(BlockState state, World world, BlockPos pos, Block sourceBlock, @Nullable WireOrientation wireOrientation, boolean notify) {
-        if (!world.isClient()) {
-            int redstonePower = world.getReceivedRedstonePower(pos);
-            Direction dir = (Direction)state.get(FACING);
-            boolean bl = (Boolean)state.get(POWERED);
-            if (bl != world.isReceivingRedstonePower(pos)) {
+    protected void neighborChanged(BlockState state, Level world, BlockPos pos, Block sourceBlock, @Nullable Orientation wireOrientation, boolean notify) {
+        if (!world.isClientSide()) {
+            int redstonePower = world.getBestNeighborSignal(pos);
+            Direction dir = (Direction)state.getValue(FACING);
+            boolean bl = (Boolean)state.getValue(POWERED);
+            if (bl != world.hasNeighborSignal(pos)) {
                 if (bl) {
-                    world.scheduleBlockTick(pos, this, 4);
+                    world.scheduleTick(pos, this, 4);
                 } else {
-                    world.setBlockState(pos, (BlockState)state.cycle(POWERED), 2);
+                    world.setBlock(pos, (BlockState)state.cycle(POWERED), 2);
 //                    world.playSound((PlayerEntity)null, pos, LaserBridgesDoors.ON, SoundCategory.BLOCKS, this.volume, this.pitch);
                     this.GenerateBridge(dir, world, redstonePower, pos, state);
                 }
             } else if (bl) {
-                world.scheduleBlockTick(pos, this, 4);
+                world.scheduleTick(pos, this, 4);
             }
 
         }
     }
 
-    public void scheduledTick(BlockState state, ServerWorld world, BlockPos pos, Random random) {
-        if (!world.isClient()) {
-            if ((Boolean)state.get(POWERED)) {
-                Direction dir = (Direction)state.get(FACING);
-                if (!world.isReceivingRedstonePower(pos)) {
-                    world.setBlockState(pos, (BlockState)state.cycle(POWERED), 2);
+    public void tick(BlockState state, ServerLevel world, BlockPos pos, RandomSource random) {
+        if (!world.isClientSide()) {
+            if ((Boolean)state.getValue(POWERED)) {
+                Direction dir = (Direction)state.getValue(FACING);
+                if (!world.hasNeighborSignal(pos)) {
+                    world.setBlock(pos, (BlockState)state.cycle(POWERED), 2);
                     this.GenerateBridge(dir, world, 0, pos, state);
 //                    world.playSound((PlayerEntity)null, pos, LaserBridgesDoors.OFF, SoundCategory.BLOCKS, this.volume, this.pitch);
                 } else {
-                    int redstonePower = world.getReceivedRedstonePower(pos);
+                    int redstonePower = world.getBestNeighborSignal(pos);
                     this.GenerateBridge(dir, world, redstonePower, pos, state);
                 }
             }
@@ -158,17 +157,17 @@ public class LightBarrierEmitterBlock extends WallMountedBlock {
         }
     }
 
-    public void onPlaced(World world, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack itemStack) {
-        if (!world.isClient()) {
-            boolean bl = (Boolean)state.get(POWERED);
-            if (bl != world.isReceivingRedstonePower(pos)) {
+    public void setPlacedBy(Level world, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack itemStack) {
+        if (!world.isClientSide()) {
+            boolean bl = (Boolean)state.getValue(POWERED);
+            if (bl != world.hasNeighborSignal(pos)) {
                 if (bl) {
-                    world.scheduleBlockTick(pos, this, 4);
+                    world.scheduleTick(pos, this, 4);
                 } else {
-                    world.setBlockState(pos, (BlockState)state.cycle(POWERED), 2);
+                    world.setBlock(pos, (BlockState)state.cycle(POWERED), 2);
 //                    world.playSound((PlayerEntity)null, pos, LaserBridgesDoors.ON, SoundCategory.BLOCKS, this.volume, this.pitch);
-                    Direction dir = (Direction)state.get(FACING);
-                    int redstonePower = world.getReceivedRedstonePower(pos);
+                    Direction dir = (Direction)state.getValue(FACING);
+                    int redstonePower = world.getBestNeighborSignal(pos);
                     this.GenerateBridge(dir, world, redstonePower, pos, state);
                 }
             }
@@ -176,32 +175,32 @@ public class LightBarrierEmitterBlock extends WallMountedBlock {
         }
     }
 
-    public BlockState onBreak(World world, BlockPos pos, BlockState state, PlayerEntity player) {
-        if (!world.isClient()) {
-            world.playSound((PlayerEntity)null, pos, SoundEvents.BLOCK_METAL_BREAK, SoundCategory.BLOCKS, 0.8F, 0.8F);
+    public BlockState playerWillDestroy(Level world, BlockPos pos, BlockState state, Player player) {
+        if (!world.isClientSide()) {
+            world.playSound((Player)null, pos, SoundEvents.METAL_BREAK, SoundSource.BLOCKS, 0.8F, 0.8F);
         }
 
-        Direction dir = (Direction)state.get(FACING);
+        Direction dir = (Direction)state.getValue(FACING);
         this.GenerateBridge(dir, world, 0, pos, state);
 //        world.playSound((PlayerEntity)null, pos, LaserBridgesDoors.OFF, SoundCategory.BLOCKS, this.volume, this.pitch);
         return state;
     }
 
-    protected BlockState getStateForNeighborUpdate(BlockState state, WorldView world, ScheduledTickView tickView, BlockPos pos, Direction direction, BlockPos neighborPos, BlockState neighborState, Random random) {
-        Direction dir = (Direction)state.get(FACING);
-        if (!state.canPlaceAt(world, pos)) {
-            this.GenerateBridge(dir, (WorldAccess)world, 0, pos, state);
+    protected BlockState updateShape(BlockState state, LevelReader world, ScheduledTickAccess tickView, BlockPos pos, Direction direction, BlockPos neighborPos, BlockState neighborState, RandomSource random) {
+        Direction dir = (Direction)state.getValue(FACING);
+        if (!state.canSurvive(world, pos)) {
+            this.GenerateBridge(dir, (LevelAccessor)world, 0, pos, state);
 //            ((World)world).playSound((PlayerEntity)null, pos, LaserBridgesDoors.OFF, SoundCategory.BLOCKS, this.volume, this.pitch);
-            return Blocks.AIR.getDefaultState();
+            return Blocks.AIR.defaultBlockState();
         } else {
             return state;
         }
     }
 
-    public VoxelShape getOutlineShape(BlockState state, BlockView view, BlockPos pos, ShapeContext context) {
-        Direction dir = (Direction)state.get(FACING);
-        boolean powered = (Boolean)state.get(POWERED);
-        switch ((BlockFace)state.get(FACE)) {
+    public VoxelShape getShape(BlockState state, BlockGetter view, BlockPos pos, CollisionContext context) {
+        Direction dir = (Direction)state.getValue(FACING);
+        boolean powered = (Boolean)state.getValue(POWERED);
+        switch ((AttachFace)state.getValue(FACE)) {
             case FLOOR:
                 switch (dir) {
                     case EAST:
@@ -238,36 +237,36 @@ public class LightBarrierEmitterBlock extends WallMountedBlock {
         }
     }
 
-    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(new Property[]{FACING, FACE, POWERED});
     }
 
     static {
-        FACING = Properties.HORIZONTAL_FACING;
-        POWERED = Properties.POWERED;
-        CEILING_EAST_SHAPE = VoxelShapes.cuboid(0.375, 0.875, 0.0, 0.6875, 1.0, 1.0);
-        CEILING_WEST_SHAPE = VoxelShapes.cuboid(0.3125, 0.875, 0.0, 0.625, 1.0, 1.0);
-        CEILING_NORTH_SHAPE = VoxelShapes.cuboid(0.0, 0.875, 0.3125, 1.0, 1.0, 0.625);
-        CEILING_SOUTH_SHAPE = VoxelShapes.cuboid(0.0, 0.875, 0.375, 1.0, 1.0, 0.6875);
-        CEILING_EAST_POWERED_SHAPE = VoxelShapes.combine(CEILING_EAST_SHAPE, VoxelShapes.cuboid(0.5, 0.0, 0.0, 0.5625, 0.875, 1.0), BooleanBiFunction.OR);
-        CEILING_WEST_POWERED_SHAPE = VoxelShapes.combine(CEILING_WEST_SHAPE, VoxelShapes.cuboid(0.4375, 0.0, 0.0, 0.5, 0.875, 1.0), BooleanBiFunction.OR);
-        CEILING_NORTH_POWERED_SHAPE = VoxelShapes.combine(CEILING_NORTH_SHAPE, VoxelShapes.cuboid(0.0, 0.0, 0.4375, 1.0, 1.0, 0.5), BooleanBiFunction.OR);
-        CEILING_SOUTH_POWERED_SHAPE = VoxelShapes.combine(CEILING_SOUTH_SHAPE, VoxelShapes.cuboid(0.0, 0.0, 0.5, 1.0, 1.0, 0.5625), BooleanBiFunction.OR);
-        FLOOR_EAST_SHAPE = VoxelShapes.cuboid(0.375, 0.0, 0.0, 0.6875, 0.125, 1.0);
-        FLOOR_WEST_SHAPE = VoxelShapes.cuboid(0.3125, 0.0, 0.0, 0.625, 0.125, 1.0);
-        FLOOR_NORTH_SHAPE = VoxelShapes.cuboid(0.0, 0.0, 0.3125, 1.0, 0.125, 0.625);
-        FLOOR_SOUTH_SHAPE = VoxelShapes.cuboid(0.0, 0.0, 0.375, 1.0, 0.125, 0.6875);
-        FLOOR_EAST_POWERED_SHAPE = VoxelShapes.combine(FLOOR_EAST_SHAPE, VoxelShapes.cuboid(0.5, 0.0, 0.0, 0.5625, 1.0, 1.0), BooleanBiFunction.OR);
-        FLOOR_WEST_POWERED_SHAPE = VoxelShapes.combine(FLOOR_WEST_SHAPE, VoxelShapes.cuboid(0.4375, 0.0, 0.0, 0.5, 1.0, 1.0), BooleanBiFunction.OR);
-        FLOOR_NORTH_POWERED_SHAPE = VoxelShapes.combine(FLOOR_NORTH_SHAPE, VoxelShapes.cuboid(0.0, 0.0, 0.4375, 1.0, 1.0, 0.5), BooleanBiFunction.OR);
-        FLOOR_SOUTH_POWERED_SHAPE = VoxelShapes.combine(FLOOR_SOUTH_SHAPE, VoxelShapes.cuboid(0.0, 0.0, 0.5, 1.0, 1.0, 0.5625), BooleanBiFunction.OR);
-        NORTH_SHAPE = VoxelShapes.cuboid(0.0, 0.3125, 0.875, 1.0, 0.625, 1.0);
-        SOUTH_SHAPE = VoxelShapes.cuboid(0.0, 0.3125, 0.0, 1.0, 0.625, 0.125);
-        WEST_SHAPE = VoxelShapes.cuboid(0.875, 0.3125, 0.0, 1.0, 0.625, 1.0);
-        EAST_SHAPE = VoxelShapes.cuboid(0.0, 0.3125, 0.0, 0.125, 0.625, 1.0);
-        NORTH_POWERED_SHAPE = VoxelShapes.combine(NORTH_SHAPE, VoxelShapes.cuboid(0.0, 0.4375, 0.0, 1.0, 0.5, 1.0), BooleanBiFunction.OR);
-        SOUTH_POWERED_SHAPE = VoxelShapes.combine(SOUTH_SHAPE, VoxelShapes.cuboid(0.0, 0.4375, 0.0, 1.0, 0.5, 1.0), BooleanBiFunction.OR);
-        WEST_POWERED_SHAPE = VoxelShapes.combine(WEST_SHAPE, VoxelShapes.cuboid(0.0, 0.4375, 0.0, 1.0, 0.5, 1.0), BooleanBiFunction.OR);
-        EAST_POWERED_SHAPE = VoxelShapes.combine(EAST_SHAPE, VoxelShapes.cuboid(0.0, 0.4375, 0.0, 1.0, 0.5, 1.0), BooleanBiFunction.OR);
+        FACING = BlockStateProperties.HORIZONTAL_FACING;
+        POWERED = BlockStateProperties.POWERED;
+        CEILING_EAST_SHAPE = Shapes.box(0.375, 0.875, 0.0, 0.6875, 1.0, 1.0);
+        CEILING_WEST_SHAPE = Shapes.box(0.3125, 0.875, 0.0, 0.625, 1.0, 1.0);
+        CEILING_NORTH_SHAPE = Shapes.box(0.0, 0.875, 0.3125, 1.0, 1.0, 0.625);
+        CEILING_SOUTH_SHAPE = Shapes.box(0.0, 0.875, 0.375, 1.0, 1.0, 0.6875);
+        CEILING_EAST_POWERED_SHAPE = Shapes.joinUnoptimized(CEILING_EAST_SHAPE, Shapes.box(0.5, 0.0, 0.0, 0.5625, 0.875, 1.0), BooleanOp.OR);
+        CEILING_WEST_POWERED_SHAPE = Shapes.joinUnoptimized(CEILING_WEST_SHAPE, Shapes.box(0.4375, 0.0, 0.0, 0.5, 0.875, 1.0), BooleanOp.OR);
+        CEILING_NORTH_POWERED_SHAPE = Shapes.joinUnoptimized(CEILING_NORTH_SHAPE, Shapes.box(0.0, 0.0, 0.4375, 1.0, 1.0, 0.5), BooleanOp.OR);
+        CEILING_SOUTH_POWERED_SHAPE = Shapes.joinUnoptimized(CEILING_SOUTH_SHAPE, Shapes.box(0.0, 0.0, 0.5, 1.0, 1.0, 0.5625), BooleanOp.OR);
+        FLOOR_EAST_SHAPE = Shapes.box(0.375, 0.0, 0.0, 0.6875, 0.125, 1.0);
+        FLOOR_WEST_SHAPE = Shapes.box(0.3125, 0.0, 0.0, 0.625, 0.125, 1.0);
+        FLOOR_NORTH_SHAPE = Shapes.box(0.0, 0.0, 0.3125, 1.0, 0.125, 0.625);
+        FLOOR_SOUTH_SHAPE = Shapes.box(0.0, 0.0, 0.375, 1.0, 0.125, 0.6875);
+        FLOOR_EAST_POWERED_SHAPE = Shapes.joinUnoptimized(FLOOR_EAST_SHAPE, Shapes.box(0.5, 0.0, 0.0, 0.5625, 1.0, 1.0), BooleanOp.OR);
+        FLOOR_WEST_POWERED_SHAPE = Shapes.joinUnoptimized(FLOOR_WEST_SHAPE, Shapes.box(0.4375, 0.0, 0.0, 0.5, 1.0, 1.0), BooleanOp.OR);
+        FLOOR_NORTH_POWERED_SHAPE = Shapes.joinUnoptimized(FLOOR_NORTH_SHAPE, Shapes.box(0.0, 0.0, 0.4375, 1.0, 1.0, 0.5), BooleanOp.OR);
+        FLOOR_SOUTH_POWERED_SHAPE = Shapes.joinUnoptimized(FLOOR_SOUTH_SHAPE, Shapes.box(0.0, 0.0, 0.5, 1.0, 1.0, 0.5625), BooleanOp.OR);
+        NORTH_SHAPE = Shapes.box(0.0, 0.3125, 0.875, 1.0, 0.625, 1.0);
+        SOUTH_SHAPE = Shapes.box(0.0, 0.3125, 0.0, 1.0, 0.625, 0.125);
+        WEST_SHAPE = Shapes.box(0.875, 0.3125, 0.0, 1.0, 0.625, 1.0);
+        EAST_SHAPE = Shapes.box(0.0, 0.3125, 0.0, 0.125, 0.625, 1.0);
+        NORTH_POWERED_SHAPE = Shapes.joinUnoptimized(NORTH_SHAPE, Shapes.box(0.0, 0.4375, 0.0, 1.0, 0.5, 1.0), BooleanOp.OR);
+        SOUTH_POWERED_SHAPE = Shapes.joinUnoptimized(SOUTH_SHAPE, Shapes.box(0.0, 0.4375, 0.0, 1.0, 0.5, 1.0), BooleanOp.OR);
+        WEST_POWERED_SHAPE = Shapes.joinUnoptimized(WEST_SHAPE, Shapes.box(0.0, 0.4375, 0.0, 1.0, 0.5, 1.0), BooleanOp.OR);
+        EAST_POWERED_SHAPE = Shapes.joinUnoptimized(EAST_SHAPE, Shapes.box(0.0, 0.4375, 0.0, 1.0, 0.5, 1.0), BooleanOp.OR);
     }
 }

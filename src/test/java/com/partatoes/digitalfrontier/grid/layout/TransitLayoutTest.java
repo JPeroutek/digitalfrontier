@@ -236,8 +236,8 @@ class TransitLayoutTest {
                     assertFalse(transit.subway(x, z), where + ": never on a city line");
                     // Each open side leads to the next piece of the same line
                     int open = 0;
-                    for (var side : new net.minecraft.util.math.Direction[]{piece.from(), piece.to()}) {
-                        TransitLayout.ExpressPiece next = transit.expressAt(x + side.getOffsetX(), z + side.getOffsetZ());
+                    for (var side : new net.minecraft.core.Direction[]{piece.from(), piece.to()}) {
+                        TransitLayout.ExpressPiece next = transit.expressAt(x + side.getStepX(), z + side.getStepZ());
                         if (next != null) {
                             assertEquals(piece.line(), next.line(), where + ": lines don't meet");
                             assertTrue(next.from() == side.getOpposite() || next.to() == side.getOpposite(), where + ": joined up");
@@ -259,8 +259,8 @@ class TransitLayoutTest {
                 assertEquals(2, stations[line], "seed " + seed + ": a station at each end");
                 // One of the stations is right next to the waypoint
                 boolean beside = false;
-                for (var side : net.minecraft.util.math.Direction.Type.HORIZONTAL) {
-                    TransitLayout.ExpressPiece next = transit.expressAt(waypoint.chunkX() + side.getOffsetX(), waypoint.chunkZ() + side.getOffsetZ());
+                for (var side : net.minecraft.core.Direction.Plane.HORIZONTAL) {
+                    TransitLayout.ExpressPiece next = transit.expressAt(waypoint.chunkX() + side.getStepX(), waypoint.chunkZ() + side.getStepZ());
                     beside |= next != null && next.station() && next.line() == line;
                 }
                 assertTrue(beside, "seed " + seed + ": waypoint " + line);

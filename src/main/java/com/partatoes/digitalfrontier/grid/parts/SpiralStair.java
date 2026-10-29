@@ -1,11 +1,11 @@
 package com.partatoes.digitalfrontier.grid.parts;
 
 import com.partatoes.digitalfrontier.block.ModBlocks;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.StairsBlock;
-import net.minecraft.block.enums.BlockHalf;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Half;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -23,8 +23,8 @@ public final class SpiralStair {
     private static final int FIRST_INNER = 3;
     private static final int LAST_INNER = 7;
 
-    private static final BlockState WALL = ModBlocks.GRIDSTONE_BRICKS_WALL.getDefaultState();
-    private static final BlockState AIR = Blocks.AIR.getDefaultState();
+    private static final BlockState WALL = ModBlocks.GRIDSTONE_BRICKS_WALL.defaultBlockState();
+    private static final BlockState AIR = Blocks.AIR.defaultBlockState();
 
     private SpiralStair() {
     }
@@ -78,8 +78,8 @@ public final class SpiralStair {
             // Each step faces the next one, so you climb toward it
             int[] next = RING[(cell + 1) % RING.length];
             Direction facing = next[0] > x ? Direction.EAST : next[0] < x ? Direction.WEST : next[1] > z ? Direction.SOUTH : Direction.NORTH;
-            return ModBlocks.GRIDSTONE_BRICKS_STAIRS.getDefaultState()
-                    .with(StairsBlock.FACING, facing).with(StairsBlock.HALF, BlockHalf.BOTTOM);
+            return ModBlocks.GRIDSTONE_BRICKS_STAIRS.defaultBlockState()
+                    .setValue(StairBlock.FACING, facing).setValue(StairBlock.HALF, Half.BOTTOM);
         }
         return AIR;
     }

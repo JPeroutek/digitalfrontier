@@ -4,8 +4,8 @@ import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.resources.ResourceManager;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Reader;
@@ -41,15 +41,15 @@ public final class Lieutenants implements SimpleSynchronousResourceReloadListene
 
     @Override
     public Identifier getFabricId() {
-        return Identifier.of(DigitalFrontier.MOD_ID, "grid_lieutenants");
+        return Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "grid_lieutenants");
     }
 
     @Override
-    public void reload(ResourceManager manager) {
+    public void onResourceManagerReload(ResourceManager manager) {
         Map<Identifier, Lieutenant> lieutenants = new HashMap<>();
-        manager.findResources(FOLDER, path -> path.getPath().endsWith(".json")).forEach((file, resource) -> {
+        manager.listResources(FOLDER, path -> path.getPath().endsWith(".json")).forEach((file, resource) -> {
             Identifier id = file.withPath(path -> path.substring(FOLDER.length() + 1, path.length() - ".json".length()));
-            try (Reader reader = resource.getReader()) {
+            try (Reader reader = resource.openAsReader()) {
                 LieutenantDef.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseReader(reader))
                         .resultOrPartial(error -> DigitalFrontier.LOGGER.error("Invalid grid lieutenant {}: {}", id, error))
                         .ifPresent(def -> lieutenants.put(id, new Lieutenant(id, def, new CompiledTrigger(def.respawn().trigger()))));

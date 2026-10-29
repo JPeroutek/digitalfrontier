@@ -1,24 +1,24 @@
 package com.partatoes.digitalfrontier.block.custom;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class BoosterBlock extends Block {
-    public BoosterBlock(Settings settings) {
+    public BoosterBlock(Properties settings) {
         super(settings);
     }
 
     @Override
-    public void onSteppedOn(World world, BlockPos pos, BlockState state, Entity entity) {
-        if (entity.isLiving() && !entity.bypassesSteppingEffects()) {
-            ((LivingEntity) entity).addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, 1));
+    public void stepOn(Level world, BlockPos pos, BlockState state, Entity entity) {
+        if (entity.showVehicleHealth() && !entity.isSteppingCarefully()) {
+            ((LivingEntity) entity).addEffect(new MobEffectInstance(MobEffects.SPEED, 1));
         }
-        super.onSteppedOn(world, pos, state, entity);
+        super.stepOn(world, pos, state, entity);
     }
 }

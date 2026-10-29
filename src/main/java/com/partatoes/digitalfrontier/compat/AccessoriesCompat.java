@@ -3,7 +3,7 @@ package com.partatoes.digitalfrontier.compat;
 import com.partatoes.digitalfrontier.grid.exit.MemoryPaging;
 import io.wispforest.accessories.api.events.DropRule;
 import io.wispforest.accessories.api.events.OnDropCallback;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.world.entity.player.Player;
 
 /**
  * Accessories (and Trinkets mods running on its Trinkets compatibility layer): a Core Dump keeps equipped
@@ -17,7 +17,7 @@ public final class AccessoriesCompat {
     public static void register() {
         // Only the default rule is overridden, as with keepInventory: slots that always drop or destroy still do
         OnDropCallback.EVENT.register((dropRule, stack, reference, damageSource) ->
-                dropRule == DropRule.DEFAULT && reference.entity() instanceof PlayerEntity player && MemoryPaging.keepsInventory(player)
+                dropRule == DropRule.DEFAULT && reference.entity() instanceof Player player && MemoryPaging.keepsInventory(player)
                         ? DropRule.KEEP
                         : null);
     }

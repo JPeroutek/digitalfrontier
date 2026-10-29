@@ -7,13 +7,13 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 
 /** Turns what players do into {@link GridEvent}s for the strongholds' respawn triggers. */
 public final class StrongholdEvents {
@@ -24,42 +24,42 @@ public final class StrongholdEvents {
         ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register((player, origin, destination) -> {
             if (GridArrival.generator(destination) != null) {
                 // Arriving through a laser records the terminal only after this, so a first visit still looks new
-                boolean newPlayer = player.getAttachedOrCreate(GridMemory.TYPE).discovered(destination.getRegistryKey().getValue()).isEmpty();
+                boolean newPlayer = player.getAttachedOrCreate(GridMemory.TYPE).discovered(destination.dimension().identifier()).isEmpty();
                 StrongholdManager.fire(destination, new GridEvent.GridEntered(newPlayer));
             }
         });
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
-            if (!(entity.getEntityWorld() instanceof ServerWorld world)) {
+            if (!(entity.level() instanceof ServerLevel world)) {
                 return;
             }
-            if (entity instanceof ServerPlayerEntity) {
-                StrongholdManager.fire(world, new GridEvent.PlayerDerezzed(entity.getBlockPos()));
-            } else if (entity instanceof ProgramEntity && source.getAttacker() instanceof PlayerEntity) {
-                StrongholdManager.fire(world, new GridEvent.ProgramDerezzed(entity.getBlockPos()));
+            if (entity instanceof ServerPlayer) {
+                StrongholdManager.fire(world, new GridEvent.PlayerDerezzed(entity.blockPosition()));
+            } else if (entity instanceof ProgramEntity && source.getEntity() instanceof Player) {
+                StrongholdManager.fire(world, new GridEvent.ProgramDerezzed(entity.blockPosition()));
             }
         });
         PlayerBlockBreakEvents.AFTER.register((world, player, pos, state, blockEntity) -> {
-            if (world instanceof ServerWorld serverWorld) {
+            if (world instanceof ServerLevel serverWorld) {
                 StrongholdManager.fire(serverWorld, new GridEvent.BlockBroken(state, pos));
             }
         });
         UseItemCallback.EVENT.register((player, world, hand) -> {
-            ItemStack stack = player.getStackInHand(hand);
-            if (!(world instanceof ServerWorld serverWorld) || stack.isEmpty()) {
-                return ActionResult.PASS;
+            ItemStack stack = player.getItemInHand(hand);
+            if (!(world instanceof ServerLevel serverWorld) || stack.isEmpty()) {
+                return InteractionResult.PASS;
             }
-            StrongholdManager.Fired fired = StrongholdManager.fire(serverWorld, new GridEvent.ItemUsed(stack.copy(), player.getBlockPos()));
+            StrongholdManager.Fired fired = StrongholdManager.fire(serverWorld, new GridEvent.ItemUsed(stack.copy(), player.blockPosition()));
             if (fired.consume()) {
-                stack.decrementUnlessCreative(1, player);
-                return ActionResult.SUCCESS;
+                stack.consume(1, player);
+                return InteractionResult.SUCCESS;
             }
-            return ActionResult.PASS;
+            return InteractionResult.PASS;
         });
     }
 
     /** From {@code ItemStackMixin}: crafting in a grid counts there; crafting in the real world counts in every grid. */
-    public static void onItemCrafted(ItemStack stack, World world, PlayerEntity player) {
-        if (!(world instanceof ServerWorld serverWorld)) {
+    public static void onItemCrafted(ItemStack stack, Level world, Player player) {
+        if (!(world instanceof ServerLevel serverWorld)) {
             return;
         }
         GridEvent event = new GridEvent.ItemCrafted(stack.copy());
@@ -71,8 +71,8 @@ public final class StrongholdEvents {
     }
 
     /** From {@code BlockItemMixin}, after a block was placed successfully. */
-    public static void onBlockPlaced(World world, BlockPos pos) {
-        if (world instanceof ServerWorld serverWorld) {
+    public static void onBlockPlaced(Level world, BlockPos pos) {
+        if (world instanceof ServerLevel serverWorld) {
             StrongholdManager.fire(serverWorld, new GridEvent.BlockPlaced(world.getBlockState(pos), pos));
         }
     }

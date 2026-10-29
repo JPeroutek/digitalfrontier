@@ -5,8 +5,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.minecraft.util.Identifier;
-
+import net.minecraft.resources.Identifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +25,7 @@ public record GridMemory(Map<Identifier, List<String>> discovered, Optional<Term
     ).apply(instance, GridMemory::new));
 
     public static final AttachmentType<GridMemory> TYPE = AttachmentRegistry.create(
-            Identifier.of(DigitalFrontier.MOD_ID, "grid_memory"),
+            Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "grid_memory"),
             builder -> builder.persistent(CODEC).copyOnDeath().initializer(() -> EMPTY));
 
     /** Terminal ids discovered in a grid, in the order they were found. */

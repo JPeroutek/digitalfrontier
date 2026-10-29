@@ -7,10 +7,9 @@ import com.google.gson.JsonObject;
 import com.mojang.serialization.JsonOps;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.grid.layout.GridLayoutSettings;
-import net.minecraft.util.Identifier;
-
 import java.nio.charset.StandardCharsets;
 import java.util.TreeMap;
+import net.minecraft.resources.Identifier;
 
 /**
  * Derives a grid's dimension id from its settings: {@code digitalfrontier:default} for the default settings,
@@ -24,11 +23,11 @@ public final class GridKey {
 
     public static Identifier of(GridLayoutSettings settings) {
         if (settings.equals(GridLayoutSettings.DEFAULT)) {
-            return Identifier.of(DigitalFrontier.MOD_ID, DEFAULT_PATH);
+            return Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, DEFAULT_PATH);
         }
         JsonElement json = GridLayoutSettings.CODEC.encodeStart(JsonOps.INSTANCE, settings).getOrThrow();
         String hash = Hashing.sha256().hashString(canonicalize(json).toString(), StandardCharsets.UTF_8).toString();
-        return Identifier.of(DigitalFrontier.MOD_ID, "0x" + hash.substring(0, 8));
+        return Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "0x" + hash.substring(0, 8));
     }
 
     // Sort object keys so the hash doesn't depend on field encoding order

@@ -5,13 +5,13 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.partatoes.digitalfrontier.grid.layout.GridLayout;
 import com.partatoes.digitalfrontier.grid.layout.StreetAxis.RoadClass;
 import com.partatoes.digitalfrontier.grid.layout.Zone;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.StringIdentifiable;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.StringRepresentable;
 
 /**
  * A building, plaza, or piece of street furniture, loaded from {@code data/<namespace>/grid/building/<name>.json}.
@@ -63,7 +63,7 @@ public record GridBuildingDef(
         return Stream.of(base.stream(), floors.stream(), roof.stream()).flatMap(stream -> stream);
     }
 
-    public enum Kind implements StringIdentifiable {
+    public enum Kind implements StringRepresentable {
         /** Placed on building chunks. */
         BUILDING("building"),
         /** The 2×2 tower at the center of the city. */
@@ -111,7 +111,7 @@ public record GridBuildingDef(
         /** A skyway bridge across a road along X (so the bridge runs along Z); Y = 0 is its floor. */
         SKYWAY("skyway", -1);
 
-        public static final Codec<Kind> CODEC = StringIdentifiable.createCodec(Kind::values);
+        public static final Codec<Kind> CODEC = StringRepresentable.fromEnum(Kind::values);
 
         private final String name;
         // Where a level part's Y = 0 goes; 0 for kinds stacked from the street, -1 where it varies (skyways)
@@ -137,7 +137,7 @@ public record GridBuildingDef(
         }
 
         @Override
-        public String asString() {
+        public String getSerializedName() {
             return name;
         }
     }

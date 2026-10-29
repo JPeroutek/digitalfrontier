@@ -4,12 +4,12 @@ import com.mojang.serialization.JsonOps;
 import com.partatoes.digitalfrontier.grid.GridKey;
 import com.partatoes.digitalfrontier.grid.layout.GridLayoutSettings;
 import com.partatoes.digitalfrontier.grid.layout.StreetAxis.StreetStyle;
-import net.minecraft.util.DyeColor;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import net.minecraft.world.item.DyeColor;
 
 import static org.junit.jupiter.api.Assertions.*;
 

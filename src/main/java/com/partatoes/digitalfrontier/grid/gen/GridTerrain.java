@@ -12,10 +12,10 @@ import com.partatoes.digitalfrontier.grid.layout.Site;
 import com.partatoes.digitalfrontier.grid.layout.StreetAxis.Road;
 import com.partatoes.digitalfrontier.grid.layout.StreetAxis.RoadClass;
 import com.partatoes.digitalfrontier.grid.layout.Zone;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.DyeColor;
 
 import static com.partatoes.digitalfrontier.grid.layout.GridLayout.FLOOR_HEIGHT;
 import static com.partatoes.digitalfrontier.grid.layout.GridLayout.FLOOR_Y;
@@ -73,7 +73,7 @@ final class GridTerrain {
      */
     record Column(int bottom, int top, BlockState surface, BlockState body, boolean sea) {
         // Open sea, nothing above it
-        static final Column SEA = new Column(SEA_LEVEL + 1, SEA_LEVEL, Blocks.AIR.getDefaultState(), Blocks.AIR.getDefaultState(), true);
+        static final Column SEA = new Column(SEA_LEVEL + 1, SEA_LEVEL, Blocks.AIR.defaultBlockState(), Blocks.AIR.defaultBlockState(), true);
 
         Column(int bottom, int top, BlockState surface, BlockState body) {
             this(bottom, top, surface, body, false);
@@ -108,9 +108,9 @@ final class GridTerrain {
                 : surface(plan, localX, localZ);
         int rise = mesaHeight(layout, plan, blockX, blockZ);
         if (rise > 0) {
-            surface = ModBlocks.CRACKED_GRIDSTONE_BLOCK.getDefaultState();
+            surface = ModBlocks.CRACKED_GRIDSTONE_BLOCK.defaultBlockState();
         }
-        return new Column(WORLD_BOTTOM, FLOOR_Y + rise, surface, ModBlocks.GRIDSTONE_BLOCK.getDefaultState());
+        return new Column(WORLD_BOTTOM, FLOOR_Y + rise, surface, ModBlocks.GRIDSTONE_BLOCK.defaultBlockState());
     }
 
     /** Highest Y with a block in this column, including placeholder buildings and lane walls. */
@@ -126,7 +126,7 @@ final class GridTerrain {
 
     static BlockState blockAt(ChunkPlan plan, Column column, int localX, int y, int localZ) {
         if (y < column.bottom()) {
-            return column.sea() ? seaAt(localX, y, localZ) : Blocks.AIR.getDefaultState();
+            return column.sea() ? seaAt(localX, y, localZ) : Blocks.AIR.defaultBlockState();
         }
         if (y < column.top()) {
             return column.body();
@@ -136,16 +136,16 @@ final class GridTerrain {
         }
         if (plan.type() == PlanType.STREET) {
             return y == FLOOR_Y + 1 && isLaneWall(plan, localX, localZ)
-                    ? ModBlocks.GRIDSTONE_BRICKS_WALL.getDefaultState()
-                    : Blocks.AIR.getDefaultState();
+                    ? ModBlocks.GRIDSTONE_BRICKS_WALL.defaultBlockState()
+                    : Blocks.AIR.defaultBlockState();
         }
         if (y <= columnTop(plan, column, localX, localZ)) {
             // A lit band marks the top of every floor
             return (y - FLOOR_Y) % FLOOR_HEIGHT == 0
                     ? pattern("full", plan.district())
-                    : ModBlocks.GRIDSTONE_BRICKS_BLOCK.getDefaultState();
+                    : ModBlocks.GRIDSTONE_BRICKS_BLOCK.defaultBlockState();
         }
-        return Blocks.AIR.getDefaultState();
+        return Blocks.AIR.defaultBlockState();
     }
 
     private static BlockState surface(ChunkPlan plan, int localX, int localZ) {
@@ -156,18 +156,18 @@ final class GridTerrain {
                 }
                 // Outside every road's pavement: a lane's walled strips
                 boolean paved = isPaved(plan.roadX(), localZ) || isPaved(plan.roadZ(), localX);
-                yield paved ? ModBlocks.GRIDSTONE_BLOCK.getDefaultState() : ModBlocks.GRIDSTONE_BRICKS_BLOCK.getDefaultState();
+                yield paved ? ModBlocks.GRIDSTONE_BLOCK.defaultBlockState() : ModBlocks.GRIDSTONE_BRICKS_BLOCK.defaultBlockState();
             }
-            case BUILDING -> ModBlocks.GRIDSTONE_BRICKS_BLOCK.getDefaultState();
+            case BUILDING -> ModBlocks.GRIDSTONE_BRICKS_BLOCK.defaultBlockState();
             case PLAZA -> isCenter(localX, localZ, 1)
                     ? pattern("thin_target", plan.district())
-                    : ModBlocks.GRIDSTONE_BRICKS_BLOCK.getDefaultState();
+                    : ModBlocks.GRIDSTONE_BRICKS_BLOCK.defaultBlockState();
             case SITE -> isCenter(localX, localZ, 2)
                     ? pattern("thick_target", siteColor(plan.site()))
-                    : ModBlocks.GRIDSTONE_BRICKS_BLOCK.getDefaultState();
+                    : ModBlocks.GRIDSTONE_BRICKS_BLOCK.defaultBlockState();
             case OPEN -> plan.zone() == Zone.OUTLANDS
-                    ? ModBlocks.CRACKED_GRIDSTONE_BLOCK.getDefaultState()
-                    : ModBlocks.GRIDSTONE_BLOCK.getDefaultState();
+                    ? ModBlocks.CRACKED_GRIDSTONE_BLOCK.defaultBlockState()
+                    : ModBlocks.GRIDSTONE_BLOCK.defaultBlockState();
         };
     }
 
@@ -176,7 +176,7 @@ final class GridTerrain {
         int across = Math.abs(road.offset(blockX, blockZ));
         return across >= DiagonalRoad.HALF_WIDTH - 1
                 ? pattern("full", plan.district())
-                : ModBlocks.GRIDSTONE_BLOCK.getDefaultState();
+                : ModBlocks.GRIDSTONE_BLOCK.defaultBlockState();
     }
 
     /**
@@ -222,8 +222,8 @@ final class GridTerrain {
         double drift = Math.min(1.0, past / 8);
         int top = FLOOR_Y + (int) Math.round((GridRandom.unit(GridRandom.hash(seed, tileX, tileZ, SALT_FRAGMENT_HEIGHT)) - 0.5) * 6 * drift);
         int thickness = 1 + GridRandom.nextInt(GridRandom.hash(seed, tileX, tileZ, SALT_FRAGMENT_THICKNESS), 3);
-        return new Column(top - thickness + 1, top, ModBlocks.GRIDSTONE_BLOCK.getDefaultState(),
-                ModBlocks.CRACKED_GRIDSTONE_BLOCK.getDefaultState(), true);
+        return new Column(top - thickness + 1, top, ModBlocks.GRIDSTONE_BLOCK.defaultBlockState(),
+                ModBlocks.CRACKED_GRIDSTONE_BLOCK.defaultBlockState(), true);
     }
 
     /**
@@ -247,22 +247,22 @@ final class GridTerrain {
         int thickness = 2 + (int) (depth * (1 - distance / edge));
         BlockState surface = (blockX & 15) == 0 || (blockZ & 15) == 0
                 ? pattern("full", plan.district())
-                : ModBlocks.GRIDSTONE_BLOCK.getDefaultState();
-        return new Column(FLOOR_Y - thickness + 1, FLOOR_Y, surface, ModBlocks.CRACKED_GRIDSTONE_BLOCK.getDefaultState(), true);
+                : ModBlocks.GRIDSTONE_BLOCK.defaultBlockState();
+        return new Column(FLOOR_Y - thickness + 1, FLOOR_Y, surface, ModBlocks.CRACKED_GRIDSTONE_BLOCK.defaultBlockState(), true);
     }
 
     // The Sea of Simulation below a column: dark water over a bed of gridstone, lit with a faint line on chunk edges
     private static BlockState seaAt(int localX, int y, int localZ) {
         if (y > SEA_LEVEL) {
-            return Blocks.AIR.getDefaultState();
+            return Blocks.AIR.defaultBlockState();
         }
         if (y > SEA_BED) {
-            return Blocks.WATER.getDefaultState();
+            return Blocks.WATER.defaultBlockState();
         }
         if (y == SEA_BED && (localX == 0 || localZ == 0)) {
             return pattern("full", DyeColor.CYAN);
         }
-        return ModBlocks.GRIDSTONE_BLOCK.getDefaultState();
+        return ModBlocks.GRIDSTONE_BLOCK.defaultBlockState();
     }
 
     // Smoothly interpolated random values on a lattice of the given cell size
@@ -347,6 +347,6 @@ final class GridTerrain {
     }
 
     private static BlockState pattern(String name, DyeColor color) {
-        return ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get(name).get(color).getDefaultState();
+        return ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get(name).get(color).defaultBlockState();
     }
 }
