@@ -15,7 +15,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
 /**
- * The regime's sentries, found where corruption runs high. Hostile, they patrol in groups (the spawner places
+ * The regime's sentries, patrolling the ground it controls (see {@link com.partatoes.digitalfrontier.grid.layout.ControlField}):
+ * disciplined, not decayed. Hostile, they patrol in groups (the spawner places
  * them together), come to each other's aid, and hunt clean programs as well as players.
  */
 public class EnforcerEntity extends Monster {

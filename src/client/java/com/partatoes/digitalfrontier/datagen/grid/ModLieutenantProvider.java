@@ -51,7 +51,7 @@ public class ModLieutenantProvider implements DataProvider {
         // The ruler returns on its own after a week, or sooner if the grid feeds the regime
         defs.put("the_sovereign", new LieutenantDef(
                 Component.translatable("lieutenant.digitalfrontier.the_sovereign"),
-                LieutenantDef.Archetype.RULER, Optional.empty(), Optional.empty(), 10, 0f, 1f,
+                LieutenantDef.Archetype.RULER, Optional.empty(), Optional.empty(), 10, 0f, 1f, 0f, 1f,
                 Optional.of(ModEntityLootProvider.SOVEREIGN_LOOT),
                 new LieutenantDef.Respawn(DAY, -1, anyOf(
                         new Triggers.Time(7 * DAY),
@@ -69,7 +69,7 @@ public class ModLieutenantProvider implements DataProvider {
         // The duelist waits for its stronghold to be deserted, then for someone to come back, or for fresh blood
         defs.put("the_warden", new LieutenantDef(
                 Component.translatable("lieutenant.digitalfrontier.the_warden"),
-                LieutenantDef.Archetype.DUELIST, Optional.empty(), Optional.empty(), 10, 0f, 1f, Optional.empty(),
+                LieutenantDef.Archetype.DUELIST, Optional.empty(), Optional.empty(), 10, 0f, 1f, 0f, 1f, Optional.empty(),
                 new LieutenantDef.Respawn(DAY / 2, -1, anyOf(
                         new Triggers.StrongholdEntered(DAY),
                         new Triggers.GridEntered(true),

@@ -43,7 +43,8 @@ lieutenants can name.
 ### 1.2 Redemption, not just defeat
 **Inspired by:** Rinzler, who is Tron repurposed and turns back once he recognizes a User. Also Paige and Cutler.
 
-**What it adds:** some lieutenants can be **restored** instead of derezzed. Defeating The Warden while a condition
+**What it adds:** some lieutenants can be **redeemed** instead of derezzed. A lieutenant is a good program turned to
+the regime's cause, not decayed code: redemption turns it back. Defeating The Warden while a condition
 holds turns its circuitry from orange to white. It kneels, then becomes a friendly champion who guards the area,
 or follows the player for a while. A restored lieutenant doesn't respawn as hostile; the stronghold picks a
 replacement.
@@ -60,13 +61,15 @@ evaluated at the moment of defeat.
 ### 1.3 Repurposing
 **Inspired by:** Clu's repurposing of programs, Keller's code pathogen, and the circuitry colours.
 
-**What it adds:** corruption becomes something that happens *to* programs.
-- Neutral (white or blue) Programs near corrupted ones, or near a stronghold, slowly turn.
+**What it adds:** decay becomes something that happens *to* programs. Decay and the regime are separate axes
+(see `docs/grid-structures.md`): decay is the only one that turns programs by area. The regime recruits instead,
+through recruiters and bribery, by each program's sentiment toward it (planned; see the regime docs once built).
+- Neutral (white or blue) Programs near corrupted ones, or in decayed districts, slowly turn.
 - Their circuitry shifts through yellow to orange, a visible stage, before they become corrupted programs.
-- A city near a stronghold therefore slowly loses its civilians unless the player intervenes.
+- A city bordering decay therefore slowly loses its civilians unless the player intervenes.
 - The reverse is 1.4.
 
-**Builds on:** `ProgramEntity` and `CorruptedProgramEntity`, the corruption field, and skin tinting.
+**Builds on:** `ProgramEntity` and `CorruptedProgramEntity`, the decay field, and skin tinting.
 
 ### 1.4 Disinfection
 **Inspired by:** the Infected Files in Killer App, which turn back into normal programs on disinfection pads and

@@ -1,9 +1,10 @@
 # Stronghold lieutenants
 
-Every grid has strongholds deep in its most corrupted territory, and every stronghold has a **lieutenant**: a
-named boss who appears when players come near, and who comes back some time after being derezzed. How many
-strongholds a grid has depends on its corruption setting (the Grid Tuning Laser's slider): one up to 64% (the
-default grid has 50%), two from 65%, three from 85%. Lieutenants
+Every grid has strongholds at the seats of the regime's territory, and every stronghold has a **lieutenant**:
+a named boss who appears when players come near, and who comes back some time after being derezzed. Lieutenants
+are the regime's, not the decay's: they're programs turned to its cause, disciplined rather than glitching. How
+many strongholds a grid has depends on its regime setting (the Grid Tuning Laser's "Regime" slider): one up to 64%
+(the default grid has 50%), two from 65%, three from 85%. Lieutenants
 are data: a datapack can rename them (for example to lore-accurate TRON names), reskin them, change when they
 return, or add new ones.
 
@@ -25,6 +26,8 @@ Each lieutenant is a file at `data/<namespace>/grid/lieutenant/<name>.json`. The
   "weight": 10,
   "min_grid_corruption": 0.0,
   "max_grid_corruption": 1.0,
+  "min_grid_regime": 0.0,
+  "max_grid_regime": 1.0,
   "loot_table": "digitalfrontier:entities/lieutenant",
   "respawn": {
     "min_delay": 12000,
@@ -41,7 +44,8 @@ Each lieutenant is a file at `data/<namespace>/grid/lieutenant/<name>.json`. The
 | `texture` | no | A 64×64 player-style skin. Defaults to the archetype's (`sovereign64` for rulers, `warden64` for duelists). The image belongs in a resource pack; players who don't have it see the archetype's skin instead. |
 | `health` | no | Defaults to 300 (ruler) or 220 (duelist). |
 | `weight` | no (10) | Relative chance when a stronghold picks its lieutenant. |
-| `min_grid_corruption` / `max_grid_corruption` | no (0 / 1) | Only grids whose corruption setting (the Grid Tuning Laser's slider, 0–1) is in this range can have this lieutenant. |
+| `min_grid_corruption` / `max_grid_corruption` | no (0 / 1) | Only grids whose decay setting (the Grid Tuning Laser's "Decay" slider, 0–1) is in this range can have this lieutenant. |
+| `min_grid_regime` / `max_grid_regime` | no (0 / 1) | Only grids whose regime setting (the "Regime" slider, 0–1) is in this range can have this lieutenant. |
 | `loot_table` | no | What it drops when derezzed (a loot table id). Defaults to `digitalfrontier:entities/lieutenant`. |
 | `respawn.min_delay` | no (0) | Ticks after the defeat before anything can bring it back (24000 ticks = 1 day). |
 | `respawn.max_respawns` | no (-1) | How many times it can come back; -1 for no limit. |

@@ -100,7 +100,8 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add("screen.digitalfrontier.grid_tuning", "Grid Tuning");
         translationBuilder.add("screen.digitalfrontier.grid_tuning.seed", "Seed");
         translationBuilder.add("screen.digitalfrontier.grid_tuning.random", "Random");
-        translationBuilder.add("screen.digitalfrontier.grid_tuning.corruption", "Corruption: %s%% (strongholds: %s)");
+        translationBuilder.add("screen.digitalfrontier.grid_tuning.corruption", "Decay: %s%%");
+        translationBuilder.add("screen.digitalfrontier.grid_tuning.regime", "Regime: %s%% (strongholds: %s)");
         translationBuilder.add("screen.digitalfrontier.grid_tuning.city_radius", "City radius: %s chunks (%s blocks)");
         translationBuilder.add("screen.digitalfrontier.grid_tuning.block_size", "Blocks");
         translationBuilder.add("screen.digitalfrontier.grid_tuning.waypoints", "Waypoints");
@@ -124,7 +125,7 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add("screen.digitalfrontier.grid_tuning.grid_id", "Grid: %s");
         translationBuilder.add("screen.digitalfrontier.grid_tuning.tune", "Tune");
         translationBuilder.add("commands.digitalfrontier.grid.list", "%s of %s tuned grids:");
-        translationBuilder.add("commands.digitalfrontier.grid.list.entry", "(city radius %s, corruption %s%%, %s players)");
+        translationBuilder.add("commands.digitalfrontier.grid.list.entry", "(city radius %s, decay %s%%, regime %s%%, %s players)");
         translationBuilder.add("commands.digitalfrontier.grid.code", "Grid %s has code %s");
         translationBuilder.add("commands.digitalfrontier.grid.code.untunable", "This grid's settings can't be written as a grid code");
         translationBuilder.add("commands.digitalfrontier.grid.open", "Opened grid %s");

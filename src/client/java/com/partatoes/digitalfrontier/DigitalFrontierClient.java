@@ -29,14 +29,14 @@ public class DigitalFrontierClient implements ClientModInitializer {
 		EntityRendererRegistry.register(ModEntities.CORRUPTED_PROGRAM, context -> new GridMobRenderer<>(context,
 				GridMobRenderer.variants("corrupted_program_0", "corrupted_program_1", "corrupted_program_2"), 0.6f));
 		EntityRendererRegistry.register(ModEntities.ENFORCER, context -> new GridMobRenderer<>(context,
-				GridMobRenderer.variants("guard_red64", "guard_orange64"), 0.2f));
+				GridMobRenderer.variants("guard_red64", "guard_orange64"), 0));
 		// The lieutenant's skin comes from its definition, so lore packs can swap it; a client without the pack's
 		// resource pack sees the archetype's skin instead
 		PackTextures.register();
 		EntityRendererRegistry.register(ModEntities.LIEUTENANT, context -> new GridMobRenderer<LieutenantEntity>(context,
 				entity -> entity.texture() != null
 						? PackTextures.orFallback(entity.texture(), entity.defaultTexture())
-						: entity.defaultTexture(), 0.35f));
+						: entity.defaultTexture(), 0));
 		ModelLayerRegistry.registerModelLayer(ModModelLayers.PROGRAM, ProgramModel::getTexturedModelData);
 
 		// The Portal's beam, seen from anywhere in the grid

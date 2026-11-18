@@ -12,6 +12,8 @@ import org.jetbrains.annotations.Nullable;
  * @param roadZ      the road running along the Z axis through this chunk, if any
  * @param multiChunk set when this chunk is part of a 2×2-chunk building
  * @param diagonal   set when a diagonal highway crosses this (open) chunk
+ * @param corruption decay intensity, after the regime's control has suppressed it (see {@link Territory})
+ * @param control    the regime's control (see {@link ControlField})
  */
 public record ChunkPlan(
         Zone zone,
@@ -24,7 +26,19 @@ public record ChunkPlan(
         @Nullable MultiChunk multiChunk,
         @Nullable DiagonalRoad diagonal,
         float corruption,
-        CorruptionTier tier) {
+        CorruptionTier tier,
+        float control,
+        ControlTier controlTier) {
+
+    /** True if this chunk is a road: a street, or open ground a diagonal highway crosses. */
+    public boolean road() {
+        return type == PlanType.STREET || diagonal != null;
+    }
+
+    ChunkPlan withTerritory(float corruption, float control) {
+        return new ChunkPlan(zone, type, floors, district, roadX, roadZ, site, multiChunk, diagonal,
+                corruption, CorruptionTier.fromIntensity(corruption), control, ControlTier.fromIntensity(control));
+    }
 
     /** True if a road runs along the X axis through this chunk. */
     public boolean streetX() {

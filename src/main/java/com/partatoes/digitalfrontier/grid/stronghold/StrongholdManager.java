@@ -290,7 +290,7 @@ public final class StrongholdManager {
     // Strongholds pick in site order (stronghold_0 first), each preferring a lieutenant no other stronghold of the
     // grid has; once every eligible lieutenant is taken, they can repeat
     private static Optional<Identifier> pickLieutenant(GridLayout layout, StrongholdState state, Site site) {
-        List<Lieutenant> eligible = Lieutenants.eligible(layout.settings().corruption());
+        List<Lieutenant> eligible = Lieutenants.eligible(layout.settings());
         List<Identifier> taken = state.all().values().stream().map(Stronghold::lieutenant).toList();
         List<Lieutenant> untaken = eligible.stream().filter(lieutenant -> !taken.contains(lieutenant.id())).toList();
         if (!untaken.isEmpty()) {

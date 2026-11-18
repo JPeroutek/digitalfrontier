@@ -3,6 +3,7 @@ package com.partatoes.digitalfrontier.grid.stronghold;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
 import com.partatoes.digitalfrontier.DigitalFrontier;
+import com.partatoes.digitalfrontier.grid.layout.GridLayoutSettings;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -30,11 +31,13 @@ public final class Lieutenants implements SimpleSynchronousResourceReloadListene
         return loaded.get(id);
     }
 
-    /** Lieutenants a grid tuned to this corruption setting can have, sorted by id so weighted picks are stable. */
-    public static List<Lieutenant> eligible(float gridCorruption) {
+    /** Lieutenants a grid of these settings can have, sorted by id so weighted picks are stable. */
+    public static List<Lieutenant> eligible(GridLayoutSettings grid) {
         return loaded.values().stream()
-                .filter(lieutenant -> gridCorruption >= lieutenant.def().minGridCorruption()
-                        && gridCorruption <= lieutenant.def().maxGridCorruption())
+                .filter(lieutenant -> grid.corruption() >= lieutenant.def().minGridCorruption()
+                        && grid.corruption() <= lieutenant.def().maxGridCorruption()
+                        && grid.regime() >= lieutenant.def().minGridRegime()
+                        && grid.regime() <= lieutenant.def().maxGridRegime())
                 .sorted((a, b) -> a.id().compareTo(b.id()))
                 .toList();
     }

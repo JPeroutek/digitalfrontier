@@ -53,6 +53,7 @@ final class GridChunkBuild {
     private final GridTerrain.Column[] columns = new GridTerrain.Column[256];
     @Nullable
     private float[] corruptionGrid;
+    private float[] controlGrid;
     @Nullable
     private GridTransit.ChunkTransit transit;
 
@@ -372,25 +373,39 @@ final class GridChunkBuild {
     }
 
     BlockState blockAt(int localX, int y, int localZ) {
-        if (isPortal() || !corrupted()) {
+        if (isPortal()) {
             return uncorruptedBlockAt(localX, y, localZ);
         }
-        GridTransit.ChunkTransit levels = transit();
-        boolean level = levels.any() && GridTransit.blockAt(levels, localX, y, localZ) != null;
-        return GridCorruption.apply(layout.settings().gridSeed(), corruptionAt(localX, localZ), plan.type() != PlanType.SITE, level,
-                uncorruptedMaxY(), chunkX * 16 + localX, y, chunkZ * 16 + localZ, sourceY -> uncorruptedBlockAt(localX, sourceY, localZ));
+        BlockState state;
+        if (corrupted()) {
+            GridTransit.ChunkTransit levels = transit();
+            boolean level = levels.any() && GridTransit.blockAt(levels, localX, y, localZ) != null;
+            state = GridCorruption.apply(layout.settings().gridSeed(), corruptionAt(localX, localZ), plan.type() != PlanType.SITE, level,
+                    uncorruptedMaxY(), chunkX * 16 + localX, y, chunkZ * 16 + localZ, sourceY -> uncorruptedBlockAt(localX, sourceY, localZ));
+        } else {
+            state = uncorruptedBlockAt(localX, y, localZ);
+        }
+        if (regimeColored()) {
+            state = GridCorruption.regimeColor(layout.settings().gridSeed(), blend(controlGrid, localX, localZ),
+                    layout.settings().regimeColor(), chunkX * 16 + localX, y, chunkZ * 16 + localZ, state);
+        }
+        return state;
     }
 
-    // Corruption intensity of the 3×3 chunks around this one, so it can be blended smoothly across chunk borders
+    // Decay and control of the 3×3 chunks around this one, so they can be blended smoothly across chunk borders
     private float[] corruptionGrid() {
         if (corruptionGrid == null) {
-            float[] grid = new float[9];
+            float[] decay = new float[9];
+            float[] control = new float[9];
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dz = -1; dz <= 1; dz++) {
-                    grid[(dz + 1) * 3 + dx + 1] = layout.corruptionAt(chunkX + dx, chunkZ + dz);
+                    ChunkPlan neighbour = layout.planAt(chunkX + dx, chunkZ + dz);
+                    decay[(dz + 1) * 3 + dx + 1] = neighbour.corruption();
+                    control[(dz + 1) * 3 + dx + 1] = neighbour.control();
                 }
             }
-            corruptionGrid = grid;
+            controlGrid = control;
+            corruptionGrid = decay;
         }
         return corruptionGrid;
     }
@@ -404,9 +419,22 @@ final class GridChunkBuild {
         return false;
     }
 
-    // Bilinear between the centers of the four nearest chunks
+    private boolean regimeColored() {
+        corruptionGrid();
+        for (float intensity : controlGrid) {
+            if (intensity >= GridCorruption.REGIME_COLOR_FROM) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private float corruptionAt(int localX, int localZ) {
-        float[] grid = corruptionGrid();
+        return blend(corruptionGrid(), localX, localZ);
+    }
+
+    // Bilinear between the centers of the four nearest chunks
+    private static float blend(float[] grid, int localX, int localZ) {
         float gx = (localX + 0.5f) / 16 - 0.5f;
         float gz = (localZ + 0.5f) / 16 - 0.5f;
         int x0 = gx < 0 ? -1 : 0;

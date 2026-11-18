@@ -50,7 +50,7 @@ public class GridTuningScreen extends Screen {
     @Override
     protected void init() {
         left = (width - WIDTH) / 2;
-        top = Math.max(8, (height - 260) / 2);
+        top = Math.max(8, (height - 284) / 2);
         int y = top + 16;
 
         EditBox seedField = new EditBox(font, left + 60, y, WIDTH - 60 - 66, 20,
@@ -65,9 +65,13 @@ public class GridTuningScreen extends Screen {
         y += ROW;
 
         addRenderableWidget(new IntSlider(left, y, WIDTH, 0, 100, tuning.corruptionPercent(),
-                value -> Component.translatable("screen.digitalfrontier.grid_tuning.corruption", value,
-                        GridLayout.strongholdCount(value / 100f)),
+                value -> Component.translatable("screen.digitalfrontier.grid_tuning.corruption", value),
                 value -> update(tuning.withCorruptionPercent(value))));
+        y += ROW;
+        addRenderableWidget(new IntSlider(left, y, WIDTH, 0, 100, tuning.regimePercent(),
+                value -> Component.translatable("screen.digitalfrontier.grid_tuning.regime", value,
+                        GridLayout.strongholdCount(value / 100f)),
+                value -> update(tuning.withRegimePercent(value))));
         y += ROW;
         addRenderableWidget(new IntSlider(left, y, WIDTH, GridTuning.MIN_CITY_RADIUS, GridTuning.MAX_CITY_RADIUS, tuning.cityRadius(),
                 value -> Component.translatable("screen.digitalfrontier.grid_tuning.city_radius", value, value * 16),
@@ -141,7 +145,7 @@ public class GridTuningScreen extends Screen {
         super.extractRenderState(context, mouseX, mouseY, delta);
         context.centeredText(font, title, width / 2, top, WHITE);
         context.text(font, Component.translatable("screen.digitalfrontier.grid_tuning.seed"), left, top + 22, GRAY);
-        int colorsLabelY = top + 16 + 5 * ROW;
+        int colorsLabelY = top + 16 + 6 * ROW;
         context.text(font, Component.translatable("screen.digitalfrontier.grid_tuning.districts",
                 tuning.districtColors().size(), GridTuning.MAX_DISTRICT_COLORS), left, colorsLabelY, GRAY);
         int codeLabelY = colorsLabelY + 12 + SWATCH + 6;

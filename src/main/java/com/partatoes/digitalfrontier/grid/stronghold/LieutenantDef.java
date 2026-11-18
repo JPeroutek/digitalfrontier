@@ -17,7 +17,8 @@ import net.minecraft.world.level.storage.loot.LootTable;
  * it a character is data: its name (any text component, so a datapack can use lore names), its skin, and when it
  * comes back after being defeated. Its fighting style is one of the built-in {@link Archetype}s.
  *
- * @param minGridCorruption only strongholds of grids tuned at least this corrupt (0 to 1) can have this lieutenant
+ * @param minGridCorruption only strongholds of grids tuned at least this decayed (0 to 1) can have this lieutenant
+ * @param minGridRegime     only strongholds of grids whose regime is at least this strong (0 to 1) can have this lieutenant
  * @param lootTable         what it drops when derezzed; without one, the lieutenant entity's default table
  *                          ({@code digitalfrontier:entities/lieutenant})
  */
@@ -29,6 +30,8 @@ public record LieutenantDef(
         int weight,
         float minGridCorruption,
         float maxGridCorruption,
+        float minGridRegime,
+        float maxGridRegime,
         Optional<ResourceKey<LootTable>> lootTable,
         Respawn respawn) {
 
@@ -40,13 +43,16 @@ public record LieutenantDef(
             Codec.intRange(1, 1000).optionalFieldOf("weight", 10).forGetter(LieutenantDef::weight),
             Codec.floatRange(0, 1).optionalFieldOf("min_grid_corruption", 0f).forGetter(LieutenantDef::minGridCorruption),
             Codec.floatRange(0, 1).optionalFieldOf("max_grid_corruption", 1f).forGetter(LieutenantDef::maxGridCorruption),
+            Codec.floatRange(0, 1).optionalFieldOf("min_grid_regime", 0f).forGetter(LieutenantDef::minGridRegime),
+            Codec.floatRange(0, 1).optionalFieldOf("max_grid_regime", 1f).forGetter(LieutenantDef::maxGridRegime),
             ResourceKey.codec(Registries.LOOT_TABLE).optionalFieldOf("loot_table").forGetter(LieutenantDef::lootTable),
             Respawn.CODEC.fieldOf("respawn").forGetter(LieutenantDef::respawn)
     ).apply(instance, LieutenantDef::new));
 
     /** The same lieutenant in another skin. */
     public LieutenantDef withTexture(Identifier skin) {
-        return new LieutenantDef(name, archetype, Optional.of(skin), health, weight, minGridCorruption, maxGridCorruption, lootTable, respawn);
+        return new LieutenantDef(name, archetype, Optional.of(skin), health, weight, minGridCorruption, maxGridCorruption, minGridRegime, maxGridRegime,
+                lootTable, respawn);
     }
 
     public Identifier textureOrDefault() {

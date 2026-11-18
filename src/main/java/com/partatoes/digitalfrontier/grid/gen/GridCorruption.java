@@ -15,7 +15,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import static com.partatoes.digitalfrontier.grid.layout.GridLayout.FLOOR_Y;
 
 /**
- * The last pass over a chunk's blocks: corruption, applied to whatever the chunk would otherwise be, so any zone or
+ * The last passes over a chunk's blocks: the regime's color in its territory ({@link #regimeColor}), and before it
+ * corruption (decay), applied to whatever the chunk would otherwise be, so any zone or
  * building can be corrupted without corrupted copies of anything. Every decision is a hash of the grid seed and the
  * block or cell position, so chunks agree at their borders and regenerate identically.
  *
@@ -37,6 +38,10 @@ final class GridCorruption {
     static final float MIN_INTENSITY = 0.2f;
     /** The furthest a shifted column moves up. */
     static final int MAX_SHIFT = 5;
+    /** Control at which pattern lines start taking the regime's color, just short of CONTROLLED. */
+    static final float REGIME_COLOR_FROM = 0.55f;
+    // How much more control it takes for every line to have it
+    private static final float REGIME_COLOR_SPREAD = 0.25f;
 
     private static final float LOW = MIN_INTENSITY;
     private static final float UNSTABLE = 0.45f;
@@ -63,6 +68,7 @@ final class GridCorruption {
     private static final int SALT_RECOLOR_JUMP = 5014;
     private static final int SALT_FLICKER = 5015;
     private static final int SALT_FLICKER_TIMING = 5016;
+    private static final int SALT_REGIME_COLOR = 5017;
     /** Missing spans of the city's levels are this many blocks each way. */
     private static final int SPAN = 8;
 
@@ -129,6 +135,25 @@ final class GridCorruption {
             return Blocks.AIR.defaultBlockState();
         }
         return material(seed, intensity, blockX, y, blockZ, state);
+    }
+
+    /**
+     * The regime's mark on a block: pattern lines in regime territory take the regime's color, fading in across the
+     * border (from {@link #REGIME_COLOR_FROM}) until every line has it. Decay is held back there (see
+     * {@link com.partatoes.digitalfrontier.grid.layout.Territory}), so this is the only change regime ground shows.
+     *
+     * @param control the regime's control here, 0 to 1
+     */
+    static BlockState regimeColor(long seed, float control, DyeColor color, int blockX, int y, int blockZ, BlockState state) {
+        if (control < REGIME_COLOR_FROM) {
+            return state;
+        }
+        Pattern pattern = patterns().get(state.getBlock());
+        if (pattern == null || pattern.color() == color
+                || roll(seed, blockX, y, blockZ, SALT_REGIME_COLOR) >= (control - REGIME_COLOR_FROM) / REGIME_COLOR_SPREAD) {
+            return state;
+        }
+        return ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get(pattern.name()).get(color).defaultBlockState();
     }
 
     // Columns of a building, in groups of 4×4, slide up or down a few blocks

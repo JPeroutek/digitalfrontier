@@ -298,7 +298,7 @@ class GridLayoutTest {
     }
 
     @Test
-    void moreCorruptedGridsHaveMoreStrongholds() {
+    void strongerRegimesHaveMoreStrongholds() {
         assertEquals(1, GridLayout.strongholdCount(0f));
         assertEquals(1, GridLayout.strongholdCount(0.5f));
         assertEquals(2, GridLayout.strongholdCount(0.65f));
@@ -312,7 +312,8 @@ class GridLayoutTest {
                 assertEquals(strongholds.size(), strongholds.stream().map(Site::id).distinct().count(), where);
                 Site portal = sitesOfType(layout, Site.Type.PORTAL).getFirst();
                 for (Site stronghold : strongholds) {
-                    assertEquals(CorruptionTier.SEVERE, layout.planAt(stronghold.chunkX(), stronghold.chunkZ()).tier(), where);
+                    assertEquals(ControlTier.SEAT, layout.planAt(stronghold.chunkX(), stronghold.chunkZ()).controlTier(), where);
+                    assertEquals(CorruptionTier.CLEAN, layout.planAt(stronghold.chunkX(), stronghold.chunkZ()).tier(), where);
                     assertEquals(PlanType.SITE, layout.planAt(stronghold.chunkX(), stronghold.chunkZ()).type(), where);
                     // Never in the portal's direction
                     double angle = Math.abs(Math.atan2(stronghold.chunkZ(), stronghold.chunkX()) - Math.atan2(portal.chunkZ(), portal.chunkX()));
@@ -388,10 +389,12 @@ class GridLayoutTest {
     }
 
     @Test
-    void corruptionIsCleanAtTheCoreAndSevereAtTheStronghold() {
+    void theCoreIsFreeAndCleanAndTheStrongholdHeldAndClean() {
         GridLayout layout = new GridLayout(DEFAULT);
         assertEquals(CorruptionTier.CLEAN, layout.planAt(0, 0).tier());
         Site stronghold = layout.sites().stream().filter(site -> site.type() == Site.Type.STRONGHOLD).findFirst().orElseThrow();
-        assertEquals(CorruptionTier.SEVERE, layout.planAt(stronghold.chunkX(), stronghold.chunkZ()).tier());
+        assertEquals(ControlTier.FREE, layout.planAt(0, 0).controlTier());
+        assertEquals(ControlTier.SEAT, layout.planAt(stronghold.chunkX(), stronghold.chunkZ()).controlTier());
+        assertEquals(CorruptionTier.CLEAN, layout.planAt(stronghold.chunkX(), stronghold.chunkZ()).tier());
     }
 }

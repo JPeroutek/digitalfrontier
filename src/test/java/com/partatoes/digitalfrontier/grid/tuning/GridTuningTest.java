@@ -6,6 +6,8 @@ import com.partatoes.digitalfrontier.grid.layout.GridLayoutSettings;
 import com.partatoes.digitalfrontier.grid.layout.StreetAxis.StreetStyle;
 import org.junit.jupiter.api.Test;
 
+import java.nio.ByteBuffer;
+import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,7 +30,7 @@ class GridTuningTest {
                 for (int waypoints : GridTuning.WAYPOINT_COUNTS) {
                     StreetStyle style = StreetStyle.values()[(city + block) % StreetStyle.values().length];
                     GridTuning.Levels levels = GridTuning.Levels.values()[city % GridTuning.Levels.values().length];
-                    GridTuning tuning = new GridTuning(city * 31L, city % 101, city, block, waypoints, List.of(DyeColor.RED), style, levels);
+                    GridTuning tuning = new GridTuning(city * 31L, city % 101, (city * 7) % 101, city, block, waypoints, List.of(DyeColor.RED), style, levels);
                     assertTrue(tuning.isValid());
                     GridLayoutSettings settings = tuning.toSettings();
                     // The codec's validation is what the dimension loader applies
@@ -41,10 +43,10 @@ class GridTuningTest {
 
     @Test
     void codesRoundTrip() {
-        GridTuning tuning = new GridTuning(-8_123_456_789L, 73, 96, 6, 8,
+        GridTuning tuning = new GridTuning(-8_123_456_789L, 73, 20, 96, 6, 8,
                 List.of(DyeColor.ORANGE, DyeColor.MAGENTA, DyeColor.WHITE, DyeColor.BLACK, DyeColor.LIME), StreetStyle.UNIFORM, GridTuning.Levels.TRANSIT);
         String code = tuning.code();
-        assertTrue(code.startsWith("DF3."));
+        assertTrue(code.startsWith("DF4."));
         assertEquals(tuning, GridTuning.fromCode(code).orElseThrow());
         assertEquals(tuning, GridTuning.fromCode("  " + code + "\n").orElseThrow(), "pasted codes are trimmed");
         assertEquals(GridTuning.DEFAULT, GridTuning.fromCode(GridTuning.DEFAULT.code()).orElseThrow());
@@ -87,6 +89,35 @@ class GridTuningTest {
         assertEquals(GridTuning.Levels.OFF, old.levels());
         assertEquals(24, old.cityRadius());
         assertEquals("0x2e7aae69", GridKey.of(old.toSettings()).getPath());
+    }
+
+    @Test
+    void codesFromBeforeTheRegimeFollowCorruption() {
+        // The default grid's DF3 code, laid out as it was before the regime axis
+        ByteBuffer buffer = ByteBuffer.allocate(20);
+        buffer.put((byte) 3).putLong(0L).put((byte) 50).put((byte) 40).put((byte) 3).put((byte) 4).put((byte) 4);
+        List.of(DyeColor.LIGHT_BLUE, DyeColor.CYAN, DyeColor.BLUE, DyeColor.ORANGE).forEach(color -> buffer.put((byte) color.getId()));
+        buffer.put((byte) StreetStyle.VARIED.ordinal()).put((byte) GridTuning.Levels.ALL.ordinal());
+        String code = "DF3." + Base64.getUrlEncoder().withoutPadding().encodeToString(buffer.array());
+        GridTuning old = GridTuning.fromCode(code).orElseThrow();
+        assertEquals(50, old.regimePercent());
+        assertEquals(GridTuning.DEFAULT, old);
+        assertEquals("default", GridKey.of(old.toSettings()).getPath());
+    }
+
+    @Test
+    void aRegimeEqualToCorruptionIsLeftOutOfTheSettingsJson() {
+        // So grids from before the regime axis encode, and hash, exactly as they did
+        GridLayoutSettings same = GridTuning.DEFAULT.withSeed(7).toSettings();
+        GridLayoutSettings stronger = GridTuning.DEFAULT.withSeed(7).withRegimePercent(90).toSettings();
+        assertFalse(GridLayoutSettings.CODEC.encodeStart(JsonOps.INSTANCE, same).getOrThrow().getAsJsonObject().has("regime"));
+        assertTrue(GridLayoutSettings.CODEC.encodeStart(JsonOps.INSTANCE, stronger).getOrThrow().getAsJsonObject().has("regime"));
+        assertEquals(0.5f, same.regime());
+        assertEquals(0.9f, stronger.regime());
+        assertNotEquals(GridKey.of(same), GridKey.of(stronger));
+        assertEquals(90, GridTuning.fromSettings(stronger).orElseThrow().regimePercent());
+        assertFalse(GridLayoutSettings.CODEC.encodeStart(JsonOps.INSTANCE, GridLayoutSettings.DEFAULT).getOrThrow()
+                .getAsJsonObject().has("regime_color"), "the default regime color is left out too");
     }
 
     @Test

@@ -100,8 +100,7 @@ public class GridChunkGenerator extends ChunkGenerator {
                         chunk.markPosForPostProcessing(pos);
                     }
                     oceanFloor.update(localX, y, localZ, state);
-                    worldSurface.update(localX, y, localZ, state);
-                }
+                    worldSurface.update(localX, y, localZ, state);                }
             }
         }
         placeSigns(build, chunk);
@@ -163,7 +162,8 @@ public class GridChunkGenerator extends ChunkGenerator {
         GridChunkBuild build = build(pos.getX() >> 4, pos.getZ() >> 4);
         ChunkPlan plan = build.plan();
         text.add(String.format("Grid: %s %s floors=%d district=%s", plan.zone(), plan.type(), plan.floors(), plan.district().getSerializedName()));
-        text.add(String.format("Grid corruption: %.2f (%s)", plan.corruption(), plan.tier()));
+        text.add(String.format("Grid decay: %.2f (%s)", plan.corruption(), plan.tier()));
+        text.add(String.format("Grid control: %.2f (%s)", plan.control(), plan.controlTier()));
         if (build.buildingId() != null) {
             text.add("Grid building: " + build.buildingId());
         }

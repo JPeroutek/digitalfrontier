@@ -33,6 +33,7 @@ public final class GridLayout {
     private static final int SALT_EXTRA_STRONGHOLDS = 9;
     private static final int SALT_STREETS_X = 10;
     private static final int SALT_STREETS_Z = 11;
+    private static final int SALT_UPKEEP = 12;
 
     private final GridLayoutSettings settings;
     private final List<Site> sites;
@@ -40,6 +41,7 @@ public final class GridLayout {
     private final List<Site> terminals;
     private final Map<Long, Site> sitesByChunk = new HashMap<>();
     private final CorruptionField corruption;
+    private final ControlField control;
     private final double districtRotation;
     // Streets along X are found on the Z axis (a row of chunks), streets along Z on the X axis
     private final StreetAxis xAxis;
@@ -65,7 +67,7 @@ public final class GridLayout {
         allSites.addAll(waypointSites);
 
         // Strongholds and the portal sit in the 8 slots between the waypoint directions, so they never collide with
-        // a waypoint. The portal is opposite the first stronghold; more corrupted grids get more strongholds, in
+        // a waypoint. The portal is opposite the first stronghold; stronger regimes get more strongholds, in
         // other slots picked by the seed.
         int firstSlot = GridRandom.nextInt(GridRandom.hash(seed, 0, 0, SALT_STRONGHOLD), 8);
         int portalSlot = (firstSlot + 4) % 8;
@@ -74,7 +76,7 @@ public final class GridLayout {
                 .filter(slot -> slot != firstSlot && slot != portalSlot)
                 .boxed()
                 .sorted(Comparator.comparingLong(slot -> GridRandom.hash(seed, slot, 0, SALT_EXTRA_STRONGHOLDS)))
-                .limit(strongholdCount(settings.corruption()) - 1)
+                .limit(strongholdCount(settings.regime()) - 1)
                 .forEach(slots::add);
         List<Site> strongholds = new ArrayList<>();
         for (int i = 0; i < slots.size(); i++) {
@@ -90,7 +92,8 @@ public final class GridLayout {
         for (Site site : sites) {
             sitesByChunk.put(chunkKey(site.chunkX(), site.chunkZ()), site);
         }
-        this.corruption = new CorruptionField(settings, List.copyOf(strongholds));
+        this.corruption = new CorruptionField(settings);
+        this.control = new ControlField(settings, List.copyOf(strongholds));
         this.districtRotation = GridRandom.unit(GridRandom.hash(seed, 0, 0, SALT_DISTRICTS)) * Math.PI * 2;
         int extent = settings.cityRadius() + MultiChunk.SIZE + 2;
         this.xAxis = new StreetAxis(settings.streetStyle(), seed, SALT_STREETS_X, settings.blockSize(), extent);
@@ -98,12 +101,12 @@ public final class GridLayout {
         this.transit = new TransitLayout(settings, xAxis, zAxis, waypoints);
     }
 
-    /** One stronghold up to 64% corruption (the default grid has 50%), two up to 84%, three above that. */
-    public static int strongholdCount(float corruption) {
-        if (corruption >= 0.85f) {
+    /** One stronghold up to a 64% regime (the default grid has 50%), two up to 84%, three above that. */
+    public static int strongholdCount(float regime) {
+        if (regime >= 0.85f) {
             return 3;
         }
-        return corruption >= 0.65f ? 2 : 1;
+        return regime >= 0.65f ? 2 : 1;
     }
 
     // The middle of one of the 8 gaps between waypoint directions
@@ -169,12 +172,20 @@ public final class GridLayout {
         return DerelictSector.at(settings, chunkX, chunkZ) != null ? Zone.DERELICT : Zone.UNALLOCATED;
     }
 
-    /** Corruption intensity of a chunk, in [0, 1]; the same value its plan carries. */
+    /** Decay intensity of a chunk, in [0, 1]; the same value its plan carries. */
     public float corruptionAt(int chunkX, int chunkZ) {
-        float intensity = corruption.intensityAt(chunkX, chunkZ);
-        // Derelict sectors are long abandoned: badly corrupted wherever they are
-        DerelictSector sector = derelictAt(chunkX, chunkZ);
-        return sector != null ? Math.max(intensity, sector.corruption()) : intensity;
+        return planAt(chunkX, chunkZ).corruption();
+    }
+
+    /** The regime's control of a chunk, in [0, 1]; the same value its plan carries. */
+    public float controlAt(int chunkX, int chunkZ) {
+        return planAt(chunkX, chunkZ).control();
+    }
+
+    /** The stronghold whose control is strongest at a chunk, or null if none reaches it. */
+    @Nullable
+    public Site controlSourceAt(int chunkX, int chunkZ) {
+        return control.strongestSource(chunkX, chunkZ);
     }
 
     /** The derelict sector covering any part of a chunk, or null. */
@@ -184,9 +195,24 @@ public final class GridLayout {
     }
 
     public ChunkPlan planAt(int chunkX, int chunkZ) {
+        ChunkPlan shape = shapeAt(chunkX, chunkZ);
+        // Roads outside the city core are where a strong regime patrols, and what it keeps clear
+        boolean road = shape.road() && shape.zone() != Zone.CITY_CORE;
+        float controlled = control.intensityAt(chunkX, chunkZ, road);
+        double upkeep = GridRandom.unit(GridRandom.hash(settings.gridSeed(), chunkX, chunkZ, SALT_UPKEEP));
+        float decay = Territory.decay(corruption.intensityAt(chunkX, chunkZ), controlled, upkeep, road);
+        // Derelict sectors are long abandoned: badly decayed wherever they are, whoever claims them
+        DerelictSector sector = derelictAt(chunkX, chunkZ);
+        if (sector != null) {
+            decay = Math.max(decay, sector.corruption());
+        }
+        return shape.withTerritory(decay, controlled);
+    }
+
+    // What the chunk holds, before decay and control are worked out
+    private ChunkPlan shapeAt(int chunkX, int chunkZ) {
         Zone zone = zoneAt(chunkX, chunkZ);
-        float intensity = corruptionAt(chunkX, chunkZ);
-        Plans plans = new Plans(zone, districtAt(chunkX, chunkZ), intensity, CorruptionTier.fromIntensity(intensity));
+        Plans plans = new Plans(zone, districtAt(chunkX, chunkZ));
 
         Site site = sitesByChunk.get(chunkKey(chunkX, chunkZ));
         if (site != null) {
@@ -319,13 +345,13 @@ public final class GridLayout {
     }
 
     // What every plan of one chunk shares, so each kind of plan reads as one short call
-    private record Plans(Zone zone, DyeColor district, float corruption, CorruptionTier tier) {
+    private record Plans(Zone zone, DyeColor district) {
         ChunkPlan site(Site site) {
-            return new ChunkPlan(zone, PlanType.SITE, 0, district, null, null, site, null, null, corruption, tier);
+            return new ChunkPlan(zone, PlanType.SITE, 0, district, null, null, site, null, null, 0, CorruptionTier.CLEAN, 0, ControlTier.FREE);
         }
 
         ChunkPlan street(@Nullable StreetAxis.Road roadX, @Nullable StreetAxis.Road roadZ) {
-            return new ChunkPlan(zone, PlanType.STREET, 0, district, roadX, roadZ, null, null, null, corruption, tier);
+            return new ChunkPlan(zone, PlanType.STREET, 0, district, roadX, roadZ, null, null, null, 0, CorruptionTier.CLEAN, 0, ControlTier.FREE);
         }
 
         // An ordinary one-chunk street outside the city's street grid (highways, connectors, settlements)
@@ -335,15 +361,15 @@ public final class GridLayout {
         }
 
         ChunkPlan building(int floors, DyeColor buildingDistrict, @Nullable MultiChunk multi) {
-            return new ChunkPlan(zone, PlanType.BUILDING, floors, buildingDistrict, null, null, null, multi, null, corruption, tier);
+            return new ChunkPlan(zone, PlanType.BUILDING, floors, buildingDistrict, null, null, null, multi, null, 0, CorruptionTier.CLEAN, 0, ControlTier.FREE);
         }
 
         ChunkPlan plaza() {
-            return new ChunkPlan(zone, PlanType.PLAZA, 0, district, null, null, null, null, null, corruption, tier);
+            return new ChunkPlan(zone, PlanType.PLAZA, 0, district, null, null, null, null, null, 0, CorruptionTier.CLEAN, 0, ControlTier.FREE);
         }
 
         ChunkPlan open(@Nullable DiagonalRoad diagonal) {
-            return new ChunkPlan(zone, PlanType.OPEN, 0, district, null, null, null, null, diagonal, corruption, tier);
+            return new ChunkPlan(zone, PlanType.OPEN, 0, district, null, null, null, null, diagonal, 0, CorruptionTier.CLEAN, 0, ControlTier.FREE);
         }
     }
 

@@ -171,7 +171,7 @@ the world (Y 319).
   only. Any **Portal** block (`digitalfrontier:grid_portal`) in it sends a player who walks into it back to
   their respawn point in the real world. Portal blocks have no collision, so make sure players can walk into
   at least one at ground level. Make it tall and bright: players have to find it from a distance.
-- **`stronghold`**: the building at a stronghold site, at the heart of the grid's most corrupted territory
+- **`stronghold`**: the building at a stronghold site, at the seat of the regime's territory
   (usually zone `outlands`). Single chunk only; use `min_floors` to set its height, since the site asks for none.
   Colors other than white aren't recolored, so the regime's red stays red.
 
@@ -214,7 +214,7 @@ Their staircases climb to wherever the ground is, so express termini are always 
 
 **Maintenance passages** open off about one in seven ordinary tunnel chunks: a small lit room behind a doorway in
 the tunnel wall. In unstable ground or worse, a corrupted program lurks in each one (one that fights back where
-the ground is corrupted).
+the ground is badly decayed).
 
 ### Authoring level pieces
 
@@ -243,10 +243,18 @@ need their redstone; the starter pieces power rails every 8 blocks (X = 0 and 8)
 generator builds the starter shape in code, and the end ramps (where a deck comes down at the city edge) are always
 built in code.
 
-## Corruption
+## Decay and the regime
 
-Corruption is applied to your parts after they're placed and recolored, so you never build corrupted versions.
-Where a grid is corrupted (shown on F3 as `Grid corruption`), the same template comes out:
+Every chunk has two values, both shown on F3: **decay** (`Grid decay`), the digital corruption of a neglected grid,
+and **control** (`Grid control`), how firmly the regime holds it. They're separate, but the regime maintains what
+it holds, so strong control leaves almost no decay.
+
+Both are applied to your parts after they're placed and recolored, so you never build decayed or regime versions.
+
+### Decay
+
+Decay rises with distance from the city, in blobs, and is scaled by the grid's decay setting (the Grid Tuning
+Laser's "Decay" slider). Where a grid is decayed, the same template comes out:
 
 | Tier | What happens to your blocks |
 |---|---|
@@ -254,8 +262,31 @@ Where a grid is corrupted (shown on F3 as `Grid corruption`), the same template 
 | UNSTABLE | Holes through walls and floors; 4×4 columns of the building slide up or down; pattern lines glitch. |
 | CORRUPTED, SEVERE | Blocks turn to static; some buildings break off partway up and float apart in fragments. |
 
-Site buildings (terminals, the Portal, strongholds) keep their shape: only their materials corrupt. Arrival Pads
+Site buildings (terminals, the Portal, strongholds) keep their shape: only their materials decay. Arrival Pads
 and Portal blocks are never changed.
+
+### Control
+
+Each stronghold holds the ground around it, out to a reach set by the grid's regime setting (the "Regime" slider,
+which also sets the number of strongholds): about 10 chunks at 0%, 24 at 100%, with ragged borders. Above a 60%
+regime, the roads outside the city core are patrolled too, up to PATROLLED at 100%. The city core is always free.
+
+| Tier | Control | What it means |
+|---|---|---|
+| FREE | under 0.15 | Nobody answers to the regime. |
+| WATCHED | 0.15 | The odd patrol; programs here are the regime's citizens. |
+| PATROLLED | 0.4 | Patrols. Decay is held back, and roads are never decayed. |
+| CONTROLLED | 0.65 | Regime territory: pattern lines take the **regime color** (fading in from 0.55). |
+| SEAT | 0.85 | The stronghold and the ground around it: never decayed. |
+
+How control holds decay back: decay is multiplied by `1 − s`, where `s` rises in step with control, from 0 at no
+control to full at 0.85, times a per-chunk roll between 0.75 and 1. So decay builds up gradually across a border
+(usually 8 or more chunks from clean ground to static), at moderate control the odd neglected pocket survives, and
+at CONTROLLED and above significant decay all but never appears. Derelict sectors stay badly decayed whoever
+claims them.
+
+The regime color is the grid setting `regime_color` (a dye color, red by default). It isn't on the tuning laser;
+set it in a grid's settings by hand.
 
 ## Testing your structures
 

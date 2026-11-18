@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 /**
- * The digitalfrontier:grid F3 section: what the grid generates where the camera is (zone, corruption, building, site
+ * The digitalfrontier:grid F3 section: what the grid generates where the camera is (zone, decay, control, building, site
  * and levels). Enabled from the debug options (F3 + F6). Like vanilla's chunk_generation_stats it asks the server's
  * chunk generator, so it only shows in single player.
  */

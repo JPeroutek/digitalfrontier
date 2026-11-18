@@ -274,7 +274,7 @@ public final class GridCommands {
         int players = GridArrival.gridWorld(server, id).map(world -> world.players().size()).orElse(0);
         MutableComponent line = Component.literal(" - " + id + " ").withStyle(ChatFormatting.WHITE)
                 .append(Component.translatable("commands.digitalfrontier.grid.list.entry", settings.cityRadius(),
-                        Math.round(settings.corruption() * 100), players).withStyle(ChatFormatting.GRAY));
+                        Math.round(settings.corruption() * 100), Math.round(settings.regime() * 100), players).withStyle(ChatFormatting.GRAY));
         GridTuning.fromSettings(settings).ifPresent(tuning -> line.append(" ").append(copyable(tuning.code())));
         return line;
     }

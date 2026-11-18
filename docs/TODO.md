@@ -30,11 +30,19 @@ Ideas and planned work for the grid world generator that aren't scheduled into a
 
 ## Corruption and inhabitants
 
+- **MOTION_BLOCKING heightmap.** In generated grid chunks it reads the world's bottom (`positioned over
+  motion_blocking` gives y = -64) while WORLD_SURFACE is right, though gridstone is a full deepslate copy. Updating
+  it in `GridChunkGenerator.buildTerrain` didn't help, so something later resets it. Grid code reads WORLD_SURFACE
+  or scans the column instead; vanilla features that read MOTION_BLOCKING may misbehave in grids.
+- **Checkpoints on access roads.** Where a road crosses into controlled land, a patrolled checkpoint: a gate or
+  barrier across the road with enforcers stationed at it (not wandering patrols), so the regime's border is
+  obvious from the road. Placed from the layout where a road chunk's control first reaches CONTROLLED. No pylons
+  or boundary markers off the roads.
 - **Bigger, more detailed strongholds, and more of them.**
 - **A final boss.** `all_lieutenants_defeated` is in place to bring back (or summon) something bigger once the
   whole regime falls.
 - **Real art.** Corrupted programs, enforcers and lieutenants use the Program model with existing or generated
-  skins; corruption shows as a render jitter.
+  skins; decay shows as a render jitter (regime mobs don't jitter).
 - **Accessories.** Core Dumps keep Trinkets Updated slots. Accessories, whose compatibility layers also ran
   Trinkets and Curios mods, has no 26.x release; add its hook back (see `compat/`) if it updates.
 - **More trigger ideas.** Each trigger type is one record in `Triggers`; candidates: an advancement earned, the
