@@ -54,6 +54,8 @@ import net.minecraft.world.phys.Vec3;
  */
 public class LieutenantEntity extends Monster {
     private static final EntityDataAccessor<String> TEXTURE = SynchedEntityData.defineId(LieutenantEntity.class, EntityDataSerializers.STRING);
+    // So a client without a pack's skin can fall back to the archetype's
+    private static final EntityDataAccessor<String> ARCHETYPE = SynchedEntityData.defineId(LieutenantEntity.class, EntityDataSerializers.STRING);
     private static final int LEASH = 24;
     private static final int MAX_ENFORCERS = 4;
 
@@ -87,7 +89,7 @@ public class LieutenantEntity extends Monster {
         LieutenantDef def = lieutenant.def();
         this.lieutenantId = lieutenant.id();
         this.strongholdId = strongholdId;
-        this.archetype = def.archetype();
+        setArchetype(def.archetype());
         this.home = home;
         setCustomName(def.name());
         setCustomNameVisible(true);
@@ -108,10 +110,21 @@ public class LieutenantEntity extends Monster {
         return texture.isEmpty() ? null : Identifier.tryParse(texture);
     }
 
+    /** The skin of its archetype, for when its own texture isn't available. Works on the client too. */
+    public Identifier defaultTexture() {
+        return LieutenantDef.Archetype.byName(entityData.get(ARCHETYPE)).defaultTexture();
+    }
+
+    private void setArchetype(LieutenantDef.Archetype archetype) {
+        this.archetype = archetype;
+        entityData.set(ARCHETYPE, archetype.getSerializedName());
+    }
+
     @Override
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
         builder.define(TEXTURE, "");
+        builder.define(ARCHETYPE, LieutenantDef.Archetype.RULER.getSerializedName());
     }
 
     @Override
@@ -239,11 +252,7 @@ public class LieutenantEntity extends Monster {
         super.readAdditionalSaveData(view);
         lieutenantId = view.getString("Lieutenant").map(Identifier::tryParse).orElse(null);
         strongholdId = view.getString("Stronghold").orElse(null);
-        for (LieutenantDef.Archetype candidate : LieutenantDef.Archetype.values()) {
-            if (candidate.getSerializedName().equals(view.getStringOr("Archetype", ""))) {
-                archetype = candidate;
-            }
-        }
+        setArchetype(LieutenantDef.Archetype.byName(view.getStringOr("Archetype", "")));
         view.read("Home", BlockPos.CODEC).ifPresent(pos -> home = pos);
         entityData.set(TEXTURE, view.getStringOr("Texture", ""));
         if (hasCustomName()) {

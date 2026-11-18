@@ -1,0 +1,9 @@
+{
+  "pack": {
+    "description": {
+      "translate": "pack.digitalfrontier.lore.description"
+    },
+    "min_format": 97,
+    "max_format": 121
+  }
+}

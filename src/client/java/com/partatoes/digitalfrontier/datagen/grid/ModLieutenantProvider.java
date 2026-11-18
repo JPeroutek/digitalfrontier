@@ -44,7 +44,8 @@ public class ModLieutenantProvider implements DataProvider {
         return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new));
     }
 
-    private static Map<String, LieutenantDef> definitions() {
+    /** By file name; the lore pack (ModLorePackProvider) writes the same definitions with its own skins. */
+    static Map<String, LieutenantDef> definitions() {
         Map<String, LieutenantDef> defs = new LinkedHashMap<>();
 
         // The ruler returns on its own after a week, or sooner if the grid feeds the regime

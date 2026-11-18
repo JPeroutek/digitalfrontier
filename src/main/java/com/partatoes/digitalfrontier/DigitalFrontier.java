@@ -19,12 +19,19 @@ import com.partatoes.digitalfrontier.item.ModItemGroups;
 import com.partatoes.digitalfrontier.item.ModItems;
 import com.partatoes.digitalfrontier.world.gen.ModWorldGeneration;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
+import net.fabricmc.fabric.api.resource.v1.pack.PackActivationType;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DigitalFrontier implements ModInitializer {
 	public static final String MOD_ID = "digitalfrontier";
+	/** The built-in lore pack's folder under resourcepacks/ (see docs/lieutenants.md). */
+	public static final String LORE_PACK = "lore";
 
 	// This logger is used to write text to the console and the log file.
 	// It is considered best practice to use your mod id as the logger's name.
@@ -63,5 +70,11 @@ public class DigitalFrontier implements ModInitializer {
 		StrongholdEvents.register();
 		GridSpawner.register();
 		ModCompat.register();
+
+		// The films' names and the project's character skins, off unless a player or server owner turns it on.
+		// One folder serves both halves: data (enabled per world) and assets (enabled per client)
+		FabricLoader.getInstance().getModContainer(MOD_ID).ifPresent(mod -> ResourceLoader.registerBuiltinPack(
+				Identifier.fromNamespaceAndPath(MOD_ID, LORE_PACK), mod,
+				Component.translatable("pack.digitalfrontier.lore"), PackActivationType.NORMAL));
 	}
 }

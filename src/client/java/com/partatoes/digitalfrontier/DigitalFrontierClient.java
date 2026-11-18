@@ -6,7 +6,6 @@ import com.partatoes.digitalfrontier.entity.vehicle.LightCycleRenderer;
 import com.partatoes.digitalfrontier.entity.custom.LieutenantEntity;
 import com.partatoes.digitalfrontier.grid.GridDebugEntry;
 import com.partatoes.digitalfrontier.grid.PortalBeamRenderer;
-import com.partatoes.digitalfrontier.grid.stronghold.LieutenantDef;
 import com.partatoes.digitalfrontier.grid.tuning.GridTuning;
 import com.partatoes.digitalfrontier.grid.tuning.GridTuningNetworking;
 import com.partatoes.digitalfrontier.screen.GridTuningScreen;
@@ -25,14 +24,19 @@ public class DigitalFrontierClient implements ClientModInitializer {
 		ModelLayerRegistry.registerModelLayer(ModModelLayers.LIGHTCYCLE, LightCycleModel::getTexturedModelData);
 
 		// Entities
-		EntityRendererRegistry.register(ModEntities.PROGRAM, ProgramRenderer::new);
+		EntityRendererRegistry.register(ModEntities.PROGRAM, context -> new GridMobRenderer<>(context,
+				GridMobRenderer.variants("program_0", "program_1", "program_2"), 0));
 		EntityRendererRegistry.register(ModEntities.CORRUPTED_PROGRAM, context -> new GridMobRenderer<>(context,
 				GridMobRenderer.variants("corrupted_program_0", "corrupted_program_1", "corrupted_program_2"), 0.6f));
 		EntityRendererRegistry.register(ModEntities.ENFORCER, context -> new GridMobRenderer<>(context,
 				GridMobRenderer.variants("guard_red64", "guard_orange64"), 0.2f));
-		// The lieutenant's skin comes from its definition, so lore packs can swap it
+		// The lieutenant's skin comes from its definition, so lore packs can swap it; a client without the pack's
+		// resource pack sees the archetype's skin instead
+		PackTextures.register();
 		EntityRendererRegistry.register(ModEntities.LIEUTENANT, context -> new GridMobRenderer<LieutenantEntity>(context,
-				entity -> entity.texture() != null ? entity.texture() : LieutenantDef.Archetype.RULER.defaultTexture(), 0.35f));
+				entity -> entity.texture() != null
+						? PackTextures.orFallback(entity.texture(), entity.defaultTexture())
+						: entity.defaultTexture(), 0.35f));
 		ModelLayerRegistry.registerModelLayer(ModModelLayers.PROGRAM, ProgramModel::getTexturedModelData);
 
 		// The Portal's beam, seen from anywhere in the grid

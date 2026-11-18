@@ -62,6 +62,10 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add(ModEntities.LIEUTENANT, "Lieutenant");
         translationBuilder.add("lieutenant.digitalfrontier.the_sovereign", "The Sovereign");
         translationBuilder.add("lieutenant.digitalfrontier.the_warden", "The Warden");
+        translationBuilder.add("pack.digitalfrontier.lore", "Digital Frontier: Lore Names");
+        translationBuilder.add("pack.digitalfrontier.lore.description", "The films' names and character skins");
+        translationBuilder.add("commands.digitalfrontier.grid.locate", "%s is at %s");
+        translationBuilder.add("commands.digitalfrontier.grid.locate.unknown", "This grid has no site %s");
         translationBuilder.add(ModBlocks.STRONGHOLD_UPLINK, "Stronghold Uplink");
         translationBuilder.add("message.digitalfrontier.lieutenant_defeated", "%s has been derezzed");
         translationBuilder.add("message.digitalfrontier.lieutenant_returned", "%s has returned to its stronghold");

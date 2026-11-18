@@ -20,7 +20,7 @@ Each lieutenant is a file at `data/<namespace>/grid/lieutenant/<name>.json`. The
 {
   "name": { "translate": "lieutenant.digitalfrontier.the_warden" },
   "archetype": "duelist",
-  "texture": "digitalfrontier:textures/entity/rinzler64.png",
+  "texture": "digitalfrontier:textures/entity/warden64.png",
   "health": 220,
   "weight": 10,
   "min_grid_corruption": 0.0,
@@ -38,7 +38,7 @@ Each lieutenant is a file at `data/<namespace>/grid/lieutenant/<name>.json`. The
 |---|---|---|
 | `name` | yes | A text component: `"Rinzler"`, or `{"translate": "..."}` so a resource pack can rename it. |
 | `archetype` | yes | How it fights (built in): `ruler` keeps its distance and calls in enforcers; `duelist` is fast and closes distance in sudden dashes. |
-| `texture` | no | A 64×64 player-style skin. Defaults to the archetype's (`clu64` for rulers, `rinzler64` for duelists). |
+| `texture` | no | A 64×64 player-style skin. Defaults to the archetype's (`sovereign64` for rulers, `warden64` for duelists). The image belongs in a resource pack; players who don't have it see the archetype's skin instead. |
 | `health` | no | Defaults to 300 (ruler) or 220 (duelist). |
 | `weight` | no (10) | Relative chance when a stronghold picks its lieutenant. |
 | `min_grid_corruption` / `max_grid_corruption` | no (0 / 1) | Only grids whose corruption setting (the Grid Tuning Laser's slider, 0–1) is in this range can have this lieutenant. |
@@ -66,13 +66,25 @@ that uses it. `"loot_table": "minecraft:empty"` drops nothing.
 
 ### Lore names
 
-To use the films' names, put a datapack in the world's `datapacks` folder that replaces the shipped files:
+The mod's own names and skins don't come from the films. It also ships a built-in **lore pack**, off by default,
+which gives its characters the films' names and the project's character skins. The pack has two halves, and
+each is switched on separately:
+
+- **Data**, per world: tick "Digital Frontier: Lore Names" on the Data Packs screen when creating a world, or run
+  `/datapack enable "digitalfrontier:lore"` (then defeat and respawn a lieutenant to see the change).
+- **Assets**, per player: Options → Resource Packs. This renames the characters and holds their skins. A player
+  without it still sees the default skins and names.
+
+The lore pack is generated (`ModLorePackProvider`): its definitions are the shipped ones with only `texture`
+changed, and its names override the translation keys.
+
+To use names of your own, put a datapack in the world's `datapacks` folder that replaces the shipped files:
 
 ```
-lore_names/
-  pack.mcmeta                 {"pack": {"pack_format": 61, "description": "Lore names"}}
-  data/digitalfrontier/grid/lieutenant/the_warden.json      ... "name": "Rinzler" ...
-  data/digitalfrontier/grid/lieutenant/the_sovereign.json   ... "name": "Clu" ...
+my_names/
+  pack.mcmeta                 {"pack": {"description": "My names", "min_format": 121, "max_format": 121}}
+  data/digitalfrontier/grid/lieutenant/the_warden.json      ... "name": "..." ...
+  data/digitalfrontier/grid/lieutenant/the_sovereign.json   ... "name": "..." ...
 ```
 
 The replacement must be a complete definition (copy the shipped one and change what you like). A resource pack

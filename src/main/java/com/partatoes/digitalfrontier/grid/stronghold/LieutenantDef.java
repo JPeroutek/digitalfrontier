@@ -44,6 +44,11 @@ public record LieutenantDef(
             Respawn.CODEC.fieldOf("respawn").forGetter(LieutenantDef::respawn)
     ).apply(instance, LieutenantDef::new));
 
+    /** The same lieutenant in another skin. */
+    public LieutenantDef withTexture(Identifier skin) {
+        return new LieutenantDef(name, archetype, Optional.of(skin), health, weight, minGridCorruption, maxGridCorruption, lootTable, respawn);
+    }
+
     public Identifier textureOrDefault() {
         return texture.orElse(archetype.defaultTexture());
     }
@@ -67,9 +72,9 @@ public record LieutenantDef(
     /** How a lieutenant fights. Behavior lives in code; each definition picks one. */
     public enum Archetype implements StringRepresentable {
         /** Commands the regime: keeps its distance, calls in enforcers, hits hard when cornered. */
-        RULER("ruler", 300, 0.26, "clu64"),
+        RULER("ruler", 300, 0.26, "sovereign64"),
         /** The silent enforcer: fast, relentless, closes distance in sudden dashes. */
-        DUELIST("duelist", 220, 0.36, "rinzler64");
+        DUELIST("duelist", 220, 0.36, "warden64");
 
         public static final Codec<Archetype> CODEC = StringRepresentable.fromEnum(Archetype::values);
 
@@ -91,6 +96,16 @@ public record LieutenantDef(
 
         public double speed() {
             return speed;
+        }
+
+        /** The archetype with this serialized name, or {@link #RULER} for an unknown one. */
+        public static Archetype byName(String name) {
+            for (Archetype archetype : values()) {
+                if (archetype.name.equals(name)) {
+                    return archetype;
+                }
+            }
+            return RULER;
         }
 
         public Identifier defaultTexture() {

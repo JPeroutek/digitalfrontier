@@ -7,6 +7,10 @@ import com.partatoes.digitalfrontier.grid.arrival.GridArrival;
 import com.partatoes.digitalfrontier.grid.arrival.TerminalRef;
 import com.partatoes.digitalfrontier.grid.layout.GridLayout;
 import com.partatoes.digitalfrontier.grid.layout.GridLayoutSettings;
+import com.partatoes.digitalfrontier.grid.layout.Site;
+import com.partatoes.digitalfrontier.grid.gen.GridChunkGenerator;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import com.partatoes.digitalfrontier.grid.stronghold.GridEvent;
 import com.partatoes.digitalfrontier.grid.stronghold.StrongholdManager;
 import com.partatoes.digitalfrontier.grid.stronghold.StrongholdState;
@@ -38,7 +42,8 @@ import static net.minecraft.commands.Commands.literal;
 
 /**
  * {@code /grid list}, {@code /grid code} and {@code /grid lieutenant status <grid>} for everyone;
- * {@code /grid open <code>}, {@code /grid delete <id>}, {@code /grid lieutenant trigger <grid> [signal]} and
+ * {@code /grid open <code>}, {@code /grid delete <id>}, {@code /grid locate <grid> <site>},
+ * {@code /grid lieutenant trigger <grid> [signal]} and
  * {@code /grid lieutenant respawn <grid> <stronghold>} for operators.
  */
 public final class GridCommands {
@@ -62,6 +67,14 @@ public final class GridCommands {
                                 .suggests((context, builder) -> SharedSuggestionProvider.suggestResource(
                                         GridManager.tunedGrids(context.getSource().getServer()).keySet(), builder))
                                 .executes(GridCommands::delete)))
+                .then(literal("locate")
+                        .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                        .then(gridArgument()
+                                .then(argument("site", StringArgumentType.word())
+                                        .suggests((context, builder) -> SharedSuggestionProvider.suggest(
+                                                gridWorld(context).map(GridCommands::sites).orElse(List.of()).stream()
+                                                        .map(Site::id).toList(), builder))
+                                        .executes(GridCommands::locate))))
                 .then(literal("lieutenant")
                         .then(literal("status")
                                 .then(gridArgument().executes(GridCommands::lieutenantStatus)))
@@ -112,6 +125,41 @@ public final class GridCommands {
 
     private static Optional<ServerLevel> gridWorld(CommandContext<CommandSourceStack> context) {
         return GridArrival.gridWorld(context.getSource().getServer(), IdentifierArgument.getId(context, "grid"));
+    }
+
+    private static List<Site> sites(ServerLevel grid) {
+        GridChunkGenerator generator = GridArrival.generator(grid);
+        return generator == null ? List.of() : generator.layout().sites();
+    }
+
+    // Where a layout site is, with a click to teleport there: for testing, and for finding things in a big grid
+    private static int locate(CommandContext<CommandSourceStack> context) {
+        Optional<ServerLevel> grid = gridWorld(context);
+        String id = StringArgumentType.getString(context, "site");
+        Optional<Site> site = grid.flatMap(world -> sites(world).stream().filter(s -> s.id().equals(id)).findFirst());
+        if (site.isEmpty()) {
+            context.getSource().sendFailure(Component.translatable("commands.digitalfrontier.grid.locate.unknown", id));
+            return 0;
+        }
+        int x = site.get().chunkX() * 16 + 8;
+        int z = site.get().chunkZ() * 16 + 8;
+        // On top of whatever is there, generating the chunk if it hasn't been. The grid's generator doesn't fill
+        // in heightmaps, so the column is searched instead
+        ServerLevel world = grid.get();
+        world.getChunk(site.get().chunkX(), site.get().chunkZ());
+        BlockPos.MutableBlockPos column = new BlockPos.MutableBlockPos(x, world.getMaxY(), z);
+        while (column.getY() > world.getMinY() && world.getBlockState(column).getCollisionShape(world, column).isEmpty()) {
+            column.move(Direction.DOWN);
+        }
+        int y = column.getY() + 1;
+        String position = x + " " + y + " " + z;
+        String teleport = "/execute in " + grid.get().dimension().identifier() + " run tp @s " + position;
+        Component coordinates = Component.literal("[" + position + "]").withStyle(style -> style
+                .withColor(ChatFormatting.GREEN)
+                .withClickEvent(new ClickEvent.SuggestCommand(teleport))
+                .withHoverEvent(new HoverEvent.ShowText(Component.translatable("chat.coordinates.tooltip"))));
+        context.getSource().sendSuccess(() -> Component.translatable("commands.digitalfrontier.grid.locate", id, coordinates), false);
+        return 1;
     }
 
     private static int lieutenantStatus(CommandContext<CommandSourceStack> context) {

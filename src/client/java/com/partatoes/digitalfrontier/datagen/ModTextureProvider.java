@@ -56,10 +56,17 @@ public class ModTextureProvider implements DataProvider {
                 futures.add(CompletableFuture.runAsync(() -> createGlitched(writer, color, glitch)));
             }
         });
-        for (int i = 0; i < CORRUPTED_PROGRAM_SOURCES.length; i++) {
+        // Default skins (the lore pack has the project's character skins); corrupted programs are made from these
+        for (int i = 0; i < PROGRAM_SKINS.length; i++) {
             int variant = i;
-            futures.add(CompletableFuture.runAsync(() -> createCorruptedProgram(writer, variant)));
+            futures.add(CompletableFuture.runAsync(() -> {
+                BufferedImage program = ProgramSkins.paint(PROGRAM_SKINS[variant]);
+                writeEntity(writer, program, "program_" + variant);
+                createCorruptedProgram(writer, program, variant);
+            }));
         }
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.SOVEREIGN), "sovereign64")));
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.WARDEN), "warden64")));
 
         // Combine all futures into a single future that completes when all variants are done
         return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
@@ -139,26 +146,19 @@ public class ModTextureProvider implements DataProvider {
         writePhases(writer, image, glow, "glitched_gridstone_" + color.getSerializedName() + templateSuffix(templateIndex), 3, ANIMATION_PHASES);
     }
 
-    // Program skins that corrupted programs are made from
-    private static final String[] CORRUPTED_PROGRAM_SOURCES = {"quorra64", "sam64", "zuse64"};
+    // Ordinary programs' skins, picked per program; each has a corrupted counterpart
+    private static final ProgramSkins.Look[] PROGRAM_SKINS = {ProgramSkins.CYAN, ProgramSkins.WHITE, ProgramSkins.BLUE};
+
+    private void writeEntity(CachedOutput writer, BufferedImage image, String name) {
+        PackOutput.PathProvider resolver = dataOutput.createPathProvider(Target.RESOURCE_PACK, "textures/entity");
+        writeImage(writer, image, resolver.file(Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, name), "png"));
+    }
 
     /**
      * A program skin gone wrong: its glowing circuit lines (bright and blue-ish) turn the regime's red-orange,
      * everything else loses most of its color, and scattered pixels become static.
      */
-    private void createCorruptedProgram(CachedOutput writer, int variant) {
-        String path = String.format("assets/%s/textures/entity/%s.png", DigitalFrontier.MOD_ID, CORRUPTED_PROGRAM_SOURCES[variant]);
-        BufferedImage source;
-        try (var stream = ModTextureProvider.class.getClassLoader().getResourceAsStream(path)) {
-            if (stream == null) {
-                LOGGER.error("Could not find resource at {}", path);
-                return;
-            }
-            source = ImageIO.read(stream);
-        } catch (IOException e) {
-            LOGGER.error("Failed to load image from {}", path, e);
-            return;
-        }
+    private void createCorruptedProgram(CachedOutput writer, BufferedImage source, int variant) {
         Random random = new Random(0xC0DEL + variant);
         BufferedImage image = new BufferedImage(source.getWidth(), source.getHeight(), BufferedImage.TYPE_INT_ARGB);
         for (int y = 0; y < source.getHeight(); y++) {
@@ -184,8 +184,7 @@ public class ModTextureProvider implements DataProvider {
                 image.setRGB(x, y, result);
             }
         }
-        PackOutput.PathProvider resolver = dataOutput.createPathProvider(Target.RESOURCE_PACK, "textures/entity");
-        writeImage(writer, image, resolver.file(Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "corrupted_program_" + variant), "png"));
+        writeEntity(writer, image, "corrupted_program_" + variant);
     }
 
     // Mostly gray, with a little of the original color left
