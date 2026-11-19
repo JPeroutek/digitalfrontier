@@ -283,6 +283,28 @@ public class ModBlocks {
                     .setId(ResourceKey.create(Registries.BLOCK, GRID_PORTAL_ID))));
 
 
+    // The arena (see ArenaGeometry): its duel tiles and console come with it and have no items; trophies are won there
+    public static final Identifier ARENA_TILE_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "arena_tile");
+    public static final Block ARENA_TILE = Registry.register(BuiltInRegistries.BLOCK, ARENA_TILE_ID,
+            new ArenaTileBlock(BlockBehaviour.Properties
+                    .ofFullCopy(Blocks.BEDROCK)
+                    .lightLevel(state -> 8)
+                    .noLootTable()
+                    .setId(ResourceKey.create(Registries.BLOCK, ARENA_TILE_ID))));
+    public static final Identifier ARENA_CONSOLE_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "arena_console");
+    public static final Block ARENA_CONSOLE = Registry.register(BuiltInRegistries.BLOCK, ARENA_CONSOLE_ID,
+            new ArenaConsoleBlock(BlockBehaviour.Properties
+                    .ofFullCopy(Blocks.BEDROCK)
+                    .lightLevel(state -> 12)
+                    .noLootTable()
+                    .setId(ResourceKey.create(Registries.BLOCK, ARENA_CONSOLE_ID))));
+    public static final Identifier TROPHY_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "trophy");
+    public static final Block TROPHY = registerBlock(TROPHY_ID,
+            new Block(BlockBehaviour.Properties
+                    .ofFullCopy(Blocks.GOLD_BLOCK)
+                    .lightLevel(state -> 10)
+                    .setId(ResourceKey.create(Registries.BLOCK, TROPHY_ID))));
+
     // The short-lived light walls a Light Grenade leaves; it has no item
     public static final Identifier FADING_BARRIER_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "fading_barrier");
     public static final Block FADING_BARRIER = Registry.register(BuiltInRegistries.BLOCK, FADING_BARRIER_ID,

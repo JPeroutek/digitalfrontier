@@ -3,6 +3,7 @@ package com.partatoes.digitalfrontier.datagen;
 import com.mojang.math.Quadrant;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.block.ModBlocks;
+import com.partatoes.digitalfrontier.block.custom.ArenaTileBlock;
 import com.partatoes.digitalfrontier.block.custom.PatternBlock;
 import com.partatoes.digitalfrontier.item.ModItems;
 import net.fabricmc.fabric.api.client.datagen.v1.provider.FabricModelProvider;
@@ -121,6 +122,16 @@ public class ModModelProvider extends FabricModelProvider {
                 MultiVariantGenerator.dispatch(ModBlocks.LIGHT_BARRIER, BlockModelGenerators.plainVariant(ModelLocationUtils.getModelLocation(ModBlocks.LIGHT_BARRIER)))
                         .with(faceRotations())
         );
+
+        // The arena: duel tiles (red while about to fall), its console, and the trophies won there
+        Identifier tile = ModelTemplates.CUBE_ALL.create(ModBlocks.ARENA_TILE, TextureMapping.cube(ModBlocks.ARENA_TILE), blockStateModelGenerator.modelOutput);
+        Identifier tileWarning = ModelTemplates.CUBE_ALL.createWithSuffix(ModBlocks.ARENA_TILE, "_warning",
+                TextureMapping.cube(TextureMapping.getBlockTexture(ModBlocks.ARENA_TILE, "_warning")), blockStateModelGenerator.modelOutput);
+        blockStateModelGenerator.blockStateOutput.accept(MultiVariantGenerator.dispatch(ModBlocks.ARENA_TILE)
+                .with(BlockModelGenerators.createBooleanModelDispatch(ArenaTileBlock.WARNING,
+                        BlockModelGenerators.plainVariant(tileWarning), BlockModelGenerators.plainVariant(tile))));
+        blockStateModelGenerator.createTrivialCube(ModBlocks.ARENA_CONSOLE);
+        blockStateModelGenerator.createTrivialCube(ModBlocks.TROPHY);
     }
 
     // An emissive cube per flicker value: steady, then glows that drop out now and then (<name>_glow_flicker_<n>),

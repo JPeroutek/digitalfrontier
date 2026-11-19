@@ -21,6 +21,8 @@ public final class GridLayout {
     /** Radius in chunks of the area a waypoint occupies. */
     public static final int SITE_RADIUS = 4;
     public static final String MAIN_ARRIVAL_ID = "city_main";
+    /** The arena's site id. */
+    public static final String ARENA_ID = "arena_0";
 
     private static final int SALT_WAYPOINTS = 1;
     private static final int SALT_STRONGHOLD = 2;
@@ -51,6 +53,7 @@ public final class GridLayout {
     // The city core building chunk set aside for a garage, if the core has any building chunk
     @Nullable
     private final ChunkSpot garage;
+    private final ArenaGeometry arena;
 
     public GridLayout(GridLayoutSettings settings) {
         this.settings = settings;
@@ -89,6 +92,9 @@ public final class GridLayout {
         }
         allSites.addAll(strongholds);
         allSites.add(siteOnRing(Site.Type.PORTAL, "portal_0", slotAngle(portalSlot), settings.outlandsRadius() - 8));
+        // The arena sits just outside the city, in the slot a quarter turn from the first stronghold: between the highways
+        Site arenaSite = siteOnRing(Site.Type.ARENA, ARENA_ID, slotAngle((firstSlot + 2) % 8), settings.cityRadius() + 4);
+        allSites.add(arenaSite);
 
         this.sites = List.copyOf(allSites);
         this.waypoints = List.copyOf(waypointSites);
@@ -104,6 +110,7 @@ public final class GridLayout {
         this.zAxis = new StreetAxis(settings.streetStyle(), seed, SALT_STREETS_Z, settings.blockSize(), extent);
         this.transit = new TransitLayout(settings, xAxis, zAxis, waypoints);
         this.garage = findGarage();
+        this.arena = new ArenaGeometry(arenaSite);
     }
 
     /** A chunk, by its coordinates. */
@@ -114,6 +121,11 @@ public final class GridLayout {
      * The building chunk in the city core set aside for a garage, so every city has one (a weighted pick can't promise
      * that): of the core's single-chunk building chunks, the one the seed favours. Empty if the core has none.
      */
+    /** The arena's geometry (see {@link ArenaGeometry}). */
+    public ArenaGeometry arena() {
+        return arena;
+    }
+
     public Optional<ChunkSpot> garage() {
         return Optional.ofNullable(garage);
     }

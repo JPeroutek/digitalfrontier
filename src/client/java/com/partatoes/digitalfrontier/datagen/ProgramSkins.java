@@ -28,6 +28,8 @@ final class ProgramSkins {
     static final Look GUARD_LEADER = new Look(0xFF2A2A, Emblem.CHEVRON, true, true);
     static final Look GUARD_HEAVY = new Look(0xB01E1E, Emblem.BARS, true, true);
     static final Look GUARD_GRENADIER = new Look(0xFF6A00, Emblem.RING, true, false);
+    // The arena champion: gold, with the warden's cross and full armour
+    static final Look CHAMPION = new Look(0xFFD24F, Emblem.CROSS, true, true);
     // A program near the end of its drift into decay
     static final Look FRAYING = new Look(0xFF8A1E, Emblem.DIAMOND, false, false);
     // Job programs

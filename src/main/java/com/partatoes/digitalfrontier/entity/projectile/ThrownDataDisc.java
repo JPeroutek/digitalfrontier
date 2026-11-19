@@ -9,6 +9,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrowableItemProjectile;
 import net.minecraft.world.item.Item;
@@ -76,14 +77,21 @@ public class ThrownDataDisc extends ThrowableItemProjectile {
             return;
         }
         Entity owner = getOwner();
-        if (!(owner instanceof Player player) || !player.isAlive() || player.level() != world) {
-            spawnAtLocation(world, getItem());
+        if (!(owner instanceof LivingEntity thrower) || !thrower.isAlive() || thrower.level() != world) {
+            // A thrower's disc lies where it fell; a mob's (an arena champion's) just goes
+            if (!(owner instanceof Mob)) {
+                spawnAtLocation(world, getItem());
+            }
             discard();
             return;
         }
-        Vec3 toOwner = player.getEyePosition().subtract(position());
+        Vec3 toOwner = thrower.getEyePosition().subtract(position());
         if (toOwner.lengthSqr() < 2.25) {
-            catchBy(player);
+            if (thrower instanceof Player player) {
+                catchBy(player);
+            } else {
+                discard();
+            }
             return;
         }
         setDeltaMovement(toOwner.normalize().scale(RETURN_SPEED));
@@ -117,6 +125,8 @@ public class ThrownDataDisc extends ThrowableItemProjectile {
         if (target == getOwner()) {
             if (returning && target instanceof Player player) {
                 catchBy(player);
+            } else if (returning) {
+                discard();
             }
             return;
         }

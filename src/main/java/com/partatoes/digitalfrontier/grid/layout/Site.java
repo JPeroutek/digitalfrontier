@@ -6,7 +6,9 @@ public record Site(Type type, String id, int chunkX, int chunkZ) {
         ARRIVAL_TERMINAL,
         WAYPOINT,
         STRONGHOLD,
-        PORTAL
+        PORTAL,
+        /** The arena, in the outskirts (see {@link ArenaGeometry}). */
+        ARENA
     }
 
     /** Arrival terminals and waypoints both have a terminal players can arrive at. */

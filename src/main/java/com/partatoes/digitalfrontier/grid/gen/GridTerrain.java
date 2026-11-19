@@ -343,6 +343,7 @@ final class GridTerrain {
             case WAYPOINT -> DyeColor.LIGHT_BLUE;
             case STRONGHOLD -> DyeColor.RED;
             case PORTAL -> DyeColor.LIME;
+            case ARENA -> DyeColor.CYAN;
         };
     }
 

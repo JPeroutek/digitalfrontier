@@ -135,6 +135,48 @@ final class GearArt {
         return image;
     }
 
+    /** An arena duel tile: a dark pane edged in light, cyan, or red when it's about to fall. */
+    static BufferedImage arenaTile(boolean warning) {
+        BufferedImage image = blank(16);
+        int edge = warning ? 0xFFFF3030 : CYAN;
+        for (int y = 0; y < 16; y++) {
+            for (int x = 0; x < 16; x++) {
+                boolean rim = x == 0 || y == 0 || x == 15 || y == 15;
+                boolean inner = x == 3 || y == 3 || x == 12 || y == 12;
+                set(image, x, y, rim ? edge : inner ? (warning ? 0xFF7A1818 : 0xFF1E6F7F) : DARK);
+            }
+        }
+        return image;
+    }
+
+    /** The arena console: a panel of glowing keys. */
+    static BufferedImage arenaConsole() {
+        BufferedImage image = blank(16);
+        for (int y = 0; y < 16; y++) {
+            for (int x = 0; x < 16; x++) {
+                boolean key = x % 3 == 1 && y % 3 == 1 && x > 0 && y > 3;
+                set(image, x, y, x == 0 || y == 0 || x == 15 || y == 15 ? STEEL : key ? (x + y) % 2 == 0 ? CYAN : 0xFFFFD24F : DARK);
+            }
+        }
+        for (int x = 2; x < 14; x++) {
+            set(image, x, 2, PALE);
+        }
+        return image;
+    }
+
+    /** A trophy block: gold, with a disc of light in the middle. */
+    static BufferedImage trophy() {
+        BufferedImage image = blank(16);
+        for (int y = 0; y < 16; y++) {
+            for (int x = 0; x < 16; x++) {
+                set(image, x, y, x == 0 || y == 0 || x == 15 || y == 15 ? 0xFFB8860B : 0xFFFFD24F);
+            }
+        }
+        disc(image, 8, 8, 4, DARK);
+        ring(image, 8, 8, 4, CYAN);
+        return image;
+    }
+
     private static BufferedImage blank(int size) {
         return blank(size, size);
     }

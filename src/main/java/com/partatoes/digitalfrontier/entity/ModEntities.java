@@ -6,6 +6,7 @@ import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.entity.custom.BoolEntity;
 import com.partatoes.digitalfrontier.entity.custom.CorruptedProgramEntity;
 import com.partatoes.digitalfrontier.entity.custom.EnforcerEntity;
+import com.partatoes.digitalfrontier.entity.custom.ChampionEntity;
 import com.partatoes.digitalfrontier.entity.custom.LieutenantEntity;
 import com.partatoes.digitalfrontier.entity.custom.ProgramEntity;
 import com.partatoes.digitalfrontier.entity.custom.RecruiterEntity;
@@ -45,6 +46,9 @@ public class ModEntities {
             EntityType.Builder.of(BoolEntity::new, MobCategory.CREATURE).sized(0.5f, 0.5f).clientTrackingRange(10));
     public static final EntityType<ThrownDataDisc> DATA_DISC = register(DATA_DISC_ID,
             EntityType.Builder.<ThrownDataDisc>of(ThrownDataDisc::new, MobCategory.MISC).sized(0.5f, 0.25f).clientTrackingRange(4).updateInterval(2));
+    public static final Identifier CHAMPION_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "champion");
+    public static final EntityType<ChampionEntity> CHAMPION = register(CHAMPION_ID,
+            EntityType.Builder.of(ChampionEntity::new, MobCategory.MISC).sized(0.6f, 1.8f).clientTrackingRange(10));
     public static final Identifier RECOGNIZER_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "recognizer");
     public static final EntityType<RecognizerEntity> RECOGNIZER = register(RECOGNIZER_ID,
             EntityType.Builder.<RecognizerEntity>of(RecognizerEntity::new, MobCategory.MISC).sized(4.0f, 3.5f).clientTrackingRange(12));
@@ -63,6 +67,7 @@ public class ModEntities {
         FabricDefaultAttributeRegistry.register(PROGRAM, ProgramEntity.createProgramAttributes());
         FabricDefaultAttributeRegistry.register(CORRUPTED_PROGRAM, CorruptedProgramEntity.createCorruptedProgramAttributes());
         FabricDefaultAttributeRegistry.register(ENFORCER, EnforcerEntity.createEnforcerAttributes());
+        FabricDefaultAttributeRegistry.register(CHAMPION, ChampionEntity.createChampionAttributes());
         FabricDefaultAttributeRegistry.register(LIEUTENANT, LieutenantEntity.createLieutenantAttributes());
         FabricDefaultAttributeRegistry.register(RECRUITER, RecruiterEntity.createRecruiterAttributes());
         FabricDefaultAttributeRegistry.register(BOOL, BoolEntity.createBoolAttributes());

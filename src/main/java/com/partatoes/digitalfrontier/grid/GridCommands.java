@@ -7,6 +7,11 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.partatoes.digitalfrontier.grid.arrival.GridArrival;
 import com.partatoes.digitalfrontier.grid.exit.PortalState;
+import com.partatoes.digitalfrontier.grid.arena.ArenaGame;
+import com.partatoes.digitalfrontier.grid.arena.ArenaManager;
+import com.partatoes.digitalfrontier.grid.arena.ArenaState;
+import com.partatoes.digitalfrontier.grid.arena.Match;
+import com.partatoes.digitalfrontier.grid.layout.ArenaGeometry;
 import com.partatoes.digitalfrontier.grid.arrival.TerminalRef;
 import com.partatoes.digitalfrontier.grid.layout.GridLayout;
 import com.partatoes.digitalfrontier.grid.layout.GridLayoutSettings;
@@ -42,6 +47,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -112,6 +118,18 @@ public final class GridCommands {
                         .then(literal("reset")
                                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                                 .then(gridArgument().executes(GridCommands::coreReset))))
+                .then(literal("arena")
+                        // Anyone in the arena can step in; the console's menu runs this
+                        .then(literal("join")
+                                .then(argument("game", StringArgumentType.word())
+                                        .suggests((context, builder) -> SharedSuggestionProvider.suggest(
+                                                Arrays.stream(ArenaGame.values()).map(ArenaGame::id), builder))
+                                        .executes(GridCommands::arenaJoin)))
+                        .then(literal("status")
+                                .then(gridArgument().executes(GridCommands::arenaStatus)))
+                        .then(literal("reset")
+                                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                                .then(gridArgument().executes(GridCommands::arenaReset))))
                 .then(literal("portal")
                         .then(literal("status")
                                 .then(gridArgument().executes(GridCommands::portalStatus)))
@@ -156,6 +174,51 @@ public final class GridCommands {
         }
         CoreManager.reset(grid.get());
         context.getSource().sendSuccess(() -> Component.translatable("commands.digitalfrontier.grid.core.reset"), true);
+        return 1;
+    }
+
+    private static int arenaJoin(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        ServerPlayer player = context.getSource().getPlayerOrException();
+        String id = StringArgumentType.getString(context, "game");
+        Optional<ArenaGame> game = ArenaGame.byId(id);
+        if (game.isEmpty()) {
+            context.getSource().sendFailure(Component.translatable("arena.digitalfrontier.unknown_game", id));
+            return 0;
+        }
+        return ArenaManager.start(player, game.get(), false) ? 1 : 0;
+    }
+
+    // Each game's champion level, the titles won, and any match under way
+    private static int arenaStatus(CommandContext<CommandSourceStack> context) {
+        Optional<ServerLevel> grid = gridWorld(context);
+        if (grid.isEmpty()) {
+            context.getSource().sendFailure(Component.translatable("commands.digitalfrontier.grid.unknown", IdentifierArgument.getId(context, "grid").toString()));
+            return 0;
+        }
+        ArenaState state = ArenaState.of(grid.get());
+        ArenaManager.arena(grid.get()).ifPresent(arena -> context.getSource().sendSuccess(() -> Component.translatable(
+                "commands.digitalfrontier.grid.arena.where", arena.centerX() + ", " + ArenaGeometry.FLOOR + ", " + arena.centerZ(), state.titles()), false));
+        for (ArenaGame game : ArenaGame.values()) {
+            context.getSource().sendSuccess(() -> Component.translatable("commands.digitalfrontier.grid.arena.game",
+                    Component.translatable(game.translationKey()), state.championLevel(game)), false);
+        }
+        Match match = ArenaManager.match(grid.get());
+        if (match != null) {
+            context.getSource().sendSuccess(() -> Component.translatable("commands.digitalfrontier.grid.arena.playing",
+                    Component.translatable(match.game().translationKey())), false);
+        }
+        return state.titles();
+    }
+
+    private static int arenaReset(CommandContext<CommandSourceStack> context) {
+        Optional<ServerLevel> grid = gridWorld(context);
+        if (grid.isEmpty()) {
+            context.getSource().sendFailure(Component.translatable("commands.digitalfrontier.grid.unknown", IdentifierArgument.getId(context, "grid").toString()));
+            return 0;
+        }
+        ArenaManager.abort(grid.get());
+        ArenaState.of(grid.get()).reset();
+        context.getSource().sendSuccess(() -> Component.translatable("commands.digitalfrontier.grid.arena.reset"), true);
         return 1;
     }
 

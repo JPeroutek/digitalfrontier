@@ -72,6 +72,25 @@ Your **alignment** with the regime (per player, per grid, −1 to 1) moves with 
 rebels raise it; killing enforcers or recruiters, defeating lieutenants and the core lower it. At 0.4 and above
 patrols leave you alone; at −0.5 and below you're wanted. See [regime.md](regime.md).
 
+## The arena
+
+Just outside the city (`/grid locate <grid> arena_0`) is the **arena**: a sunken floor ringed by stepped stands, with a
+gate on the north side and a goal ring at each end. It never decays. Use the **Arena Console** inside the gate to see
+the games and click one to step in (or `/grid arena join <game>` from inside the arena). One match runs at a time,
+and the **Announcer** calls it to everyone in the arena.
+
+- **Losing costs only the round:** a finishing blow leaves you on one health in the stands, with all your items.
+  Leaving the arena forfeits.
+- **Winning** pays Luminessence and bits (more against a tougher champion), and raises that game's **champion level**
+  (1 to 3). Beating the level-3 **title champion** also gives Memory Paging, places a **Trophy** on the stands, and is
+  announced to the whole grid.
+
+| Game | How it plays |
+|---|---|
+| **Disc Duel** | You and the champion on the tile field over the pit; only Data Discs hurt it. Every five seconds the outer ring of tiles flashes red and falls. Fall in and you lose. |
+
+`/grid arena status <grid>` shows the champions' levels; `/grid arena reset <grid>` (game masters) puts them back to 1.
+
 ## Items and blocks
 
 | | |

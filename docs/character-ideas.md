@@ -211,6 +211,9 @@ never decay and are never recruited. **Not yet:** light cycle tuning and re-pack
 overworld.
 
 ### 2.4 The games
+**Built:** the arena, its console and Announcer, champions with levels and titles, and the disc duel
+(`docs/features.md`); the other games follow.
+
 **Inspired by:** the Disc Arena, the Light Cycle Grid, the Ring Game (Hyperball), tank matches, and the Voice of
 the Grid announcing it all.
 

@@ -81,6 +81,11 @@ public class ModTextureProvider implements DataProvider {
         futures.add(CompletableFuture.runAsync(() -> writeTexture(writer, GearArt.canopy(), "entity/equipment/wings", "chute")));
         futures.add(CompletableFuture.runAsync(() -> writeTexture(writer, GearArt.fadingBarrier(), "block", "fading_barrier")));
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, GearArt.recognizer(), "recognizer")));
+        futures.add(CompletableFuture.runAsync(() -> writeTexture(writer, GearArt.arenaTile(false), "block", "arena_tile")));
+        futures.add(CompletableFuture.runAsync(() -> writeTexture(writer, GearArt.arenaTile(true), "block", "arena_tile_warning")));
+        futures.add(CompletableFuture.runAsync(() -> writeTexture(writer, GearArt.arenaConsole(), "block", "arena_console")));
+        futures.add(CompletableFuture.runAsync(() -> writeTexture(writer, GearArt.trophy(), "block", "trophy")));
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.CHAMPION), "champion64")));
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paintDerezCube(), "derez_cube")));
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.MECHANIC), "job/mechanic")));
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.PORTAL_KEEPER), "job/portal_keeper")));

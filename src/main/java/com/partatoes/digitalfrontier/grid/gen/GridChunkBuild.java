@@ -4,6 +4,8 @@ import com.partatoes.digitalfrontier.block.ModBlocks;
 import com.partatoes.digitalfrontier.grid.jobs.ProgramJob;
 import com.partatoes.digitalfrontier.grid.layout.ChunkPlan;
 import com.partatoes.digitalfrontier.grid.layout.CoreChamber;
+import com.partatoes.digitalfrontier.grid.layout.ArenaGeometry;
+import com.partatoes.digitalfrontier.grid.layout.ArenaGeometry;
 import com.partatoes.digitalfrontier.grid.layout.GridLayout;
 import com.partatoes.digitalfrontier.grid.layout.GridRandom;
 import com.partatoes.digitalfrontier.grid.layout.MultiChunk;
@@ -168,6 +170,8 @@ final class GridChunkBuild {
             case ARRIVAL_TERMINAL, WAYPOINT -> GridBuildingDef.Kind.TERMINAL;
             case PORTAL -> GridBuildingDef.Kind.PORTAL;
             case STRONGHOLD -> GridBuildingDef.Kind.STRONGHOLD;
+            // The arena is code-built over whatever the chunk would have been (see arenaBlock)
+            case ARENA -> GridBuildingDef.Kind.PLAZA;
         };
     }
 
@@ -395,7 +399,8 @@ final class GridChunkBuild {
     }
 
     BlockState blockAt(int localX, int y, int localZ) {
-        if (isPortal()) {
+        // The Portal and the arena never decay or take the regime's color
+        if (isPortal() || layout.arena().touches(chunkX, chunkZ) && layout.arena().inside(chunkX * 16 + localX, chunkZ * 16 + localZ)) {
             return uncorruptedBlockAt(localX, y, localZ);
         }
         BlockState state;
@@ -471,6 +476,13 @@ final class GridChunkBuild {
     }
 
     private BlockState uncorruptedBlockAt(int localX, int y, int localZ) {
+        // The arena is dug in over anything else
+        if (layout.arena().touches(chunkX, chunkZ)) {
+            ArenaGeometry.Part part = layout.arena().partAt(chunkX * 16 + localX, y, chunkZ * 16 + localZ);
+            if (part != null) {
+                return arenaBlock(part);
+            }
+        }
         // The System Core's chamber and shaft cut through everything, the city's levels included
         if (CoreChamber.touches(chunkX, chunkZ)) {
             BlockState core = coreChamberBlockAt(chunkX * 16 + localX, y, chunkZ * 16 + localZ);
@@ -502,6 +514,19 @@ final class GridChunkBuild {
             }
         }
         return Blocks.AIR.defaultBlockState();
+    }
+
+    // What each part of the arena (see ArenaGeometry) is built from
+    private static BlockState arenaBlock(ArenaGeometry.Part part) {
+        return switch (part) {
+            case AIR -> Blocks.AIR.defaultBlockState();
+            case GROUND, FLOOR -> ModBlocks.GRIDSTONE_BLOCK.defaultBlockState();
+            case LINE, RING, WALL_LIGHT -> ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("full").get(DyeColor.CYAN).defaultBlockState();
+            case TILE -> ModBlocks.ARENA_TILE.defaultBlockState();
+            case PIT_BOTTOM -> ModBlocks.STATIC_BLOCK.defaultBlockState();
+            case STAND, WALL -> ModBlocks.GRIDSTONE_BRICKS_BLOCK.defaultBlockState();
+            case CONSOLE -> ModBlocks.ARENA_CONSOLE.defaultBlockState();
+        };
     }
 
     /**
