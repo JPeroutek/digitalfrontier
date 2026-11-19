@@ -62,7 +62,7 @@ public class DerezCubeGroup extends ParticleGroup<DerezCubeParticle> {
             }
             cubes.add(new Cube((float) (particle.x(partialTick) - eye.x), (float) (particle.y(partialTick) + particle.size / 2 - eye.y),
                     (float) (particle.z(partialTick) - eye.z), particle.size, particle.rotation(partialTick),
-                    ARGB.color(alpha, particle.color)));
+                    ARGB.color(alpha, particle.color(partialTick))));
         }
         return new State(cubes);
     }

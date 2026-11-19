@@ -10,4 +10,8 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface RenderTypeAccessor {
     @Accessor("state")
     RenderSetup digitalfrontier$state();
+
+    /** Its name, which tells glint passes apart ("armor_entity_glint", "item_cutout_glint" and so on). */
+    @Accessor("name")
+    String digitalfrontier$name();
 }

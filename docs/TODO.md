@@ -8,8 +8,6 @@ Ideas and planned work for the grid world generator that aren't scheduled into a
 Four styles are in (`/derez style`), voxel statues by default with the others kept as options; see `Derez` and
 `DerezStatue`.
 
-- **Glint.** Enchanted armour and items lose their shimmer in statues; the glint is a separate scrolling overlay.
-
 ## Light
 
 - **Moving light.** The Bool, light cycles, derez cubes and the System Core glow but don't light the world around

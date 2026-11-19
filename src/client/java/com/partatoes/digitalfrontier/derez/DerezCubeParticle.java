@@ -3,6 +3,7 @@ package com.partatoes.digitalfrontier.derez;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleRenderType;
+import net.minecraft.util.ARGB;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
@@ -12,8 +13,13 @@ import org.joml.Vector3f;
  * the model was, until it breaks off and flies. Drawn as real geometry by {@link DerezCubeGroup}.
  */
 public class DerezCubeParticle extends Particle {
+    // Vanilla's glint, a light violet
+    private static final int GLINT = 0xFF9F6BFF;
+
     final float size;
-    final int color;
+    private final int color;
+    private final float glintPhase;
+    private boolean glinting;
     private final Quaternionf base;
     private final Vector3f spinAxis;
     private final float spinSpeed;
@@ -37,6 +43,7 @@ public class DerezCubeParticle extends Particle {
         super(level, x, y, z);
         this.size = size;
         this.color = color;
+        this.glintPhase = random.nextFloat() * (float) Math.PI * 2;
         this.base = base;
         this.hold = hold;
         this.releaseX = xd;
@@ -82,6 +89,21 @@ public class DerezCubeParticle extends Particle {
     @Override
     public ParticleRenderType getGroup() {
         return DerezCubeGroup.TYPE;
+    }
+
+    /** Makes it shimmer like enchantment glint, if it came from something enchanted. */
+    public DerezCubeParticle glinting(boolean glinting) {
+        this.glinting = glinting;
+        return this;
+    }
+
+    /** Its color at a moment between ticks: an enchanted cube washes in and out of the glint's purple. */
+    int color(float partialTick) {
+        if (!glinting) {
+            return color;
+        }
+        float wash = 0.25f + 0.25f * (float) Math.sin((age + partialTick) * 0.35f + glintPhase);
+        return ARGB.srgbLerp(wash, 0xFF000000 | color, GLINT) & 0xFFFFFF;
     }
 
     /** Whether it's still standing as part of a statue. */

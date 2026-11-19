@@ -19,6 +19,7 @@ import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.item.ItemStackRenderState;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.UvMapping;
 import net.minecraft.client.resources.palette.PaletteMapping;
@@ -66,13 +67,18 @@ public final class DerezStatue {
     }
 
     /** A face in world space, with where it lies on its texture (0 to 1) and how to color it. */
-    private record Face(Vector3f[] corners, float[][] uvs, @Nullable NativeImage image, int tint, @Nullable Vector3f center,
-                        Quaternionf rotation) {
+    private record Face(Vector3f[] corners, float[][] uvs, @Nullable NativeImage image, int tint, Glint glint,
+                        @Nullable Vector3f center, Quaternionf rotation) {
         float area() {
             Vector3f across = new Vector3f(corners[1]).sub(corners[0]);
             Vector3f down = new Vector3f(corners[3]).sub(corners[0]);
             return across.cross(down).length();
         }
+    }
+
+    /** Whether a face shimmers with enchantment glint, and whether it's only a glint pass over faces already drawn. */
+    private enum Glint {
+        NONE, ALSO, ONLY
     }
 
     /** Collects a statue's faces, then raises it. */
@@ -92,20 +98,21 @@ public final class DerezStatue {
 
         /** Adds a model's showing parts, posed as they are now, drawn with this texture and tint (-1 for none). */
         public void addModel(ModelPart root, PoseStack pose, @Nullable Identifier texture, int tint) {
-            addPart(root, pose, texture == null ? null : image(texture), tint);
+            addPart(root, pose, texture == null ? null : image(texture), tint, Glint.NONE);
         }
 
         // A model drawn through a texture mapping: a paletted one (an armour trim) is recolored here, as it only exists on
         // the GPU; anything else is read from the render type's texture
         private void addModel(ModelPart root, PoseStack pose, RenderType type, @Nullable UvMapping mapping, int tint) {
-            if (mapping instanceof PalettedTextureManager.Handle handle) {
-                addPart(root, pose, paletted(handle), tint);
-            } else {
-                addModel(root, pose, texture(type), tint);
-            }
+            Identifier texture = texture(type);
+            Glint glint = !((RenderTypeAccessor) type).digitalfrontier$name().contains("glint") ? Glint.NONE
+                    : texture == null || texture.getPath().contains("glint") ? Glint.ONLY : Glint.ALSO;
+            NativeImage image = mapping instanceof PalettedTextureManager.Handle handle ? paletted(handle)
+                    : texture == null ? null : image(texture);
+            addPart(root, pose, image, tint, glint);
         }
 
-        private void addPart(ModelPart part, PoseStack pose, @Nullable NativeImage image, int tint) {
+        private void addPart(ModelPart part, PoseStack pose, @Nullable NativeImage image, int tint, Glint glint) {
             if (!part.visible) {
                 return;
             }
@@ -128,18 +135,18 @@ public final class DerezStatue {
                             corners[i] = world(matrix, vertices[i].worldX(), vertices[i].worldY(), vertices[i].worldZ());
                             uvs[i] = new float[]{vertices[i].u(), vertices[i].v()};
                         }
-                        faces.add(new Face(corners, uvs, image, tint, center, rotation));
+                        faces.add(new Face(corners, uvs, image, tint, glint, center, rotation));
                     }
                 }
             }
             for (ModelPart child : access.digitalfrontier$children().values()) {
-                addPart(child, pose, image, tint);
+                addPart(child, pose, image, tint, glint);
             }
             pose.popPose();
         }
 
         /** Adds an item's quads, as placed by this pose, colored from their sprites and tinted by layer. */
-        public void addQuads(List<BakedQuad> quads, PoseStack pose, int[] tints) {
+        public void addQuads(List<BakedQuad> quads, PoseStack pose, int[] tints, boolean foil) {
             Matrix4f matrix = pose.last().pose();
             Quaternionf rotation = matrix.getNormalizedRotation(new Quaternionf());
             for (BakedQuad quad : quads) {
@@ -159,7 +166,7 @@ public final class DerezStatue {
                             (UVPair.unpackU(packed) - sprite.getU0()) / (sprite.getU1() - sprite.getU0()),
                             (UVPair.unpackV(packed) - sprite.getV0()) / (sprite.getV1() - sprite.getV0())};
                 }
-                faces.add(new Face(corners, uvs, image, tint, null, rotation));
+                faces.add(new Face(corners, uvs, image, tint, foil ? Glint.ALSO : Glint.NONE, null, rotation));
             }
         }
 
@@ -192,7 +199,8 @@ public final class DerezStatue {
                         return null;
                     }
                     case "submitItem" -> {
-                        addQuads(((ItemQuads) args[6]).all(), (PoseStack) args[0], (int[]) args[5]);
+                        addQuads(((ItemQuads) args[6]).all(), (PoseStack) args[0], (int[]) args[5],
+                                args[7] != ItemStackRenderState.FoilType.NONE);
                         return null;
                     }
                     default -> {
@@ -260,15 +268,23 @@ public final class DerezStatue {
                         float b = (row + 0.5f) / rows;
                         bilerp(c, a, b, spot);
                         spot.add(inward);
+                        long key = key(spot, cube);
+                        Voxel earlier = voxels.get(key);
+                        if (face.glint() == Glint.ONLY) {
+                            // A glint pass only makes what's already there shimmer
+                            if (earlier != null) {
+                                voxels.put(key, new Voxel(earlier.spot(), earlier.color(), earlier.rotation(), true));
+                            }
+                            continue;
+                        }
                         int color = color(face, a, b, random);
                         if (color < 0) {
                             continue;
                         }
-                        long key = key(spot, cube);
-                        Voxel earlier = voxels.get(key);
+                        boolean glint = face.glint() == Glint.ALSO;
                         voxels.put(key, earlier == null
-                                ? new Voxel(new Vector3f(spot), color, face.rotation())
-                                : new Voxel(earlier.spot(), color, earlier.rotation()));
+                                ? new Voxel(new Vector3f(spot), color, face.rotation(), glint)
+                                : new Voxel(earlier.spot(), color, earlier.rotation(), glint));
                     }
                 }
             }
@@ -283,12 +299,12 @@ public final class DerezStatue {
                         0.04 + random.nextDouble() * 0.16,
                         outZ / length * fling + (random.nextDouble() - 0.5) * 0.04,
                         cube * 0.96f, voxel.color(), new Quaternionf(voxel.rotation()),
-                        Derez.releaseDelay((at.y - bottom) / height) + random.nextInt(3)));
+                        Derez.releaseDelay((at.y - bottom) / height) + random.nextInt(3)).glinting(voxel.glint()));
             }
         }
 
         /** One of a statue's cubes before it's raised. */
-        private record Voxel(Vector3f spot, int color, Quaternionf rotation) {
+        private record Voxel(Vector3f spot, int color, Quaternionf rotation, boolean glint) {
         }
 
         // The texture's color at a spot on a face, tinted, or -1 where the texture is see-through (nothing to build)
