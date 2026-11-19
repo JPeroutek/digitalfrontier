@@ -1,5 +1,6 @@
 package com.partatoes.digitalfrontier.entity.custom;
 
+import com.partatoes.digitalfrontier.effect.Overclock;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
@@ -105,7 +106,8 @@ public class CorruptedProgramEntity extends PathfinderMob {
     @Override
     public boolean hurtServer(ServerLevel world, DamageSource source, float amount) {
         boolean damaged = super.hurtServer(world, source, amount);
-        if (damaged && source.getEntity() instanceof Player player && !player.isCreative()) {
+        // Overclocked players read as one of them: corrupted programs don't turn on them
+        if (damaged && source.getEntity() instanceof Player player && !player.isCreative() && !Overclock.marked(player)) {
             if (provokable) {
                 setTarget(player);
                 angerTicks = ANGER_TICKS;
@@ -313,7 +315,8 @@ public class CorruptedProgramEntity extends PathfinderMob {
                 return false;
             }
             subject = level().getNearestPlayer(CorruptedProgramEntity.this, 20);
-            return subject != null && !subject.isSpectator() && subject.distanceToSqr(CorruptedProgramEntity.this) > 16;
+            return subject != null && !subject.isSpectator() && !Overclock.marked(subject)
+                    && subject.distanceToSqr(CorruptedProgramEntity.this) > 16;
         }
 
         @Override

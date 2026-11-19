@@ -1,5 +1,6 @@
 package com.partatoes.digitalfrontier.grid;
 
+import com.partatoes.digitalfrontier.effect.Overclock;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.grid.gen.GridChunkGenerator;
 import com.partatoes.digitalfrontier.grid.regime.RegimeState;

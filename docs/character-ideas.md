@@ -256,6 +256,9 @@ Byte; 250 uses, repaired with Luminessence.
 - **Not yet:** records and dual discs.
 
 ### 3.2 Other gear
+**Built** (except the code vial): the Light Staff, Light Grenade, Force Shield, Chute and Overclock; see
+`docs/features.md`.
+
 - **Light staff:** reach, and a sweeping block. Inspired by the Sentries, Mercury and Ares.
 - **Light grenade:** an area hit that leaves short-lived light barriers.
 - **Chute:** a glider that deploys from a skyroad or Recognizer fall; it could reuse elytra logic.

@@ -34,6 +34,11 @@ public class ModItemGroups {
                         entries.accept(ModItems.MEMORY_PAGING);
                         entries.accept(ModItems.CORE_DUMP);
                         entries.accept(ModItems.DATA_DISC);
+                        entries.accept(ModItems.LIGHT_STAFF);
+                        entries.accept(ModItems.LIGHT_GRENADE);
+                        entries.accept(ModItems.FORCE_SHIELD);
+                        entries.accept(ModItems.CHUTE);
+                        entries.accept(ModItems.OVERCLOCK);
                         entries.accept(ModBlocks.GRID_PORTAL);
 
                         entries.accept(ModBlocks.PIXEL_BLOCK);

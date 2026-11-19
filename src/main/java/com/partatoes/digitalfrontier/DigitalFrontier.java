@@ -1,5 +1,7 @@
 package com.partatoes.digitalfrontier;
 
+import com.partatoes.digitalfrontier.effect.Overclock;
+import com.partatoes.digitalfrontier.item.custom.Chute;
 import com.partatoes.digitalfrontier.block.ModBlocks;
 import com.partatoes.digitalfrontier.block.entity.ModBlockEntities;
 import com.partatoes.digitalfrontier.compat.ModCompat;
@@ -73,6 +75,8 @@ public class DigitalFrontier implements ModInitializer {
 		GridSpawner.register();
 		Regime.register();
 		CoreManager.register();
+		Overclock.register();
+		Chute.register();
 		ModCompat.register();
 
 		// The films' names and the project's character skins, off unless a player or server owner turns it on.

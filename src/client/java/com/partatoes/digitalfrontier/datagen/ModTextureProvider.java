@@ -70,6 +70,13 @@ public class ModTextureProvider implements DataProvider {
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.RECRUITER), "recruiter64")));
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.FRAYING), "program_fraying")));
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paintDerezMask(), "derez_mask")));
+        futures.add(CompletableFuture.runAsync(() -> writeTexture(writer, GearArt.staff(), "item", "light_staff")));
+        futures.add(CompletableFuture.runAsync(() -> writeTexture(writer, GearArt.grenade(), "item", "light_grenade")));
+        futures.add(CompletableFuture.runAsync(() -> writeTexture(writer, GearArt.shield(), "item", "force_shield")));
+        futures.add(CompletableFuture.runAsync(() -> writeTexture(writer, GearArt.chute(), "item", "chute")));
+        futures.add(CompletableFuture.runAsync(() -> writeTexture(writer, GearArt.overclock(), "item", "overclock")));
+        futures.add(CompletableFuture.runAsync(() -> writeTexture(writer, GearArt.canopy(), "entity/equipment/wings", "chute")));
+        futures.add(CompletableFuture.runAsync(() -> writeTexture(writer, GearArt.fadingBarrier(), "block", "fading_barrier")));
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paintDerezCube(), "derez_cube")));
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.MECHANIC), "job/mechanic")));
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.PORTAL_KEEPER), "job/portal_keeper")));
@@ -168,6 +175,11 @@ public class ModTextureProvider implements DataProvider {
 
     // Ordinary programs' skins, picked per program; each has a corrupted counterpart
     private static final ProgramSkins.Look[] PROGRAM_SKINS = {ProgramSkins.CYAN, ProgramSkins.WHITE, ProgramSkins.BLUE};
+
+    private void writeTexture(CachedOutput writer, BufferedImage image, String folder, String name) {
+        PackOutput.PathProvider resolver = dataOutput.createPathProvider(Target.RESOURCE_PACK, "textures/" + folder);
+        writeImage(writer, image, resolver.file(Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, name), "png"));
+    }
 
     private void writeEntity(CachedOutput writer, BufferedImage image, String name) {
         PackOutput.PathProvider resolver = dataOutput.createPathProvider(Target.RESOURCE_PACK, "textures/entity");

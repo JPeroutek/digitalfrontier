@@ -283,6 +283,21 @@ public class ModBlocks {
                     .setId(ResourceKey.create(Registries.BLOCK, GRID_PORTAL_ID))));
 
 
+    // The short-lived light walls a Light Grenade leaves; it has no item
+    public static final Identifier FADING_BARRIER_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "fading_barrier");
+    public static final Block FADING_BARRIER = Registry.register(BuiltInRegistries.BLOCK, FADING_BARRIER_ID,
+            new FadingBarrierBlock(BlockBehaviour.Properties
+                    .of()
+                    .strength(-1f, 3600000f)
+                    .noOcclusion()
+                    .noLootTable()
+                    .lightLevel(state -> 7)
+                    .emissiveRendering(state -> true)
+                    .isViewBlocking((state, world, pos, box) -> false)
+                    .isSuffocating(Blocks::never)
+                    .pushReaction(PushReaction.IMMOVEABLE)
+                    .setId(ResourceKey.create(Registries.BLOCK, FADING_BARRIER_ID))));
+
     // The light glowing entities cast as they move; placed by them only, so it has no item
     public static final Identifier MOVING_LIGHT_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "moving_light");
     public static final Block MOVING_LIGHT = Registry.register(BuiltInRegistries.BLOCK, MOVING_LIGHT_ID,

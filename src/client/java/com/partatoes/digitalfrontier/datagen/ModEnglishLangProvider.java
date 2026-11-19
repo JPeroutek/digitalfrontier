@@ -56,6 +56,14 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add(ModItems.CORE_DUMP, "Core Dump");
         translationBuilder.add(ModItems.DATA_DISC, "Data Disc");
         translationBuilder.add(ModEntities.DATA_DISC, "Data Disc");
+        translationBuilder.add(ModItems.LIGHT_STAFF, "Light Staff");
+        translationBuilder.add(ModItems.LIGHT_GRENADE, "Light Grenade");
+        translationBuilder.add(ModEntities.LIGHT_GRENADE, "Light Grenade");
+        translationBuilder.add(ModItems.FORCE_SHIELD, "Force Shield");
+        translationBuilder.add(ModItems.CHUTE, "Chute");
+        translationBuilder.add(ModItems.OVERCLOCK, "Overclock");
+        translationBuilder.add("effect.digitalfrontier.overclocked", "Overclocked");
+        translationBuilder.add(ModBlocks.FADING_BARRIER, "Fading Barrier");
 
         // Corruption
         translationBuilder.add(ModBlocks.STATIC_BLOCK, "Static");

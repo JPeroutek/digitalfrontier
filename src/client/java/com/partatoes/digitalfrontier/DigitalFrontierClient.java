@@ -61,6 +61,7 @@ public class DigitalFrontierClient implements ClientModInitializer {
 		ModelLayerRegistry.registerModelLayer(ModModelLayers.PROGRAM, ProgramModel::getTexturedModelData);
 		EntityRendererRegistry.register(ModEntities.BOOL, BoolRenderer::new);
 		EntityRendererRegistry.register(ModEntities.DATA_DISC, ThrownItemRenderer::new);
+		EntityRendererRegistry.register(ModEntities.LIGHT_GRENADE, ThrownItemRenderer::new);
 		ModelLayerRegistry.registerModelLayer(ModModelLayers.BOOL, BoolModel::getTexturedModelData);
 		EntityRendererRegistry.register(ModEntities.SYSTEM_CORE, SystemCoreRenderer::new);
 		ModelLayerRegistry.registerModelLayer(ModModelLayers.SYSTEM_CORE, SystemCoreModel::getTexturedModelData);

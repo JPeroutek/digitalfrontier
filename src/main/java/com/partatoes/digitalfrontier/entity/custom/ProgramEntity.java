@@ -1,5 +1,6 @@
 package com.partatoes.digitalfrontier.entity.custom;
 
+import com.partatoes.digitalfrontier.effect.Overclock;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.entity.ModEntities;
 import com.partatoes.digitalfrontier.grid.arrival.GridArrival;
@@ -148,6 +149,9 @@ public class ProgramEntity extends PathfinderMob implements Merchant {
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, EnforcerEntity.class, true,
                 (target, world) -> stance() == Sentiment.Stance.RESISTANCE
                         && (target instanceof Mob enforcer && (enforcer.getTarget() instanceof Player || enforcer.getTarget() instanceof ProgramEntity))));
+        // An overclocked player reads as corrupt, and ordinary programs defend themselves from it
+        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Player.class, true,
+                (target, world) -> job() == null && Overclock.marked(target)));
     }
 
     public static AttributeSupplier.Builder createProgramAttributes() {

@@ -160,6 +160,48 @@ public class ModRecipeProvider extends FabricRecipeProvider {
                         .unlockedBy(getHasName(ModItems.LUMINESSENCE), has(ModItems.LUMINESSENCE))
                         .save(output);
 
+                // Gear: Luminessence and bits worked into iron and string
+                shaped(RecipeCategory.COMBAT, ModItems.LIGHT_STAFF, 1)
+                        .pattern("  L")
+                        .pattern(" I ")
+                        .pattern("B  ")
+                        .define('L', ModItems.LUMINESSENCE)
+                        .define('I', Items.IRON_INGOT)
+                        .define('B', ModItems.BYTE)
+                        .unlockedBy(getHasName(ModItems.BYTE), has(ModItems.BYTE))
+                        .save(output);
+                shapeless(RecipeCategory.COMBAT, ModItems.LIGHT_GRENADE, 2)
+                        .requires(ModItems.LUMINESSENCE)
+                        .requires(ModItems.BINARY_1)
+                        .requires(Items.GUNPOWDER)
+                        .unlockedBy(getHasName(ModItems.LUMINESSENCE), has(ModItems.LUMINESSENCE))
+                        .save(output);
+                shaped(RecipeCategory.COMBAT, ModItems.FORCE_SHIELD, 1)
+                        .pattern("LIL")
+                        .pattern("IBI")
+                        .pattern(" I ")
+                        .define('L', ModItems.LUMINESSENCE)
+                        .define('I', Items.IRON_INGOT)
+                        .define('B', ModItems.BYTE)
+                        .unlockedBy(getHasName(ModItems.BYTE), has(ModItems.BYTE))
+                        .save(output);
+                shaped(RecipeCategory.TRANSPORTATION, ModItems.CHUTE, 1)
+                        .pattern("SLS")
+                        .pattern("SBS")
+                        .pattern("S S")
+                        .define('S', Items.STRING)
+                        .define('L', ModItems.LUMINESSENCE)
+                        .define('B', ModItems.BYTE)
+                        .unlockedBy(getHasName(ModItems.BYTE), has(ModItems.BYTE))
+                        .save(output);
+                shapeless(RecipeCategory.BREWING, ModItems.OVERCLOCK, 1)
+                        .requires(Items.GLASS_BOTTLE)
+                        .requires(ModItems.LUMINESSENCE, 2)
+                        .requires(ModItems.BYTE)
+                        .requires(Items.BLAZE_POWDER)
+                        .unlockedBy(getHasName(ModItems.BYTE), has(ModItems.BYTE))
+                        .save(output);
+
                 // Memory Paging that keeps the inventory: a step further into the late game
                 shaped(RecipeCategory.TOOLS, ModItems.CORE_DUMP, 1)
                         .pattern("ENE")

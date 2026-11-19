@@ -80,6 +80,11 @@ patrols leave you alone; at −0.5 and below you're wanted. See [regime.md](regi
 | **Pixel Dust, Pixel, Pixel Lamp** | Building materials; Pixels go into lasers. |
 | **Gridstone** | The grid's stone, in bricks, cracked, slabs, stairs, walls and patterned, glowing variants in every dye color. |
 | **Data Disc** | A thrown weapon: ricochets off up to 3 blocks, hits once per pass, returns to your hand. |
+| **Light Staff** | A weapon with reach (4.5 blocks) that blocks attacks from the front like a light shield. |
+| **Light Grenade** | Thrown; bursts on impact into an area hit and a ring of light walls that fade after five seconds. |
+| **Force Shield** | A shield that also sends projectiles striking its face straight back (discs and grenades too). |
+| **Chute** | Worn on the back; glides like an elytra and opens by itself after a 4-block fall. |
+| **Overclock** | A drink: a minute of strength and speed, paid for in player decay (+0.25 a dose, fading 0.01 a minute). While overclocked or decayed past 0.5 you read as corrupt: programs and patrols attack, corrupted programs leave you be, and you flicker. |
 | **Disinfection Pad** | Cures corrupted programs that step on it. |
 | **Lightcycle Baton** | Deploys a rideable light cycle. |
 | **Boost Block**, **Light Barrier Emitter** | A speed pad; a redstone-powered wall of light. |

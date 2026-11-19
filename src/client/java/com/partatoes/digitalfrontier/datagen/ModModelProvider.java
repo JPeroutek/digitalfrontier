@@ -56,6 +56,7 @@ public class ModModelProvider extends FabricModelProvider {
         blockStateModelGenerator.createTrivialCube(ModBlocks.BOOSTER_BLOCK);
         blockStateModelGenerator.createTrivialCube(ModBlocks.DISINFECTION_PAD);
         blockStateModelGenerator.createTrivialCube(ModBlocks.CORE_SEAL);
+        blockStateModelGenerator.createTrivialCube(ModBlocks.FADING_BARRIER);
 
         gridstonePool.wall(ModBlocks.GRIDSTONE_WALL);
         gridstonePool.stairs(ModBlocks.GRIDSTONE_STAIRS);
@@ -234,6 +235,12 @@ public class ModModelProvider extends FabricModelProvider {
         itemModelGenerator.itemModelOutput.accept(ModItems.DATA_DISC, ItemModelUtils.plainModel(ModelTemplates.FLAT_HANDHELD_ITEM.create(
                 ModItems.DATA_DISC, TextureMapping.layer0(new Material(Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "item/disk_white_small"))),
                 itemModelGenerator.modelOutput)));
+        // Gear, from the placeholder sprites painted in GearArt
+        itemModelGenerator.generateFlatItem(ModItems.LIGHT_STAFF, ModelTemplates.FLAT_HANDHELD_ITEM);
+        itemModelGenerator.generateFlatItem(ModItems.LIGHT_GRENADE, ModelTemplates.FLAT_ITEM);
+        itemModelGenerator.generateFlatItem(ModItems.FORCE_SHIELD, ModelTemplates.FLAT_HANDHELD_ITEM);
+        itemModelGenerator.generateFlatItem(ModItems.CHUTE, ModelTemplates.FLAT_ITEM);
+        itemModelGenerator.generateFlatItem(ModItems.OVERCLOCK, ModelTemplates.FLAT_ITEM);
 
     }
 }

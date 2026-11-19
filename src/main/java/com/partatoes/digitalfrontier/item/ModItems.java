@@ -6,6 +6,23 @@ import com.partatoes.digitalfrontier.item.custom.DimensionTeleporterItem;
 import com.partatoes.digitalfrontier.item.custom.EscapeKeyItem;
 import com.partatoes.digitalfrontier.item.custom.LightCycleBaton;
 import com.partatoes.digitalfrontier.item.custom.LuminanceOreDetector;
+import com.partatoes.digitalfrontier.item.custom.LightGrenadeItem;
+import com.partatoes.digitalfrontier.effect.Overclock;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Unit;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.ToolMaterial;
+import net.minecraft.world.item.component.AttackRange;
+import net.minecraft.world.item.component.BlocksAttacks;
+import net.minecraft.world.item.component.Consumables;
+import net.minecraft.world.item.consume_effects.ApplyStatusEffectsConsumeEffect;
+import net.minecraft.world.item.equipment.EquipmentAsset;
+import net.minecraft.world.item.equipment.EquipmentAssets;
+import net.minecraft.world.item.equipment.Equippable;
+import java.util.List;
+import java.util.Optional;
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTabOutput;
 import net.fabricmc.fabric.api.creativetab.v1.CreativeModeTabEvents;
 import net.minecraft.core.Registry;
@@ -80,6 +97,59 @@ public class ModItems {
             .repairable(LUMINESSENCE)
             .rarity(Rarity.UNCOMMON)
             .setId(ResourceKey.create(Registries.ITEM, DATA_DISC_ID))));
+
+    // Gear. The staff hits from further off and blocks from the front; the shield also reflects what hits its face
+    // (see ForceShield); the chute glides and opens by itself in a fall (see Chute)
+    public static final Identifier LIGHT_STAFF_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "light_staff");
+    public static final Item LIGHT_STAFF = registerItem(LIGHT_STAFF_ID, new Item(new Item.Properties()
+            .sword(ToolMaterial.IRON, 3, -3.0f)
+            .component(DataComponents.ATTACK_RANGE, new AttackRange(0, 4.5f, 0, 6.5f, 0.125f, 0.5f))
+            .component(DataComponents.BLOCKS_ATTACKS, blocking(0.6f, 0.4f))
+            .repairable(LUMINESSENCE)
+            .setId(ResourceKey.create(Registries.ITEM, LIGHT_STAFF_ID))));
+    public static final Identifier LIGHT_GRENADE_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "light_grenade");
+    public static final Item LIGHT_GRENADE = registerItem(LIGHT_GRENADE_ID, new LightGrenadeItem(new Item.Properties()
+            .stacksTo(16)
+            .setId(ResourceKey.create(Registries.ITEM, LIGHT_GRENADE_ID))));
+    public static final Identifier FORCE_SHIELD_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "force_shield");
+    public static final Item FORCE_SHIELD = registerItem(FORCE_SHIELD_ID, new Item(new Item.Properties()
+            .durability(400)
+            .component(DataComponents.BLOCKS_ATTACKS, blocking(1.0f, 0.25f))
+            .equippableUnswappable(EquipmentSlot.OFFHAND)
+            .repairable(LUMINESSENCE)
+            .setId(ResourceKey.create(Registries.ITEM, FORCE_SHIELD_ID))));
+    public static final Identifier CHUTE_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "chute");
+    public static final Item CHUTE = registerItem(CHUTE_ID, new Item(new Item.Properties()
+            .durability(120)
+            .component(DataComponents.GLIDER, Unit.INSTANCE)
+            .component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.CHEST)
+                    .setEquipSound(SoundEvents.ARMOR_EQUIP_ELYTRA)
+                    .setAsset(ResourceKey.create(equipmentAssets(), CHUTE_ID))
+                    .setDamageOnHurt(false)
+                    .build())
+            .repairable(LUMINESSENCE)
+            .setId(ResourceKey.create(Registries.ITEM, CHUTE_ID))));
+    // A minute of strength and speed, paid for in decay (see Overclock)
+    public static final Identifier OVERCLOCK_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "overclock");
+    public static final Item OVERCLOCK = registerItem(OVERCLOCK_ID, new Item(new Item.Properties()
+            .stacksTo(16)
+            .component(DataComponents.CONSUMABLE, Consumables.defaultDrink()
+                    .onConsume(new ApplyStatusEffectsConsumeEffect(new MobEffectInstance(Overclock.OVERCLOCKED, 1200)))
+                    .build())
+            .rarity(Rarity.UNCOMMON)
+            .setId(ResourceKey.create(Registries.ITEM, OVERCLOCK_ID))));
+
+    // Blocks from the front like a shield, taking this share of the damage off (all of it, for the shield)
+    private static BlocksAttacks blocking(float share, float delaySeconds) {
+        return new BlocksAttacks(delaySeconds, 1.0f, List.of(new BlocksAttacks.DamageReduction(90, Optional.empty(), 0, share)),
+                new BlocksAttacks.ItemDamageFunction(3, 1, 1), Optional.empty(),
+                Optional.of(SoundEvents.SHIELD_BLOCK), Optional.of(SoundEvents.SHIELD_BREAK));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static ResourceKey<Registry<EquipmentAsset>> equipmentAssets() {
+        return (ResourceKey<Registry<EquipmentAsset>>) EquipmentAssets.ROOT_ID;
+    }
 
     private static Item registerItem(Identifier id, Item item) {
         return Registry.register(BuiltInRegistries.ITEM, id, item);

@@ -1,5 +1,6 @@
 package com.partatoes.digitalfrontier.entity.custom;
 
+import com.partatoes.digitalfrontier.effect.Overclock;
 import com.partatoes.digitalfrontier.grid.regime.Regime;
 import com.partatoes.digitalfrontier.grid.regime.Sentiment;
 import net.minecraft.server.level.ServerLevel;
@@ -45,7 +46,7 @@ public class EnforcerEntity extends Monster {
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this).setAlertOthers());
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true,
-                (target, world) -> Regime.alignment(target) < Regime.rules().alignment().toleratedFrom()));
+                (target, world) -> Regime.alignment(target) < Regime.rules().alignment().toleratedFrom() || Overclock.marked(target)));
         this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, ProgramEntity.class, true,
                 (target, world) -> target instanceof ProgramEntity program && program.sentiment() <= Sentiment.REBEL));
         // And lieutenants that have turned on it

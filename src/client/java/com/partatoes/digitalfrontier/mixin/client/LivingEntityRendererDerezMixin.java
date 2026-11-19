@@ -6,6 +6,7 @@ import com.partatoes.digitalfrontier.derez.DerezClient;
 import com.partatoes.digitalfrontier.derez.DerezStyle;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.partatoes.digitalfrontier.derez.DerezStatue;
+import com.partatoes.digitalfrontier.effect.Overclock;
 import net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.EntityModel;
@@ -48,6 +49,10 @@ public abstract class LivingEntityRendererDerezMixin {
     @Unique
     private static final RenderStateDataKey<Integer> RAISE = RenderStateDataKey.create(() -> "digitalfrontier:derez_raise");
 
+    // Whether the body flickers, as an overclocked player does
+    @Unique
+    private static final RenderStateDataKey<Boolean> GLITCHING = RenderStateDataKey.create(() -> "digitalfrontier:glitching");
+
     @Shadow
     protected EntityModel<?> model;
 
@@ -78,6 +83,23 @@ public abstract class LivingEntityRendererDerezMixin {
             }
         } else {
             state.setData(DEREZ, null);
+        }
+    }
+
+    // An overclocked player (see Overclock) flickers like decayed code
+    @Inject(method = "extractRenderState(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;F)V",
+            at = @At("TAIL"))
+    private void digitalfrontier$extractOverclock(LivingEntity entity, LivingEntityRenderState state, float partialTick, CallbackInfo ci) {
+        state.setData(GLITCHING, Overclock.marked(entity));
+    }
+
+    @Inject(method = "submit(Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;Lnet/minecraft/client/renderer/state/level/CameraRenderState;)V",
+            at = @At(value = "INVOKE",
+                    target = "Lnet/minecraft/client/renderer/entity/LivingEntityRenderer;getRenderType(Lnet/minecraft/client/renderer/entity/state/LivingEntityRenderState;ZZZ)Lnet/minecraft/client/renderer/rendertype/RenderType;"))
+    private void digitalfrontier$glitch(LivingEntityRenderState state, PoseStack pose, SubmitNodeCollector queue, CameraRenderState camera,
+                                        CallbackInfo ci) {
+        if (Boolean.TRUE.equals(state.getData(GLITCHING)) && Math.random() < 0.15) {
+            pose.translate((Math.random() - 0.5) * 0.15, (Math.random() - 0.5) * 0.08, (Math.random() - 0.5) * 0.15);
         }
     }
 
