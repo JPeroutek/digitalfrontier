@@ -1,6 +1,7 @@
 package com.partatoes.digitalfrontier;
 
 import com.partatoes.digitalfrontier.DigitalFrontier;
+import com.partatoes.digitalfrontier.derez.DerezClient;
 import com.partatoes.digitalfrontier.entity.*;
 import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import com.partatoes.digitalfrontier.entity.core.SystemCoreModel;
@@ -66,6 +67,9 @@ public class DigitalFrontierClient implements ClientModInitializer {
 
 		// The Portal's beam, seen from anywhere in the grid
 		PortalBeamRenderer.register();
+
+		// Bodies coming apart into cubes as they die (see Derez), and /derez style to pick how
+		DerezClient.register();
 
 		// An F3 section of what the grid generates where you stand: enable digitalfrontier:grid in the debug options (F3 + F6)
 		GridDebugEntry.register();

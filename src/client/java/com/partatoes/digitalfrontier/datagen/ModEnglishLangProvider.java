@@ -68,7 +68,9 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add(ModBlocks.CORE_SEAL, "Core Seal");
         translationBuilder.add("message.digitalfrontier.core_awake", "The regime's last lieutenant has fallen, and the System Core stirs beneath the city center. The shaft at %s is open.");
         translationBuilder.add("message.digitalfrontier.core_defeated", "The System Core is derezzed. The regime is broken.");
-        translationBuilder.add("commands.digitalfrontier.grid.core.status", "System Core: %s (the shaft down to it is at %s)");
+        translationBuilder.add("commands.digitalfrontier.derez.style", "Bodies derez with style: %s");
+        translationBuilder.add("commands.digitalfrontier.derez.unknown", "No derez style %s (try sweep, instant, freeze or voxel)");
+        translationBuilder.add("commands.digitalfrontier.grid.core.status","System Core: %s (the shaft down to it is at %s)");
         translationBuilder.add("commands.digitalfrontier.grid.core.reset", "System Core reset: dormant, its seal closed, and its fallen lieutenants back");
         translationBuilder.add("entity.digitalfrontier.program.mechanic", "Mechanic");
         translationBuilder.add("entity.digitalfrontier.program.portal_keeper", "Portal Keeper");

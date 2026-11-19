@@ -60,6 +60,13 @@ The grid has two separate but correlated axes (details: [grid-structures.md](gri
 | **Bool** | A small flying companion, tamed with Luminessence. It turns red and buzzes near threats, and shows yellow "yes" when you face the nearest stronghold (or the awake core). |
 | **Mechanic** / **Portal Keeper** | Job programs who trade, at prices that depend on how your alignment compares with their sentiment. |
 
+**Derezzing:** everything that dies in a grid (players and vanilla mobs too), and the mod's own mobs anywhere, comes
+apart into glowing cubes instead of tipping over and vanishing in smoke. Four styles are in for evaluation, picked per
+client with `/derez style <sweep|instant|freeze|voxel>`: a sweep dissolving the body from the head down, an instant
+burst, a white-flashing freeze before the burst, or a voxel statue of the body (its own model and skin, rebuilt in
+cubes) that holds a moment and then flies apart from the head down. Statues of players are in their circuit color,
+since player skins aren't read back.
+
 Your **alignment** with the regime (per player, per grid, −1 to 1) moves with what you do: tribute and killing
 rebels raise it; killing enforcers or recruiters, defeating lieutenants and the core lower it. At 0.4 and above
 patrols leave you alone; at −0.5 and below you're wanted. See [regime.md](regime.md).

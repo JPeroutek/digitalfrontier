@@ -153,6 +153,30 @@ final class ProgramSkins {
         }
     }
 
+    /**
+     * The mask a derezzing body dissolves through (see the derez mixin): 2×2-texel cells, each with its own alpha. A
+     * cell vanishes once the body's fading tint drops below its alpha, so the skin comes apart in random squares.
+     */
+    static BufferedImage paintDerezMask() {
+        BufferedImage image = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
+        java.util.Random random = new java.util.Random(0xDE7E2L);
+        for (int x = 0; x < 64; x += 2) {
+            for (int y = 0; y < 64; y += 2) {
+                int alpha = 13 + random.nextInt(230);
+                fill(image, x, y, 2, 2, alpha << 24 | 0xFFFFFF);
+            }
+        }
+        return image;
+    }
+
+    /** A derez cube's faces: white (tinted by each cube's color), with a brighter rim so the edges read as a cube. */
+    static BufferedImage paintDerezCube() {
+        BufferedImage image = new BufferedImage(8, 8, BufferedImage.TYPE_INT_ARGB);
+        fill(image, 0, 0, 8, 8, 0xFFFFFFFF);
+        fill(image, 1, 1, 6, 6, 0xFFB8B8B8);
+        return image;
+    }
+
     /** The Disinfection Pad's block texture: a dark tile, a bright rim, and a glowing cross. */
     static BufferedImage paintPad() {
         BufferedImage image = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);

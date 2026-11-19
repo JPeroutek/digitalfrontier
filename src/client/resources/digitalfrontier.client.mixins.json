@@ -4,7 +4,9 @@
   "compatibilityLevel": "JAVA_17",
   "client": [
     "ClientPlayerEntityMixin",
-    "LevelRendererMixin"
+    "LevelRendererMixin",
+    "LivingEntityDerezMixin",
+    "LivingEntityRendererDerezMixin"
   ],
   "injectors": {
     "defaultRequire": 1
