@@ -96,6 +96,12 @@ Right-click it to climb into the cockpit and fly it: forward and back to thrust,
 sprint to dive. Enforcers attack whoever flies a stolen Recognizer. It has 120 health and breaks into bits and
 Luminessence when destroyed.
 
+**Conscription:** a wanted player (alignment at or below `wanted_below`) whom a Recognizer's light holds for ten
+seconds over CONTROLLED or SEAT land may be taken (a one-in-ten chance, at most once a day): lifted into a cargo seat,
+held there, and flown to the arena, where they're dropped into a random game against the champion. Losing only costs
+the round. Killing the pilot on the way sets them free. `/grid arena conscript <player>` (game masters) sends a
+Recognizer for a player at once.
+
 `/summon digitalfrontier:recognizer` brings one with its pilot.
 
 ## Recruiting

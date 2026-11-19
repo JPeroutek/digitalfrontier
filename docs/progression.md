@@ -87,6 +87,13 @@ theirs.
 
 Iron-level gear, a Data Disc and a stack of pads is meant to be enough. Bring Memory Paging or a Core Dump.
 
+## The arena, any time
+
+Just outside the city is the **arena** (`/grid locate <grid> arena_0`, or follow the outskirts): use its console to
+play a disc duel, a light cycle match or a ring game against the champion. Losing costs only the round, so it's a safe
+place to earn Luminessence and bits, and each win makes that champion tougher; beat the level-3 title champion for a
+trophy and Memory Paging. Be wary as a rebel: a Recognizer that holds you in its light may carry you there.
+
 ## Afterwards
 
 - **Tune your own grids.** The **Grid Tuning Laser** (a Digitizing Laser with diamonds, netherite, a Pixel and a

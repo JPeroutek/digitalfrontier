@@ -5,6 +5,16 @@ import com.partatoes.digitalfrontier.effect.Overclock;
 import com.partatoes.digitalfrontier.entity.ModEntities;
 import com.partatoes.digitalfrontier.entity.custom.EnforcerEntity;
 import com.partatoes.digitalfrontier.grid.layout.ControlTier;
+import com.partatoes.digitalfrontier.grid.arena.ArenaGame;
+import com.partatoes.digitalfrontier.grid.arena.ArenaManager;
+import com.partatoes.digitalfrontier.grid.arena.ArenaState;
+import com.partatoes.digitalfrontier.grid.arrival.GridArrival;
+import com.partatoes.digitalfrontier.grid.gen.GridChunkGenerator;
+import com.partatoes.digitalfrontier.grid.layout.ArenaGeometry;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import java.util.Optional;
 import com.partatoes.digitalfrontier.grid.regime.Regime;
 import com.partatoes.digitalfrontier.grid.squad.SquadRoles;
 import com.partatoes.digitalfrontier.item.ModItems;
@@ -73,6 +83,14 @@ public class RecognizerEntity extends Entity implements MovingLightBlock.Emitter
     @Nullable
     private Vec3 patrolGoal;
     private int dropCooldown;
+    // How long its light has held the same player, and the player it's carrying to the arena
+    private int spottedFor;
+    @Nullable
+    private UUID conscript;
+    /** How long a wanted player must stay in the light before the regime may take them, and how likely it is then. */
+    public static final int CONSCRIPT_AFTER = 200;
+    public static final float CONSCRIPT_CHANCE = 0.1f;
+    private static final long DAY = 24000;
     // Whoever its light has caught, rechecked every half second
     @Nullable
     private Player caught;
@@ -168,15 +186,23 @@ public class RecognizerEntity extends Entity implements MovingLightBlock.Emitter
             home = position();
         }
         if (tickCount % 10 == 0) {
-            caught = caught(world);
+            Player previous = caught;
+            caught = conscript != null ? null : caught(world);
             entityData.set(SPOTTING, caught != null);
+            spottedFor = caught != null && caught == previous ? spottedFor + 10 : 0;
             if (caught != null && --dropCooldown <= 0) {
                 dropCooldown = DROP_EVERY / 10;
                 dropEnforcers(world, caught);
             }
+            if (caught instanceof ServerPlayer player && spottedFor == CONSCRIPT_AFTER && mayConscript(world, player)) {
+                conscript(player);
+            }
         }
         Vec3 goal;
-        if (caught != null && caught.isAlive()) {
+        ServerPlayer carried = carried(world);
+        if (carried != null) {
+            goal = ferry(world, carried);
+        } else if (caught != null && caught.isAlive()) {
             goal = caught.position().add(0, CRUISE * 0.75, 0);
         } else {
             if (patrolGoal == null || position().distanceTo(patrolGoal) < 3) {
@@ -195,6 +221,76 @@ public class RecognizerEntity extends Entity implements MovingLightBlock.Emitter
         if (velocity.horizontalDistanceSqr() > 1.0e-4) {
             setYRot((float) (Mth.atan2(-velocity.x, velocity.z) * Mth.RAD_TO_DEG));
         }
+    }
+
+    // The regime takes a wanted player held in its light, now and then, over land it holds firmly, once a day at most
+    private boolean mayConscript(ServerLevel world, ServerPlayer player) {
+        if (Regime.alignment(player) > Regime.rules().alignment().wantedBelow() || random.nextFloat() >= CONSCRIPT_CHANCE) {
+            return false;
+        }
+        GridChunkGenerator generator = GridArrival.generator(world);
+        if (generator == null || generator.layout().planAt(player.getBlockX() >> 4, player.getBlockZ() >> 4).controlTier()
+                .compareTo(ControlTier.CONTROLLED) < 0) {
+            return false;
+        }
+        return ArenaState.of(world).lastConscripted(player.getUUID()) != world.getGameTime() / DAY;
+    }
+
+    /**
+     * Lifts a player into a cargo seat to fly them to the arena, where they must play a round against the champion
+     * (see {@link ArenaManager}). They can't get out on the way.
+     */
+    public void conscript(ServerPlayer player) {
+        if (!(level() instanceof ServerLevel world)) {
+            return;
+        }
+        // Its pilot boards first, so the pilot (not the conscript) holds the controls
+        if (!crewed) {
+            crew(world);
+        }
+        conscript = player.getUUID();
+        caught = null;
+        player.startRiding(this, true, false);
+        ArenaState.of(world).recordConscripted(player.getUUID(), world.getGameTime() / DAY);
+        player.sendSystemMessage(Component.translatable("arena.digitalfrontier.conscripted").withStyle(ChatFormatting.RED));
+        world.playSound(null, getX(), getY(), getZ(), SoundEvents.BEACON_ACTIVATE, SoundSource.HOSTILE, 2.0f, 0.5f);
+    }
+
+    // The player being carried to the arena, held in their seat
+    @Nullable
+    private ServerPlayer carried(ServerLevel world) {
+        if (conscript == null) {
+            return null;
+        }
+        if (!(world.getEntity(conscript) instanceof ServerPlayer player) || !player.isAlive() || player.level() != world) {
+            conscript = null;
+            return null;
+        }
+        if (player.getVehicle() != this) {
+            player.startRiding(this, true, false);
+        }
+        return player;
+    }
+
+    // Flies a conscript to the arena, and on arrival drops them into a game (or waits, if one is on)
+    private Vec3 ferry(ServerLevel world, ServerPlayer player) {
+        Optional<ArenaGeometry> found = ArenaManager.arena(world);
+        if (found.isEmpty()) {
+            player.stopRiding();
+            conscript = null;
+            return position();
+        }
+        ArenaGeometry arena = found.get();
+        Vec3 over = new Vec3(arena.centerX() + 0.5, ArenaGeometry.FLOOR + CRUISE, arena.centerZ() + 0.5);
+        if (position().subtract(over).horizontalDistance() < 6 && tickCount % 20 == 0 && ArenaManager.match(world) == null) {
+            conscript = null;
+            player.stopRiding();
+            ArenaGame[] games = ArenaGame.values();
+            ArenaManager.start(player, games[random.nextInt(games.length)], true);
+            // Back to its beat
+            patrolGoal = null;
+        }
+        return over;
     }
 
     // A player in the searchlight, below it, in sight, whom the regime doesn't tolerate

@@ -91,6 +91,9 @@ and the **Announcer** calls it to everyone in the arena.
 | **Light Cycle Match** | You and one to three programs (one per champion level) on arena light cycles that run flat out and lay walls of light; left and right turn a quarter. Hit a wall, leave the floor or step off and you're out. Last rider standing wins. |
 | **Ring Game** | You and the champion, a **Cesta** each (you're given one) and a bouncing ball. Use the Cesta to catch a loose ball within reach and again to throw it where you look; hold it more than three seconds and it throws itself. Score through the far (south) ring, keep it out of your own (north). First to three. |
 
+Players the regime wants can also be **conscripted**: carried here by a Recognizer (see
+[regime.md](regime.md#recognizers)) and dropped into a random game.
+
 `/grid arena status <grid>` shows the champions' levels; `/grid arena reset <grid>` (game masters) puts them back to 1.
 
 ## Items and blocks

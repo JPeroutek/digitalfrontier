@@ -133,8 +133,8 @@ are:
 - **chute**: drops in from skyroads and Recognizers.
 
 ### 1.7 Recognizer patrols and conscription
-**Built** as a piloted vehicle (`docs/regime.md`): patrols, searchlight, chute drops, and stealing one. Conscription
-to the arena comes with the games.
+**Built** as a piloted vehicle (`docs/regime.md`): patrols, searchlight, chute drops, stealing one, and
+conscription to the arena.
 
 **Inspired by:** Recognizers carrying captured programs and Sam to the games.
 
@@ -211,8 +211,8 @@ never decay and are never recruited. **Not yet:** light cycle tuning and re-pack
 overworld.
 
 ### 2.4 The games
-**Built:** the arena, its console and Announcer, champions with levels and titles, and the disc duel
-(`docs/features.md`); the other games follow.
+**Built:** the arena, its console and Announcer, champions with levels and titles, and all three games (disc duel,
+light cycle match, ring game), plus conscription by Recognizer (`docs/features.md`, `docs/regime.md`).
 
 **Inspired by:** the Disc Arena, the Light Cycle Grid, the Ring Game (Hyperball), tank matches, and the Voice of
 the Grid announcing it all.

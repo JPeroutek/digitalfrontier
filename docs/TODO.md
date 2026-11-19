@@ -11,9 +11,13 @@ Ideas and planned work for the grid world generator that aren't scheduled into a
 
 ## Characters
 
-- **The rest of the catalog.** The six "first picks" of `docs/character-ideas.md` are built (the regime and
-  recruiters, Bool, the Data Disc, redemption, decay and the Disinfection Pad, the Mechanic and Portal Keeper, the
-  System Core); the other ideas there aren't started.
+- **The rest of the catalog.** Built from `docs/character-ideas.md`: the six first picks, the gear (3.2, all but the code
+  vial), squads (1.6), the Recognizer (1.7) and the arena with all three games (2.4). Not started: new lieutenant
+  archetypes (1.1), ISOs (2.2), more named city roles (2.3), the rebel faction (2.5), other vehicles (3.3), the
+  overworld ideas (4.x), glitch storms and infection (5.x), and the code vial.
+- **Squad tunables.** Squad sizes and role odds are fixed in `SquadRoles`; they could be optional `regime.json` fields.
+- **Arena prizes as data.** Arena rewards are coded in `ArenaManager`; a loot table per game would let packs change them.
+- **A road to the arena.** The arena sits off the highways, just outside the city, with no road of its own.
 
 ## Tuned grids
 

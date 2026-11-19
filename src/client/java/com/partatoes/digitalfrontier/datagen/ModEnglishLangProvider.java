@@ -68,6 +68,8 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add(ModItems.RING_BALL, "Ring Ball");
         translationBuilder.add(ModEntities.RING_BALL, "Ring Ball");
         translationBuilder.add("arena.digitalfrontier.goal", "Goal to %s! %s to %s.");
+        translationBuilder.add("arena.digitalfrontier.conscripted", "The Recognizer takes you: the regime has a match for you in the arena");
+        translationBuilder.add("commands.digitalfrontier.grid.arena.conscripted", "A Recognizer is carrying %s to the arena");
         translationBuilder.add("arena.digitalfrontier.derezzed", "%s derezzes!");
         translationBuilder.add("arena.digitalfrontier.disc_duel", "Disc Duel");
         translationBuilder.add("arena.digitalfrontier.light_cycle", "Light Cycle Match");

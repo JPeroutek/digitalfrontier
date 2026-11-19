@@ -8,6 +8,9 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.partatoes.digitalfrontier.grid.arrival.GridArrival;
 import com.partatoes.digitalfrontier.grid.exit.PortalState;
 import com.partatoes.digitalfrontier.grid.arena.ArenaGame;
+import com.partatoes.digitalfrontier.entity.ModEntities;
+import com.partatoes.digitalfrontier.entity.vehicle.RecognizerEntity;
+import net.minecraft.world.entity.EntitySpawnReason;
 import com.partatoes.digitalfrontier.grid.arena.ArenaManager;
 import com.partatoes.digitalfrontier.grid.arena.ArenaState;
 import com.partatoes.digitalfrontier.grid.arena.Match;
@@ -129,7 +132,10 @@ public final class GridCommands {
                                 .then(gridArgument().executes(GridCommands::arenaStatus)))
                         .then(literal("reset")
                                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
-                                .then(gridArgument().executes(GridCommands::arenaReset))))
+                                .then(gridArgument().executes(GridCommands::arenaReset)))
+                        .then(literal("conscript")
+                                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                                .then(argument("player", EntityArgument.player()).executes(GridCommands::arenaConscript))))
                 .then(literal("portal")
                         .then(literal("status")
                                 .then(gridArgument().executes(GridCommands::portalStatus)))
@@ -208,6 +214,24 @@ public final class GridCommands {
                     Component.translatable(match.game().translationKey())), false);
         }
         return state.titles();
+    }
+
+    // A Recognizer comes for the player and carries them to the arena, as if its searchlight had taken them
+    private static int arenaConscript(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        ServerPlayer player = EntityArgument.getPlayer(context, "player");
+        if (ArenaManager.arena(player.level()).isEmpty()) {
+            context.getSource().sendFailure(Component.translatable("arena.digitalfrontier.none"));
+            return 0;
+        }
+        RecognizerEntity recognizer = ModEntities.RECOGNIZER.create(player.level(), EntitySpawnReason.COMMAND);
+        if (recognizer == null) {
+            return 0;
+        }
+        recognizer.snapTo(player.getX(), player.getY() + 4, player.getZ(), player.getYRot(), 0);
+        player.level().addFreshEntity(recognizer);
+        recognizer.conscript(player);
+        context.getSource().sendSuccess(() -> Component.translatable("commands.digitalfrontier.grid.arena.conscripted", player.getDisplayName()), true);
+        return 1;
     }
 
     private static int arenaReset(CommandContext<CommandSourceStack> context) {
