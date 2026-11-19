@@ -3,6 +3,10 @@
   "package": "com.partatoes.digitalfrontier.mixin.client",
   "compatibilityLevel": "JAVA_17",
   "client": [
+    "ModelPartAccessor",
+    "RenderSetupAccessor",
+    "RenderTypeAccessor",
+    "TextureBindingAccessor",
     "ClientPlayerEntityMixin",
     "LevelRendererMixin",
     "LivingEntityDerezMixin",

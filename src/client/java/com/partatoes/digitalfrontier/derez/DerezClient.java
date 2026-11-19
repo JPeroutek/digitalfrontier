@@ -15,6 +15,7 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.particle.v1.ParticleGroupRegistry;
 import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackType;
@@ -29,7 +30,13 @@ import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.wither.WitherBoss;
 import net.minecraft.world.phys.AABB;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Properties;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Locale;
@@ -47,12 +54,15 @@ public final class DerezClient {
     // Bodies whose statue has been raised, by entity id, with the game time it was: one statue per death
     private static final Map<Integer, Long> RAISED = new HashMap<>();
 
-    private static DerezStyle style = DerezStyle.SWEEP;
+    private static final String STYLE_KEY = "derez_style";
+
+    private static DerezStyle style = DerezStyle.VOXEL;
 
     private DerezClient() {
     }
 
     public static void register() {
+        loadStyle();
         ParticleGroupRegistry.register(DerezCubeGroup.TYPE, DerezCubeGroup::new);
         ClientTickEvents.END_LEVEL_TICK.register(DerezClient::tick);
         ResourceLoader.get(PackType.CLIENT_RESOURCES).registerReloadListener(
@@ -75,6 +85,7 @@ public final class DerezClient {
                                             for (DerezStyle value : DerezStyle.values()) {
                                                 if (name(value).equals(wanted)) {
                                                     style = value;
+                                                    saveStyle();
                                                     command.getSource().sendFeedback(Component.translatable(
                                                             "commands.digitalfrontier.derez.style", name(value)));
                                                     return 1;
@@ -89,7 +100,50 @@ public final class DerezClient {
         return value.name().toLowerCase(Locale.ROOT);
     }
 
-    /** The style bodies derez in, chosen with {@code /derez style}. */
+    // The chosen style is kept in the client's config folder, so it lasts between games
+    private static Path configFile() {
+        return FabricLoader.getInstance().getConfigDir().resolve(DigitalFrontier.MOD_ID + "-client.properties");
+    }
+
+    private static void loadStyle() {
+        Path file = configFile();
+        if (!Files.isRegularFile(file)) {
+            return;
+        }
+        Properties properties = new Properties();
+        try (Reader reader = Files.newBufferedReader(file)) {
+            properties.load(reader);
+            String saved = properties.getProperty(STYLE_KEY);
+            for (DerezStyle value : DerezStyle.values()) {
+                if (name(value).equals(saved)) {
+                    style = value;
+                }
+            }
+        } catch (IOException e) {
+            DigitalFrontier.LOGGER.warn("Couldn't read {}", file, e);
+        }
+    }
+
+    private static void saveStyle() {
+        Path file = configFile();
+        Properties properties = new Properties();
+        try {
+            if (Files.isRegularFile(file)) {
+                try (Reader reader = Files.newBufferedReader(file)) {
+                    properties.load(reader);
+                }
+            }
+            properties.setProperty(STYLE_KEY, name(style));
+            Files.createDirectories(file.getParent());
+            try (Writer writer = Files.newBufferedWriter(file)) {
+                properties.store(writer, "Digital Frontier client settings");
+            }
+        } catch (IOException e) {
+            DigitalFrontier.LOGGER.warn("Couldn't save {}", file, e);
+        }
+    }
+
+    /** The style bodies derez in, chosen with {@code /derez style} and remembered between games. */
     public static DerezStyle style() {
         return style;
     }

@@ -12,6 +12,26 @@ Ideas and planned work for the grid world generator that aren't scheduled into a
 - **The Portal Keeper's lines** say the Portal needs an Escape Key, but the Portal lets anyone out. Either gate the
   Portal on a key or change the lines.
 
+## Derezzing
+
+Four styles are in (`/derez style`), voxel statues by default with the others kept as options; see `Derez` and
+`DerezStatue`.
+
+- **Armour trims in statues.** Trims are drawn from a texture atlas, not a plain texture, so statues skip them (the
+  armour beneath is rebuilt).
+
+## Light
+
+- **Moving light.** The Bool, light cycles, derez cubes and the System Core glow but don't light the world around
+  them. Vanilla has no moving light source; options are placing and clearing invisible light blocks as they move,
+  or a dynamic-lights mod hook.
+
+## Characters
+
+- **The rest of the catalog.** The six "first picks" of `docs/character-ideas.md` are built (the regime and
+  recruiters, Bool, the Data Disc, redemption, decay and the Disinfection Pad, the Mechanic and Portal Keeper, the
+  System Core); the other ideas there aren't started.
+
 ## Tuned grids
 
 - **Idle unloading.** Every tuned grid stays loaded from server start (Fantasy persistent worlds), costing memory

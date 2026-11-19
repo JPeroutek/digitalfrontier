@@ -61,11 +61,11 @@ The grid has two separate but correlated axes (details: [grid-structures.md](gri
 | **Mechanic** / **Portal Keeper** | Job programs who trade, at prices that depend on how your alignment compares with their sentiment. |
 
 **Derezzing:** everything that dies in a grid (players and vanilla mobs too), and the mod's own mobs anywhere, comes
-apart into glowing cubes instead of tipping over and vanishing in smoke. Four styles are in for evaluation, picked per
-client with `/derez style <sweep|instant|freeze|voxel>`: a sweep dissolving the body from the head down, an instant
-burst, a white-flashing freeze before the burst, or a voxel statue of the body (its own model and skin, rebuilt in
-cubes) that holds a moment and then flies apart from the head down. Statues of players are in their circuit color,
-since player skins aren't read back.
+apart into cubes instead of tipping over and vanishing in smoke. By default it becomes a voxel statue of itself (its
+own model and skin, players' skins included, with its armour and held items, rebuilt in cubes) that holds a moment
+and then flies apart from the head down. Three other styles stay available with `/derez style
+<voxel|sweep|instant|freeze>`: a sweep dissolving the body from the head down, an instant burst, or a white-flashing
+freeze before the burst. The choice is per client and kept in `config/digitalfrontier-client.properties`.
 
 Your **alignment** with the regime (per player, per grid, −1 to 1) moves with what you do: tribute and killing
 rebels raise it; killing enforcers or recruiters, defeating lieutenants and the core lower it. At 0.4 and above

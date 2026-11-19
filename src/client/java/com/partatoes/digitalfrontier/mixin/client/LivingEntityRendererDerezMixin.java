@@ -19,7 +19,10 @@ import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.client.renderer.entity.layers.RenderLayer;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import java.util.List;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -47,6 +50,10 @@ public abstract class LivingEntityRendererDerezMixin {
 
     @Shadow
     protected EntityModel<?> model;
+
+    @Shadow
+    @Final
+    protected List<RenderLayer<?, ?>> layers;
 
     @Shadow
     public abstract Identifier getTextureLocation(LivingEntityRenderState state);
@@ -87,8 +94,19 @@ public abstract class LivingEntityRendererDerezMixin {
             return;
         }
         state.setData(RAISE, null);
+        DerezStatue.Builder statue = new DerezStatue.Builder(camera.pos, glow);
         ((EntityModel) model).setupAnim(state);
-        DerezStatue.raise(level, model.root(), pose, camera.pos, getTextureLocation(state), glow, state.x, state.z);
+        statue.addModel(model.root(), pose, getTextureLocation(state), -1);
+        // Its armour, held items and the rest of what its layers draw, handed a queue that adds them to the statue
+        SubmitNodeCollector collector = statue.collector();
+        for (RenderLayer layer : layers) {
+            try {
+                layer.submit(pose, collector, state.lightCoords, state, state.yRot, state.xRot);
+            } catch (RuntimeException e) {
+                DigitalFrontier.LOGGER.debug("Couldn't add {} to a derez statue", layer.getClass().getSimpleName(), e);
+            }
+        }
+        statue.raise(level, state.x, state.z);
     }
 
     @Inject(method = "getRenderType", at = @At("HEAD"), cancellable = true)

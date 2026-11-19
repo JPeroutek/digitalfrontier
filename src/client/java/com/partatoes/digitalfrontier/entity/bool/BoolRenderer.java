@@ -85,7 +85,9 @@ public class BoolRenderer extends EntityRenderer<BoolEntity, BoolRenderState> {
         if (state.raise >= 0 && level != null) {
             // Its statue, from the model as posed this frame
             model.setupAnim(state);
-            DerezStatue.raise(level, model.root(), matrices, cameraState.pos, TEXTURES.get(state.signal), state.raise, state.x, state.z);
+            DerezStatue.Builder statue = new DerezStatue.Builder(cameraState.pos, state.raise);
+            statue.addModel(model.root(), matrices, TEXTURES.get(state.signal), -1);
+            statue.raise(level, state.x, state.z);
             state.raise = -1;
         }
         // The frame (rims) cut out, then the faint panes inside them. The eyes pass blends without writing depth, so
