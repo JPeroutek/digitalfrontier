@@ -259,6 +259,8 @@ public class ModModelProvider extends FabricModelProvider {
         itemModelGenerator.generateFlatItem(ModItems.FORCE_SHIELD, ModelTemplates.FLAT_HANDHELD_ITEM);
         itemModelGenerator.generateFlatItem(ModItems.CHUTE, ModelTemplates.FLAT_ITEM);
         itemModelGenerator.generateFlatItem(ModItems.OVERCLOCK, ModelTemplates.FLAT_ITEM);
+        itemModelGenerator.generateFlatItem(ModItems.CESTA, ModelTemplates.FLAT_HANDHELD_ITEM);
+        itemModelGenerator.generateFlatItem(ModItems.RING_BALL, ModelTemplates.FLAT_ITEM);
 
     }
 }

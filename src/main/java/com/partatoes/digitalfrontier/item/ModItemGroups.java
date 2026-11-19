@@ -39,6 +39,7 @@ public class ModItemGroups {
                         entries.accept(ModItems.FORCE_SHIELD);
                         entries.accept(ModItems.CHUTE);
                         entries.accept(ModItems.OVERCLOCK);
+                        entries.accept(ModItems.CESTA);
                         entries.accept(ModBlocks.GRID_PORTAL);
 
                         entries.accept(ModBlocks.PIXEL_BLOCK);

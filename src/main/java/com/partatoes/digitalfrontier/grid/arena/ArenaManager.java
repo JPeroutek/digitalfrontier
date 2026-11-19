@@ -116,12 +116,8 @@ public final class ArenaManager {
         Match match = switch (game) {
             case DISC_DUEL -> new DiscDuel(world, arena, player, level, conscripted);
             case LIGHT_CYCLE -> new CycleMatch(world, arena, player, level, conscripted);
-            default -> null;
+            case RING_GAME -> new RingGame(world, arena, player, level, conscripted);
         };
-        if (match == null) {
-            player.sendSystemMessage(Component.translatable("arena.digitalfrontier.closed").withStyle(ChatFormatting.RED));
-            return false;
-        }
         MATCHES.put(world.dimension(), match);
         match.start(player);
         announce(world, arena, Component.translatable(conscripted ? "arena.digitalfrontier.conscripted_intro" : "arena.digitalfrontier.intro",

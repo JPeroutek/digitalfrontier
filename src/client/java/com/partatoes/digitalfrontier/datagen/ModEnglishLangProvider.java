@@ -64,6 +64,10 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add(ModBlocks.ARENA_CONSOLE, "Arena Console");
         translationBuilder.add(ModBlocks.TROPHY, "Trophy");
         translationBuilder.add(ModBlocks.TRAIL_WALL, "Trail Wall");
+        translationBuilder.add(ModItems.CESTA, "Cesta");
+        translationBuilder.add(ModItems.RING_BALL, "Ring Ball");
+        translationBuilder.add(ModEntities.RING_BALL, "Ring Ball");
+        translationBuilder.add("arena.digitalfrontier.goal", "Goal to %s! %s to %s.");
         translationBuilder.add("arena.digitalfrontier.derezzed", "%s derezzes!");
         translationBuilder.add("arena.digitalfrontier.disc_duel", "Disc Duel");
         translationBuilder.add("arena.digitalfrontier.light_cycle", "Light Cycle Match");
@@ -74,7 +78,6 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add("arena.digitalfrontier.busy", "A match is under way: wait for it to finish");
         translationBuilder.add("arena.digitalfrontier.none", "There's no arena here");
         translationBuilder.add("arena.digitalfrontier.come_closer", "Step into the arena to play");
-        translationBuilder.add("arena.digitalfrontier.closed", "That game isn't open yet");
         translationBuilder.add("arena.digitalfrontier.unknown_game", "No arena game %s");
         translationBuilder.add("arena.digitalfrontier.intro", "%s takes on the champion at the %s! Champion level %s.");
         translationBuilder.add("arena.digitalfrontier.conscripted_intro", "The regime brings us %s, to face the champion at the %s! Champion level %s.");

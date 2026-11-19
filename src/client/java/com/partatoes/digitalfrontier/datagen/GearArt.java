@@ -162,6 +162,30 @@ final class GearArt {
         return image;
     }
 
+    /** The Cesta: a long curved scoop with a glowing rim. */
+    static BufferedImage cesta() {
+        BufferedImage image = blank(16);
+        for (int i = 2; i < 14; i++) {
+            set(image, i, 15 - i, STEEL);
+        }
+        for (int y = 1; y < 7; y++) {
+            for (int x = 9; x < 15; x++) {
+                boolean rim = x == 9 || x == 14 || y == 1;
+                set(image, x, y, rim ? CYAN : DARK);
+            }
+        }
+        return image;
+    }
+
+    /** The ring game's ball: a bright core in a glowing shell. */
+    static BufferedImage ringBall() {
+        BufferedImage image = blank(16);
+        disc(image, 8, 8, 6, CYAN);
+        disc(image, 8, 8, 4, PALE);
+        disc(image, 8, 8, 2, 0xFFFFFFFF);
+        return image;
+    }
+
     /** The arena console: a panel of glowing keys. */
     static BufferedImage arenaConsole() {
         BufferedImage image = blank(16);

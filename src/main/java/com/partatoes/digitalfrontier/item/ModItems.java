@@ -7,6 +7,7 @@ import com.partatoes.digitalfrontier.item.custom.EscapeKeyItem;
 import com.partatoes.digitalfrontier.item.custom.LightCycleBaton;
 import com.partatoes.digitalfrontier.item.custom.LuminanceOreDetector;
 import com.partatoes.digitalfrontier.item.custom.LightGrenadeItem;
+import com.partatoes.digitalfrontier.item.custom.CestaItem;
 import com.partatoes.digitalfrontier.effect.Overclock;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.sounds.SoundEvents;
@@ -138,6 +139,15 @@ public class ModItems {
                     .build())
             .rarity(Rarity.UNCOMMON)
             .setId(ResourceKey.create(Registries.ITEM, OVERCLOCK_ID))));
+
+    // The ring game (see RingGame): the scoop that catches and throws its ball, and the ball itself
+    public static final Identifier CESTA_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "cesta");
+    public static final Item CESTA = registerItem(CESTA_ID, new CestaItem(new Item.Properties()
+            .stacksTo(1)
+            .setId(ResourceKey.create(Registries.ITEM, CESTA_ID))));
+    public static final Identifier RING_BALL_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "ring_ball");
+    public static final Item RING_BALL = registerItem(RING_BALL_ID, new Item(new Item.Properties()
+            .setId(ResourceKey.create(Registries.ITEM, RING_BALL_ID))));
 
     // Blocks from the front like a shield, taking this share of the damage off (all of it, for the shield)
     private static BlocksAttacks blocking(float share, float delaySeconds) {

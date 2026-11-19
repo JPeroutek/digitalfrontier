@@ -2,6 +2,7 @@ package com.partatoes.digitalfrontier.entity;
 
 import com.partatoes.digitalfrontier.entity.vehicle.RecognizerEntity;
 import com.partatoes.digitalfrontier.entity.projectile.ThrownLightGrenade;
+import com.partatoes.digitalfrontier.entity.projectile.RingBall;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.entity.custom.BoolEntity;
 import com.partatoes.digitalfrontier.entity.custom.CorruptedProgramEntity;
@@ -46,6 +47,9 @@ public class ModEntities {
             EntityType.Builder.of(BoolEntity::new, MobCategory.CREATURE).sized(0.5f, 0.5f).clientTrackingRange(10));
     public static final EntityType<ThrownDataDisc> DATA_DISC = register(DATA_DISC_ID,
             EntityType.Builder.<ThrownDataDisc>of(ThrownDataDisc::new, MobCategory.MISC).sized(0.5f, 0.25f).clientTrackingRange(4).updateInterval(2));
+    public static final Identifier RING_BALL_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "ring_ball");
+    public static final EntityType<RingBall> RING_BALL = register(RING_BALL_ID,
+            EntityType.Builder.<RingBall>of(RingBall::new, MobCategory.MISC).sized(0.4f, 0.4f).clientTrackingRange(8).updateInterval(2));
     public static final Identifier CHAMPION_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "champion");
     public static final EntityType<ChampionEntity> CHAMPION = register(CHAMPION_ID,
             EntityType.Builder.of(ChampionEntity::new, MobCategory.MISC).sized(0.6f, 1.8f).clientTrackingRange(10));

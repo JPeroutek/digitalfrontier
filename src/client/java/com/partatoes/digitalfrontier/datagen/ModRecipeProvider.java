@@ -194,6 +194,15 @@ public class ModRecipeProvider extends FabricRecipeProvider {
                         .define('B', ModItems.BYTE)
                         .unlockedBy(getHasName(ModItems.BYTE), has(ModItems.BYTE))
                         .save(output);
+                shaped(RecipeCategory.COMBAT, ModItems.CESTA, 1)
+                        .pattern("S S")
+                        .pattern("SLS")
+                        .pattern(" I ")
+                        .define('S', Items.STRING)
+                        .define('L', ModItems.LUMINESSENCE)
+                        .define('I', Items.IRON_INGOT)
+                        .unlockedBy(getHasName(ModItems.LUMINESSENCE), has(ModItems.LUMINESSENCE))
+                        .save(output);
                 shapeless(RecipeCategory.BREWING, ModItems.OVERCLOCK, 1)
                         .requires(Items.GLASS_BOTTLE)
                         .requires(ModItems.LUMINESSENCE, 2)

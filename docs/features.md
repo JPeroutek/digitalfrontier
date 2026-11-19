@@ -89,6 +89,7 @@ and the **Announcer** calls it to everyone in the arena.
 |---|---|
 | **Disc Duel** | You and the champion on the tile field over the pit; only Data Discs hurt it. Every five seconds the outer ring of tiles flashes red and falls. Fall in and you lose. |
 | **Light Cycle Match** | You and one to three programs (one per champion level) on arena light cycles that run flat out and lay walls of light; left and right turn a quarter. Hit a wall, leave the floor or step off and you're out. Last rider standing wins. |
+| **Ring Game** | You and the champion, a **Cesta** each (you're given one) and a bouncing ball. Use the Cesta to catch a loose ball within reach and again to throw it where you look; hold it more than three seconds and it throws itself. Score through the far (south) ring, keep it out of your own (north). First to three. |
 
 `/grid arena status <grid>` shows the champions' levels; `/grid arena reset <grid>` (game masters) puts them back to 1.
 
@@ -109,6 +110,7 @@ and the **Announcer** calls it to everyone in the arena.
 | **Disinfection Pad** | Cures corrupted programs that step on it. |
 | **Lightcycle Baton** | Deploys a rideable light cycle. |
 | **Boost Block**, **Light Barrier Emitter** | A speed pad; a redstone-powered wall of light. |
+| **Cesta** | The ring game's scoop: catches and throws the Ring Ball. |
 | **Coal Dust** | Fuel. |
 | **Stronghold Uplink** | Found in strongholds; a redstone signal into it can be wired as a lieutenant's respawn trigger. |
 
