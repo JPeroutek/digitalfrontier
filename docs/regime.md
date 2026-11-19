@@ -65,6 +65,24 @@ What it does:
   is from their own sentiment: a quarter cheaper for a player exactly as aligned as they are, up to a quarter dearer
   for one on the opposite extreme.
 
+## Squads
+
+Enforcers patrol in squads: two in PATROLLED land, two or three in CONTROLLED, three or four at a SEAT. The first of each
+squad is its **leader** (a red chevron and pauldrons, ten more health); the others keep within ten blocks of it.
+**Kill the leader and the rest scatter**: they drop their targets and flee from where the blow came for eight
+seconds, then wander, leaderless.
+
+Each member has a role, likelier to be heavy or ranged the deeper into the regime's land:
+
+| Role | PATROLLED | CONTROLLED | SEAT | What it does |
+|---|---|---|---|---|
+| plain | 70% | 50% | 35% | Fists, as before. |
+| staff | 20% | 25% | 25% | A Light Staff: reach, and it raises its guard when struck. |
+| heavy | 5% | 12% | 20% | 50 health, armour 10, slower and bigger. |
+| grenadier | 5% | 13% | 20% | Keeps 8–14 blocks off and lobs Light Grenades every three seconds; fights hand to hand up close. |
+
+A role can be given by hand: `/summon digitalfrontier:enforcer ~ ~ ~ {Role:"heavy",Leader:1b}`.
+
 ## Recruiting
 
 **Recruiters** are the regime's recruitment agents: unarmed, persistent, and found with patrols on its ground while

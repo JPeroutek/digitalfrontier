@@ -120,6 +120,9 @@ decay and the regime are separate. **Not yet:** a trophy drop, and the usurper.
 The system core is the more distinct of the two: The Sovereign already covers the "ruler in person" fight.
 
 ### 1.6 Squads and enforcer variants
+**Built:** squads, leaders and the staff, heavy and grenadier roles (`docs/regime.md`). The chute variant comes with the
+Recognizer.
+
 **Inspired by:** Black Guards in squads of four, staff-wielding Sentries, and heavy Sentries.
 
 **What it adds:** enforcers spawn as **squads** with a leader. Killing the leader scatters the rest. The variants

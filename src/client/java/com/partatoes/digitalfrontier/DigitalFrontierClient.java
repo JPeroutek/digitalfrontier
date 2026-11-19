@@ -11,6 +11,7 @@ import com.partatoes.digitalfrontier.entity.bool.BoolRenderer;
 import com.partatoes.digitalfrontier.entity.vehicle.LightCycleModel;
 import com.partatoes.digitalfrontier.entity.vehicle.LightCycleRenderer;
 import com.partatoes.digitalfrontier.entity.custom.Decay;
+import com.partatoes.digitalfrontier.entity.custom.EnforcerEntity;
 import com.partatoes.digitalfrontier.entity.custom.LieutenantEntity;
 import com.partatoes.digitalfrontier.entity.custom.ProgramEntity;
 import com.partatoes.digitalfrontier.grid.GridDebugEntry;
@@ -47,8 +48,18 @@ public class DigitalFrontierClient implements ClientModInitializer {
 				program -> Decay.jitter(program.decay())));
 		EntityRendererRegistry.register(ModEntities.CORRUPTED_PROGRAM, context -> new GridMobRenderer<>(context,
 				GridMobRenderer.variants("corrupted_program_0", "corrupted_program_1", "corrupted_program_2"), 0.6f));
-		EntityRendererRegistry.register(ModEntities.ENFORCER, context -> new GridMobRenderer<>(context,
-				GridMobRenderer.variants("guard_red64", "guard_orange64"), 0));
+		// A squad's leader, heavies and grenadiers each have their own look
+		Function<EnforcerEntity, Identifier> guards = GridMobRenderer.variants("guard_red64", "guard_orange64");
+		EntityRendererRegistry.register(ModEntities.ENFORCER, context -> new GridMobRenderer<EnforcerEntity>(context, enforcer -> {
+			if (enforcer.leader()) {
+				return texture("guard_leader64");
+			}
+			return switch (enforcer.role()) {
+				case HEAVY -> texture("guard_heavy64");
+				case GRENADIER -> texture("guard_grenadier64");
+				default -> guards.apply(enforcer);
+			};
+		}, 0));
 		EntityRendererRegistry.register(ModEntities.RECRUITER, context -> new GridMobRenderer<>(context,
 				GridMobRenderer.variants("recruiter64"), 0));
 		// The lieutenant's skin comes from its definition, so lore packs can swap it; a client without the pack's
@@ -78,5 +89,9 @@ public class DigitalFrontierClient implements ClientModInitializer {
 		// Grid Tuning Laser screen, opened by the server with the laser's current grid code
 		ClientPlayNetworking.registerGlobalReceiver(GridTuningNetworking.OpenScreenPayload.ID, (payload, context) ->
 				GridTuning.fromCode(payload.code()).ifPresent(tuning -> context.client().gui.setScreen(new GridTuningScreen(payload.pos(), tuning))));
+	}
+
+	private static Identifier texture(String name) {
+		return Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "textures/entity/" + name + ".png");
 	}
 }

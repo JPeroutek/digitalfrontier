@@ -24,6 +24,10 @@ final class ProgramSkins {
     static final Look SOVEREIGN = new Look(0xFFB000, Emblem.CHEVRON, false, true);
     static final Look WARDEN = new Look(0xFF6A00, Emblem.CROSS, true, false);
     static final Look RECRUITER = new Look(0xFF2A2A, Emblem.HORN, false, true);
+    // Squad roles: the leader's chevron and pauldrons, the heavy's darker plating, the grenadier's orange ring
+    static final Look GUARD_LEADER = new Look(0xFF2A2A, Emblem.CHEVRON, true, true);
+    static final Look GUARD_HEAVY = new Look(0xB01E1E, Emblem.BARS, true, true);
+    static final Look GUARD_GRENADIER = new Look(0xFF6A00, Emblem.RING, true, false);
     // A program near the end of its drift into decay
     static final Look FRAYING = new Look(0xFF8A1E, Emblem.DIAMOND, false, false);
     // Job programs

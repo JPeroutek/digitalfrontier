@@ -68,6 +68,9 @@ public class ModTextureProvider implements DataProvider {
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.SOVEREIGN), "sovereign64")));
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.WARDEN), "warden64")));
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.RECRUITER), "recruiter64")));
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.GUARD_LEADER), "guard_leader64")));
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.GUARD_HEAVY), "guard_heavy64")));
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.GUARD_GRENADIER), "guard_grenadier64")));
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.FRAYING), "program_fraying")));
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paintDerezMask(), "derez_mask")));
         futures.add(CompletableFuture.runAsync(() -> writeTexture(writer, GearArt.staff(), "item", "light_staff")));

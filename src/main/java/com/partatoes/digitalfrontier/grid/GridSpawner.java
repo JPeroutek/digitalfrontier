@@ -1,5 +1,7 @@
 package com.partatoes.digitalfrontier.grid;
 
+import com.partatoes.digitalfrontier.grid.squad.SquadRoles;
+import java.util.UUID;
 import com.partatoes.digitalfrontier.entity.ModEntities;
 import com.partatoes.digitalfrontier.entity.custom.BoolEntity;
 import com.partatoes.digitalfrontier.entity.custom.CorruptedProgramEntity;
@@ -113,19 +115,19 @@ public final class GridSpawner {
             switch (held) {
                 case PATROLLED -> {
                     if (hostilesAllowed && world.getRandom().nextFloat() < 0.5f) {
-                        spawnPatrol(world, pos, 2);
+                        spawnPatrol(world, pos, held);
                     } else {
                         spawn(world, ModEntities.PROGRAM, pos, program -> { });
                     }
                 }
                 case CONTROLLED -> {
                     if (hostilesAllowed) {
-                        spawnPatrol(world, pos, 2 + world.getRandom().nextInt(2));
+                        spawnPatrol(world, pos, held);
                     }
                 }
                 default -> {
                     if (hostilesAllowed) {
-                        spawnPatrol(world, pos, 3 + world.getRandom().nextInt(2));
+                        spawnPatrol(world, pos, held);
                     }
                 }
             }
@@ -169,10 +171,16 @@ public final class GridSpawner {
         return stronghold != null && !stronghold.alive() ? plan.control() * 0.5f : plan.control();
     }
 
+    // A squad (see SquadRoles): its size and roles by how firmly the regime holds the land, the first one its leader.
     // While the regime is short of members, a patrol brings a recruiter along, one per area
-    private static void spawnPatrol(ServerLevel world, BlockPos pos, int size) {
+    private static void spawnPatrol(ServerLevel world, BlockPos pos, ControlTier tier) {
+        UUID squad = UUID.randomUUID();
+        int size = SquadRoles.size(tier, world.getRandom().nextDouble());
         for (int i = 0; i < size; i++) {
-            spawn(world, ModEntities.ENFORCER, pos.offset(world.getRandom().nextInt(3) - 1, 0, world.getRandom().nextInt(3) - 1), enforcer -> { });
+            SquadRoles role = SquadRoles.roll(tier, world.getRandom().nextDouble());
+            boolean leader = i == 0;
+            spawn(world, ModEntities.ENFORCER, pos.offset(world.getRandom().nextInt(3) - 1, 0, world.getRandom().nextInt(3) - 1),
+                    enforcer -> enforcer.joinSquad(squad, role, leader));
         }
         if (!CoreManager.defeated(world) && Regime.population(world) < Regime.ideal(world)
                 && world.getEntitiesOfClass(RecruiterEntity.class, new AABB(pos).inflate(RECRUITER_SPACING), recruiter -> true).isEmpty()) {
