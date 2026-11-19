@@ -149,6 +149,19 @@ final class GearArt {
         return image;
     }
 
+    /** A light cycle's trail wall: bright bands of light, cyan for the challenger, orange for a program. */
+    static BufferedImage trailWall(boolean program) {
+        BufferedImage image = blank(16);
+        int bright = program ? 0xFFFFB04A : 0xFF9FF4FF;
+        int glow = program ? 0xFFFF8A1E : CYAN;
+        for (int y = 0; y < 16; y++) {
+            for (int x = 0; x < 16; x++) {
+                set(image, x, y, y == 0 || y == 15 || y == 7 || y == 8 ? bright : glow);
+            }
+        }
+        return image;
+    }
+
     /** The arena console: a panel of glowing keys. */
     static BufferedImage arenaConsole() {
         BufferedImage image = blank(16);

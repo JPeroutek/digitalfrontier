@@ -298,6 +298,15 @@ public class ModBlocks {
                     .lightLevel(state -> 12)
                     .noLootTable()
                     .setId(ResourceKey.create(Registries.BLOCK, ARENA_CONSOLE_ID))));
+    // The walls of light arena cycles leave behind them; the match places and clears them
+    public static final Identifier TRAIL_WALL_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "trail_wall");
+    public static final Block TRAIL_WALL = Registry.register(BuiltInRegistries.BLOCK, TRAIL_WALL_ID,
+            new TrailWallBlock(BlockBehaviour.Properties
+                    .ofFullCopy(Blocks.BEDROCK)
+                    .noOcclusion()
+                    .lightLevel(state -> 9)
+                    .noLootTable()
+                    .setId(ResourceKey.create(Registries.BLOCK, TRAIL_WALL_ID))));
     public static final Identifier TROPHY_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "trophy");
     public static final Block TROPHY = registerBlock(TROPHY_ID,
             new Block(BlockBehaviour.Properties

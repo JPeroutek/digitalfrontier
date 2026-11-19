@@ -88,6 +88,7 @@ and the **Announcer** calls it to everyone in the arena.
 | Game | How it plays |
 |---|---|
 | **Disc Duel** | You and the champion on the tile field over the pit; only Data Discs hurt it. Every five seconds the outer ring of tiles flashes red and falls. Fall in and you lose. |
+| **Light Cycle Match** | You and one to three programs (one per champion level) on arena light cycles that run flat out and lay walls of light; left and right turn a quarter. Hit a wall, leave the floor or step off and you're out. Last rider standing wins. |
 
 `/grid arena status <grid>` shows the champions' levels; `/grid arena reset <grid>` (game masters) puts them back to 1.
 

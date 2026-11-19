@@ -115,6 +115,7 @@ public final class ArenaManager {
         int level = ArenaState.of(world).championLevel(game);
         Match match = switch (game) {
             case DISC_DUEL -> new DiscDuel(world, arena, player, level, conscripted);
+            case LIGHT_CYCLE -> new CycleMatch(world, arena, player, level, conscripted);
             default -> null;
         };
         if (match == null) {

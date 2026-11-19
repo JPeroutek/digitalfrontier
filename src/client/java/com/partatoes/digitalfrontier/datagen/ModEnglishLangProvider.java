@@ -63,6 +63,8 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add(ModBlocks.ARENA_TILE, "Arena Tile");
         translationBuilder.add(ModBlocks.ARENA_CONSOLE, "Arena Console");
         translationBuilder.add(ModBlocks.TROPHY, "Trophy");
+        translationBuilder.add(ModBlocks.TRAIL_WALL, "Trail Wall");
+        translationBuilder.add("arena.digitalfrontier.derezzed", "%s derezzes!");
         translationBuilder.add("arena.digitalfrontier.disc_duel", "Disc Duel");
         translationBuilder.add("arena.digitalfrontier.light_cycle", "Light Cycle Match");
         translationBuilder.add("arena.digitalfrontier.ring_game", "Ring Game");

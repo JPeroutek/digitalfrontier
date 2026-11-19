@@ -4,6 +4,7 @@ import com.mojang.math.Quadrant;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.block.ModBlocks;
 import com.partatoes.digitalfrontier.block.custom.ArenaTileBlock;
+import com.partatoes.digitalfrontier.block.custom.TrailWallBlock;
 import com.partatoes.digitalfrontier.block.custom.PatternBlock;
 import com.partatoes.digitalfrontier.item.ModItems;
 import net.fabricmc.fabric.api.client.datagen.v1.provider.FabricModelProvider;
@@ -130,6 +131,12 @@ public class ModModelProvider extends FabricModelProvider {
         blockStateModelGenerator.blockStateOutput.accept(MultiVariantGenerator.dispatch(ModBlocks.ARENA_TILE)
                 .with(BlockModelGenerators.createBooleanModelDispatch(ArenaTileBlock.WARNING,
                         BlockModelGenerators.plainVariant(tileWarning), BlockModelGenerators.plainVariant(tile))));
+        Identifier trail = ModelTemplates.CUBE_ALL.create(ModBlocks.TRAIL_WALL, TextureMapping.cube(ModBlocks.TRAIL_WALL), blockStateModelGenerator.modelOutput);
+        Identifier programTrail = ModelTemplates.CUBE_ALL.createWithSuffix(ModBlocks.TRAIL_WALL, "_program",
+                TextureMapping.cube(TextureMapping.getBlockTexture(ModBlocks.TRAIL_WALL, "_program")), blockStateModelGenerator.modelOutput);
+        blockStateModelGenerator.blockStateOutput.accept(MultiVariantGenerator.dispatch(ModBlocks.TRAIL_WALL)
+                .with(BlockModelGenerators.createBooleanModelDispatch(TrailWallBlock.PROGRAM,
+                        BlockModelGenerators.plainVariant(programTrail), BlockModelGenerators.plainVariant(trail))));
         blockStateModelGenerator.createTrivialCube(ModBlocks.ARENA_CONSOLE);
         blockStateModelGenerator.createTrivialCube(ModBlocks.TROPHY);
     }

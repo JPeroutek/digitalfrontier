@@ -85,6 +85,8 @@ public class ModTextureProvider implements DataProvider {
         futures.add(CompletableFuture.runAsync(() -> writeTexture(writer, GearArt.arenaTile(true), "block", "arena_tile_warning")));
         futures.add(CompletableFuture.runAsync(() -> writeTexture(writer, GearArt.arenaConsole(), "block", "arena_console")));
         futures.add(CompletableFuture.runAsync(() -> writeTexture(writer, GearArt.trophy(), "block", "trophy")));
+        futures.add(CompletableFuture.runAsync(() -> writeTexture(writer, GearArt.trailWall(false), "block", "trail_wall")));
+        futures.add(CompletableFuture.runAsync(() -> writeTexture(writer, GearArt.trailWall(true), "block", "trail_wall_program")));
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.CHAMPION), "champion64")));
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paintDerezCube(), "derez_cube")));
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.MECHANIC), "job/mechanic")));
