@@ -3,17 +3,15 @@
 Your first trip into the grid, from a fresh survival world. For what you do once you're there, see
 [progression.md](progression.md); for the full feature list, [features.md](features.md).
 
-> **Survival note.** Bits (Binary 0/1) can't be obtained in survival yet, so the Digitizing Laser can't be crafted
-> without them (see [features.md](features.md#known-gaps)). Until that's fixed, get a laser from the creative tab or
-> with `/give @s digitalfrontier:digitizing_laser`, and play on from there in survival.
-
-## 1. Gather Luminessence
+## 1. Gather Luminessence and bits
 
 Luminessence is the grid's currency and the base of most recipes. In the real world:
 
 1. Mine down below **Y 20**. Luminance Ore generates there, in stone and deepslate.
-2. Craft a **Luminessence Detector** if you want help: right-click a block to detect ore below it.
-3. Bring a stack or two. You'll want it for the laser, for befriending a Bool, and for trading.
+2. Each ore also gives up 0–2 loose **bits** (Binary 0 or Binary 1), unless you mine it with Silk Touch. You need
+   eight Binary 1s for the laser's Pixels, and any eight bits make a Byte.
+3. Craft a **Luminessence Detector** if you want help: right-click a block to detect ore below it.
+4. Bring a stack or two. You'll want it for the laser, for befriending a Bool, and for trading.
 
 ## 2. Build a Digitizing Laser
 
@@ -53,8 +51,9 @@ Right-click the laser and **stay within 4 blocks** for two seconds while it scan
 
 ## 6. Getting home
 
-- Walk or ride far out to the **Portal**, a beam of light at the grid's edge, and step in. The **Portal Keeper**
-  there sells Escape Keys.
+- Walk or ride far out to the **Portal**, a beam of light at the grid's edge, and step in. It starts sealed: the
+  first player to step in holding an **Escape Key** spends it, and from then on the Portal is open to everyone. The
+  **Portal Keeper** there sells keys.
 - Or use an **Escape Key** anywhere.
 
 Either way you wake up where you last slept in the real world. Next time, your laser (with a Laser Tuner) can send you

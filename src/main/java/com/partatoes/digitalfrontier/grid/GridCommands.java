@@ -6,6 +6,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.partatoes.digitalfrontier.grid.arrival.GridArrival;
+import com.partatoes.digitalfrontier.grid.exit.PortalState;
 import com.partatoes.digitalfrontier.grid.arrival.TerminalRef;
 import com.partatoes.digitalfrontier.grid.layout.GridLayout;
 import com.partatoes.digitalfrontier.grid.layout.GridLayoutSettings;
@@ -111,6 +112,15 @@ public final class GridCommands {
                         .then(literal("reset")
                                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                                 .then(gridArgument().executes(GridCommands::coreReset))))
+                .then(literal("portal")
+                        .then(literal("status")
+                                .then(gridArgument().executes(GridCommands::portalStatus)))
+                        .then(literal("open")
+                                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                                .then(gridArgument().executes(context -> portalSet(context, true))))
+                        .then(literal("seal")
+                                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                                .then(gridArgument().executes(context -> portalSet(context, false)))))
                 .then(literal("regime")
                         .then(literal("status")
                                 .then(gridArgument()
@@ -147,6 +157,42 @@ public final class GridCommands {
         CoreManager.reset(grid.get());
         context.getSource().sendSuccess(() -> Component.translatable("commands.digitalfrontier.grid.core.reset"), true);
         return 1;
+    }
+
+    // Every Portal of the grid, open or sealed (see PortalGate)
+    private static int portalStatus(CommandContext<CommandSourceStack> context) {
+        Optional<ServerLevel> grid = gridWorld(context);
+        if (grid.isEmpty()) {
+            context.getSource().sendFailure(Component.translatable("commands.digitalfrontier.grid.unknown", IdentifierArgument.getId(context, "grid").toString()));
+            return 0;
+        }
+        PortalState state = PortalState.of(grid.get());
+        List<String> portals = portals(grid.get());
+        portals.forEach(portal -> context.getSource().sendSuccess(() -> Component.translatable("commands.digitalfrontier.grid.portal.status",
+                portal, Component.translatable(state.isUnlocked(portal)
+                        ? "commands.digitalfrontier.grid.portal.open" : "commands.digitalfrontier.grid.portal.sealed")), false));
+        return (int) portals.stream().filter(state::isUnlocked).count();
+    }
+
+    // Opens every Portal of the grid as if its toll were paid, or seals them again
+    private static int portalSet(CommandContext<CommandSourceStack> context, boolean open) {
+        Optional<ServerLevel> grid = gridWorld(context);
+        if (grid.isEmpty()) {
+            context.getSource().sendFailure(Component.translatable("commands.digitalfrontier.grid.unknown", IdentifierArgument.getId(context, "grid").toString()));
+            return 0;
+        }
+        PortalState state = PortalState.of(grid.get());
+        List<String> portals = portals(grid.get());
+        portals.forEach(portal -> state.setUnlocked(portal, open));
+        context.getSource().sendSuccess(() -> Component.translatable(open
+                ? "commands.digitalfrontier.grid.portal.opened" : "commands.digitalfrontier.grid.portal.resealed", portals.size()), true);
+        return portals.size();
+    }
+
+    private static List<String> portals(ServerLevel grid) {
+        GridChunkGenerator generator = GridArrival.generator(grid);
+        return generator == null ? List.of() : generator.layout().sites().stream()
+                .filter(site -> site.type() == Site.Type.PORTAL).map(Site::id).toList();
     }
 
     // The regime's size against what it wants, and a player's alignment: the given player's, or the caller's own

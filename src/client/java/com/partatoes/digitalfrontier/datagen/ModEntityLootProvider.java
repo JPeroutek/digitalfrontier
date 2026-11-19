@@ -49,6 +49,9 @@ public class ModEntityLootProvider extends SimpleFabricLootTableSubProvider {
                         .setRolls(ContextIntProviders.exactly(1))
                         .add(LootItem.lootTableItem(ModItems.LUMINESSENCE)
                                 .apply(SetItemCountFunction.setCount(ContextIntProviders.between(8, 16))))));
+        // Decayed code comes apart into loose bits
+        exporter.accept(ModEntities.CORRUPTED_PROGRAM.getDefaultLootTable().orElseThrow(), LootTable.lootTable()
+                .withPool(ModLootTableProvider.bits(ContextIntProviders.between(1, 3))));
         // What the corruption held, released when a Disinfection Pad cures a program
         exporter.accept(DisinfectionPadBlock.CURE_LOOT, LootTable.lootTable()
                 .withPool(LootPool.lootPool()

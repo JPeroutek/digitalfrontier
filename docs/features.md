@@ -16,7 +16,7 @@ skins: Rinzler, Bit, Identity Disc, Master Control Program, Tower Guardian, Clu.
 | **Laser Tuner** | Use on a laser to cycle its link through the nearest terminal and every terminal you've discovered. |
 | **Grid Tuning Laser** | A late-game laser that opens a screen to tune it to *any* grid: your own generated world, from a seed and settings (see below). |
 | **Terminals** | Arrival points in a grid: the City Terminal at the center and numbered Waypoints out in the outlands. Coming within 2 chunks of one discovers it, so lasers can send you there. |
-| **Portal** | A beam of light at the grid's far edge. Step into it to leave the grid. |
+| **Portal** | A beam of light at the grid's far edge. Step into it to leave the grid, once its toll is paid: the first player to step in holding an Escape Key spends it, and the Portal stays open to everyone from then on. |
 | **Escape Key** | Single use: leaves the grid from anywhere. |
 | **Memory Paging** / **Core Dump** | Carried when you die in a grid, it respawns you at the last terminal you arrived at instead of the real world. Memory Paging drops your items as usual; a Core Dump keeps your inventory and experience (and Trinkets Updated slots). A Data Disc in your offhand stands in for a Core Dump. |
 
@@ -34,7 +34,7 @@ Each grid is its own dimension, generated chunk by chunk from a seed and a handf
 - **Grid settings** (tuning laser screen, or a `DF4.` grid code you can copy and share): seed, city radius, street
   style, levels, district colors, waypoints, **Decay** and **Regime**.
 - **Commands** (`/grid`): `list`, `open`, `delete`, `code`, `locate <grid> <site>` (terminals, `portal_0`,
-  `stronghold_N`, `garage`), plus the `lieutenant`, `regime` and `core` groups below.
+  `stronghold_N`, `garage`), `portal status|open|seal <grid>`, plus the `lieutenant`, `regime` and `core` groups below.
 - F3 (with the `digitalfrontier:grid` debug section on) shows the chunk's decay and control and your regime alignment.
 
 ## Two forces: decay and the regime
@@ -76,7 +76,7 @@ patrols leave you alone; at −0.5 and below you're wanted. See [regime.md](regi
 | | |
 |---|---|
 | **Luminessence** | The currency and crafting essence. Mined from Luminance Ore (real world, below Y 20); dropped by lieutenants, the core and cured programs. A **Luminessence Detector** finds ore below a block. |
-| **Binary 0 / 1, Byte** | Bits; eight make a Byte. |
+| **Binary 0 / 1, Byte** | Bits; eight make a Byte. Luminance Ore gives up 0–2 (not with Silk Touch); in the grid, every Static block breaks into one, and corrupted programs drop 1–3. |
 | **Pixel Dust, Pixel, Pixel Lamp** | Building materials; Pixels go into lasers. |
 | **Gridstone** | The grid's stone, in bricks, cracked, slabs, stairs, walls and patterned, glowing variants in every dye color. |
 | **Data Disc** | A thrown weapon: ricochets off up to 3 blocks, hits once per pass, returns to your hand. |
@@ -88,10 +88,6 @@ patrols leave you alone; at −0.5 and below you're wanted. See [regime.md](regi
 
 ## Known gaps
 
-- **Bits have no survival source.** Nothing drops, generates or crafts Binary 0/1, so Pixel Dust, Pixels, Bytes and
-  everything made from them (the Digitizing Laser, Data Disc, Memory Paging, Core Dump, Lightcycle Baton) can't be
-  made in survival yet. The Mechanic sells batons; the rest needs creative or commands for now. See [TODO.md](TODO.md).
-- **The Portal Keeper's lines** say the Portal needs an Escape Key; stepping into the Portal works without one.
 - **Placeholder art** for every new mob (programs share one model with generated skins).
 - **No moving light**: the Bool and light cycles glow but don't light the world.
 - Light cycles drive jittery and slow, and lay no walls yet; strongholds are small and few. More in [TODO.md](TODO.md).

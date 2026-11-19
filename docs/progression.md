@@ -15,12 +15,16 @@ the grid is also simply a place to explore and build.
 - **Buy a Lightcycle Baton** from the Mechanic in the City Core's garage, and ride out. The subway's express lines
   also reach every Waypoint.
 - **Discover terminals.** Pass within two chunks of each Waypoint to discover it; your laser can then send you
-  straight there. Find the **Portal** at the far edge, and its Keeper, who sells Escape Keys.
+  straight there. Find the **Portal** at the far edge, and its Keeper, who sells Escape Keys. Pay the Portal's
+  toll once (step in holding a key) and it's a free way home for everyone from then on.
 - **Craft Disinfection Pads** (three Luminessence over three Gridstone, makes two). You'll want them in stages 3
   and 4.
 
 **Earning Luminessence in the grid:** curing corrupted programs on Disinfection Pads (1–2 each), defeating
 lieutenants and the core. The real world's ore is the steady supply.
+
+**Bits** (for Bytes, Pixels and everything built from them) are richest in decayed land: every Static block breaks
+into a bit, and corrupted programs drop 1–3 when destroyed. Luminance Ore gives a few in the real world.
 
 ## Stage 2: read the land, and pick a side
 

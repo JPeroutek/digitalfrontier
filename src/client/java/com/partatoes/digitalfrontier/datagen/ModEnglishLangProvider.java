@@ -48,6 +48,8 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add(ModItems.ESCAPE_KEY, "Escape Key");
         translationBuilder.add(ModItems.MEMORY_PAGING, "Memory Paging");
         translationBuilder.add("message.digitalfrontier.exited_grid", "Left the grid");
+        translationBuilder.add("message.digitalfrontier.portal_sealed", "The Portal is sealed: step in holding an Escape Key to open it for good");
+        translationBuilder.add("message.digitalfrontier.portal_opened", "%s paid the Portal's toll: it's open to everyone now");
         translationBuilder.add("message.digitalfrontier.escape_key_outside_grid", "The Escape Key only works inside the grid");
         translationBuilder.add("message.digitalfrontier.memory_paged", "Memory paged back in at %s");
         translationBuilder.add(ModItems.CORE_DUMP, "Core Dump");
@@ -72,10 +74,15 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add("commands.digitalfrontier.derez.unknown", "No derez style %s (try sweep, instant, freeze or voxel)");
         translationBuilder.add("commands.digitalfrontier.grid.core.status","System Core: %s (the shaft down to it is at %s)");
         translationBuilder.add("commands.digitalfrontier.grid.core.reset", "System Core reset: dormant, its seal closed, and its fallen lieutenants back");
+        translationBuilder.add("commands.digitalfrontier.grid.portal.status", "%s: %s");
+        translationBuilder.add("commands.digitalfrontier.grid.portal.open", "open");
+        translationBuilder.add("commands.digitalfrontier.grid.portal.sealed", "sealed");
+        translationBuilder.add("commands.digitalfrontier.grid.portal.opened", "Opened %s Portals");
+        translationBuilder.add("commands.digitalfrontier.grid.portal.resealed", "Sealed %s Portals again");
         translationBuilder.add("entity.digitalfrontier.program.mechanic", "Mechanic");
         translationBuilder.add("entity.digitalfrontier.program.portal_keeper", "Portal Keeper");
-        translationBuilder.add("entity.digitalfrontier.program.portal_keeper.line0", "The Portal opens on the real world, but only with an Escape Key. I keep one for those who can pay.");
-        translationBuilder.add("entity.digitalfrontier.program.portal_keeper.line1", "Step through with a key in hand and you wake where you last slept, out there.");
+        translationBuilder.add("entity.digitalfrontier.program.portal_keeper.line0", "The Portal opens on the real world, but it's sealed until someone pays its toll: one Escape Key. I keep one for those who can pay.");
+        translationBuilder.add("entity.digitalfrontier.program.portal_keeper.line1", "Step in with a key in hand and the Portal opens, for you and everyone after you, for good. You wake where you last slept, out there.");
         translationBuilder.add("entity.digitalfrontier.program.portal_keeper.line2", "The regime watches this place. Whatever you are to them, the Portal doesn't care.");
         translationBuilder.add("entity.digitalfrontier.recruiter.tribute", "The regime notes your tribute");
         translationBuilder.add(ModEntities.LIEUTENANT, "Lieutenant");

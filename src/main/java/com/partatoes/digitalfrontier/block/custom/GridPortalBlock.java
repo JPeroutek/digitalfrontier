@@ -1,6 +1,7 @@
 package com.partatoes.digitalfrontier.block.custom;
 
 import com.partatoes.digitalfrontier.grid.exit.GridExit;
+import com.partatoes.digitalfrontier.grid.exit.PortalGate;
 import com.partatoes.digitalfrontier.grid.stronghold.GridEvent;
 import com.partatoes.digitalfrontier.grid.stronghold.StrongholdManager;
 import com.partatoes.digitalfrontier.world.ModDimensions;
@@ -18,7 +19,8 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /**
- * The column of light at a grid's Portal site, up to build height. Players who step into it leave the grid. The blocks
+ * The column of light at a grid's Portal site, up to build height. Players who step into it leave the grid, once its
+ * toll has been paid (see {@link PortalGate}). The blocks
  * themselves are invisible and can't be targeted: what shows is the beam of light the client draws through them (see
  * {@code PortalBeamRenderer}). Stepping in still counts, as entities touch any block they're inside.
  */
@@ -40,7 +42,8 @@ public class GridPortalBlock extends Block {
     @Override
     protected void entityInside(BlockState state, Level world, BlockPos pos, Entity entity, InsideBlockEffectApplier handler, boolean bl) {
         // A player touches several portal blocks in one tick; only the first one, while they're still here, counts
-        if (entity instanceof ServerPlayer player && player.level() == world && ModDimensions.isGrid(world)) {
+        if (entity instanceof ServerPlayer player && player.level() == world && ModDimensions.isGrid(world)
+                && PortalGate.pass(player, player.level(), pos)) {
             StrongholdManager.fire(player.level(), new GridEvent.PortalUsed());
             GridExit.toRealWorld(player);
         }

@@ -242,13 +242,13 @@ public class ModBlocks {
                     .ofFullCopy(Blocks.NETHERITE_BLOCK)
                     .lightLevel(state -> 10)
                     .setId(ResourceKey.create(Registries.BLOCK, GRID_TUNING_LASER_ID))));
-    // Corruption-only blocks: generated where a grid is corrupted, and they don't drop anything
+    // Corruption-only blocks, generated where a grid is decayed. Static breaks down into loose bits; glitched gridstone
+    // drops nothing
     public static final Identifier STATIC_BLOCK_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "static_block");
     public static final Block STATIC_BLOCK = registerBlock(STATIC_BLOCK_ID,
             new Block(BlockBehaviour.Properties
                     .ofFullCopy(ModBlocks.GRIDSTONE_BLOCK)
                     .lightLevel(state -> 4)
-                    .noLootTable()
                     .setId(ResourceKey.create(Registries.BLOCK, STATIC_BLOCK_ID))));
     public static final Map<DyeColor, Block> GLITCHED_GRIDSTONE = Arrays.stream(DyeColor.values())
             .collect(Collectors.toMap(color -> color, color -> {
