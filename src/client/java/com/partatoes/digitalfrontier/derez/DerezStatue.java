@@ -4,6 +4,9 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.mixin.client.ModelPartAccessor;
+import com.partatoes.digitalfrontier.mixin.client.PalettedBaseTextureAccessor;
+import com.partatoes.digitalfrontier.mixin.client.PalettedSlotKeyAccessor;
+import com.partatoes.digitalfrontier.mixin.client.PalettedTextureManagerAccessor;
 import com.partatoes.digitalfrontier.mixin.client.RenderSetupAccessor;
 import com.partatoes.digitalfrontier.mixin.client.RenderTypeAccessor;
 import com.partatoes.digitalfrontier.mixin.client.TextureBindingAccessor;
@@ -17,6 +20,9 @@ import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.UvMapping;
+import net.minecraft.client.resources.palette.PaletteMapping;
+import net.minecraft.client.resources.palette.PalettedTextureManager;
 import net.minecraft.client.resources.model.geometry.BakedQuad;
 import net.minecraft.client.resources.model.geometry.ItemQuads;
 import net.minecraft.resources.Identifier;
@@ -34,11 +40,11 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * Builds a derezzing body's statue (see {@link DerezStyle#VOXEL}): its model, posed as it was at the moment of death,
@@ -52,6 +58,8 @@ import java.util.Set;
 public final class DerezStatue {
     // Textures read back from the resource packs, by texture; empty where one can't be read
     private static final Map<Identifier, Optional<NativeImage>> TEXTURES = new HashMap<>();
+    // Paletted textures (armour trims) recolored for statues, by the GPU slot each is drawn from
+    private static final Map<PalettedTextureManager.Handle, Optional<NativeImage>> PALETTED = new IdentityHashMap<>();
     private static final int SHELL = 0x14191E;
 
     private DerezStatue() {
@@ -85,6 +93,16 @@ public final class DerezStatue {
         /** Adds a model's showing parts, posed as they are now, drawn with this texture and tint (-1 for none). */
         public void addModel(ModelPart root, PoseStack pose, @Nullable Identifier texture, int tint) {
             addPart(root, pose, texture == null ? null : image(texture), tint);
+        }
+
+        // A model drawn through a texture mapping: a paletted one (an armour trim) is recolored here, as it only exists on
+        // the GPU; anything else is read from the render type's texture
+        private void addModel(ModelPart root, PoseStack pose, RenderType type, @Nullable UvMapping mapping, int tint) {
+            if (mapping instanceof PalettedTextureManager.Handle handle) {
+                addPart(root, pose, paletted(handle), tint);
+            } else {
+                addModel(root, pose, texture(type), tint);
+            }
         }
 
         private void addPart(ModelPart part, PoseStack pose, @Nullable NativeImage image, int tint) {
@@ -163,13 +181,13 @@ public final class DerezStatue {
                         // The full form (model, state, pose, render type, light, overlay, tint, uv mapping, outline);
                         // the shorter forms fill in their defaults and land here
                         if (args.length == 9 && args[3] instanceof RenderType type) {
-                            submitModel((Model<?>) args[0], args[1], (PoseStack) args[2], type, (int) args[6]);
+                            submitModel((Model<?>) args[0], args[1], (PoseStack) args[2], type, (UvMapping) args[7], (int) args[6]);
                             return null;
                         }
                     }
                     case "submitModelPart" -> {
                         if (args[2] instanceof RenderType type) {
-                            addModel((ModelPart) args[0], (PoseStack) args[1], texture(type), args.length > 6 ? (int) args[6] : -1);
+                            addModel((ModelPart) args[0], (PoseStack) args[1], type, (UvMapping) args[5], args.length > 6 ? (int) args[6] : -1);
                         }
                         return null;
                     }
@@ -190,10 +208,10 @@ public final class DerezStatue {
         }
 
         @SuppressWarnings({"unchecked", "rawtypes"})
-        private void submitModel(Model model, Object state, PoseStack pose, RenderType type, int tint) {
+        private void submitModel(Model model, Object state, PoseStack pose, RenderType type, @Nullable UvMapping mapping, int tint) {
             // Models are posed when they're drawn; a layer's model is posed for this body now
             model.setupAnim(state);
-            addModel(model.root(), pose, texture(type), tint);
+            addModel(model.root(), pose, type, mapping, tint);
         }
 
         /** Raises the statue and sets it falling apart. */
@@ -215,7 +233,9 @@ public final class DerezStatue {
             float height = Math.max(0.01f, top - bottom);
 
             RandomSource random = level.getRandom();
-            Set<Long> placed = new HashSet<>();
+            // One cube per spot. Faces are in drawing order, so where two meet at the same spot (an armour trim over its
+            // armour) the later one's color wins, as it would on screen
+            Map<Long, Voxel> voxels = new LinkedHashMap<>();
             Vector3f across = new Vector3f();
             Vector3f down = new Vector3f();
             Vector3f spot = new Vector3f();
@@ -240,27 +260,35 @@ public final class DerezStatue {
                         float b = (row + 0.5f) / rows;
                         bilerp(c, a, b, spot);
                         spot.add(inward);
-                        // Faces meet at the edges: one cube per spot
-                        if (!placed.add(key(spot, cube))) {
-                            continue;
-                        }
                         int color = color(face, a, b, random);
                         if (color < 0) {
                             continue;
                         }
-                        double outX = spot.x - centerX;
-                        double outZ = spot.z - centerZ;
-                        double length = Math.max(0.05, Math.sqrt(outX * outX + outZ * outZ));
-                        double fling = 0.05 + random.nextDouble() * 0.12;
-                        Minecraft.getInstance().particleEngine.add(new DerezCubeParticle(level, spot.x, spot.y - cube / 2, spot.z,
-                                outX / length * fling + (random.nextDouble() - 0.5) * 0.04,
-                                0.04 + random.nextDouble() * 0.16,
-                                outZ / length * fling + (random.nextDouble() - 0.5) * 0.04,
-                                cube * 0.96f, color, new Quaternionf(face.rotation()),
-                                Derez.releaseDelay((spot.y - bottom) / height) + random.nextInt(3)));
+                        long key = key(spot, cube);
+                        Voxel earlier = voxels.get(key);
+                        voxels.put(key, earlier == null
+                                ? new Voxel(new Vector3f(spot), color, face.rotation())
+                                : new Voxel(earlier.spot(), color, earlier.rotation()));
                     }
                 }
             }
+            for (Voxel voxel : voxels.values()) {
+                Vector3f at = voxel.spot();
+                double outX = at.x - centerX;
+                double outZ = at.z - centerZ;
+                double length = Math.max(0.05, Math.sqrt(outX * outX + outZ * outZ));
+                double fling = 0.05 + random.nextDouble() * 0.12;
+                Minecraft.getInstance().particleEngine.add(new DerezCubeParticle(level, at.x, at.y - cube / 2, at.z,
+                        outX / length * fling + (random.nextDouble() - 0.5) * 0.04,
+                        0.04 + random.nextDouble() * 0.16,
+                        outZ / length * fling + (random.nextDouble() - 0.5) * 0.04,
+                        cube * 0.96f, voxel.color(), new Quaternionf(voxel.rotation()),
+                        Derez.releaseDelay((at.y - bottom) / height) + random.nextInt(3)));
+            }
+        }
+
+        /** One of a statue's cubes before it's raised. */
+        private record Voxel(Vector3f spot, int color, Quaternionf rotation) {
         }
 
         // The texture's color at a spot on a face, tinted, or -1 where the texture is see-through (nothing to build)
@@ -326,9 +354,34 @@ public final class DerezStatue {
         })).orElse(null);
     }
 
+    /**
+     * A paletted texture (an armour trim), recolored on the CPU as vanilla does on the GPU: its greyscale base image
+     * mapped from its base palette to its own. Null if it can't be traced back.
+     */
+    @Nullable
+    private static NativeImage paletted(PalettedTextureManager.Handle handle) {
+        return PALETTED.computeIfAbsent(handle, ignored -> {
+            PalettedTextureManagerAccessor manager = (PalettedTextureManagerAccessor) Minecraft.getInstance().getPalettedTextureManager();
+            Object key = manager.digitalfrontier$handles().entrySet().stream()
+                    .filter(entry -> entry.getValue() == handle).map(Map.Entry::getKey).findFirst().orElse(null);
+            if (key == null) {
+                return Optional.empty();
+            }
+            PalettedSlotKeyAccessor slot = (PalettedSlotKeyAccessor) key;
+            return manager.digitalfrontier$baseTextures().getUnchecked(slot.digitalfrontier$baseTexture()).map(found -> {
+                PalettedBaseTextureAccessor base = (PalettedBaseTextureAccessor) found;
+                PaletteMapping mapping = manager.digitalfrontier$paletteMappings()
+                        .apply(base.digitalfrontier$paletteMetadata().basePalette(), slot.digitalfrontier$paletteId());
+                return base.digitalfrontier$image().mappedCopy(mapping);
+            });
+        }).orElse(null);
+    }
+
     /** Forgets the textures read so far, so a resource reload's new ones are used. */
     public static void clearSkins() {
         TEXTURES.values().forEach(image -> image.ifPresent(NativeImage::close));
         TEXTURES.clear();
+        PALETTED.values().forEach(image -> image.ifPresent(NativeImage::close));
+        PALETTED.clear();
     }
 }

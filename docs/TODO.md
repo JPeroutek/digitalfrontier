@@ -8,8 +8,7 @@ Ideas and planned work for the grid world generator that aren't scheduled into a
 Four styles are in (`/derez style`), voxel statues by default with the others kept as options; see `Derez` and
 `DerezStatue`.
 
-- **Armour trims in statues.** Trims are drawn from a texture atlas, not a plain texture, so statues skip them (the
-  armour beneath is rebuilt).
+- **Glint.** Enchanted armour and items lose their shimmer in statues; the glint is a separate scrolling overlay.
 
 ## Light
 

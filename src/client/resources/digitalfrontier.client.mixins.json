@@ -3,6 +3,9 @@
   "package": "com.partatoes.digitalfrontier.mixin.client",
   "compatibilityLevel": "JAVA_17",
   "client": [
+    "PalettedBaseTextureAccessor",
+    "PalettedSlotKeyAccessor",
+    "PalettedTextureManagerAccessor",
     "ModelPartAccessor",
     "RenderSetupAccessor",
     "RenderTypeAccessor",
