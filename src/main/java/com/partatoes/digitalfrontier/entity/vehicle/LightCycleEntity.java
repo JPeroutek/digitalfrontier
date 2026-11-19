@@ -5,6 +5,7 @@
 
 package com.partatoes.digitalfrontier.entity.vehicle;
 
+import com.partatoes.digitalfrontier.block.custom.MovingLightBlock;
 import com.partatoes.digitalfrontier.item.ModItems;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
@@ -27,7 +28,9 @@ import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
-public class LightCycleEntity extends VehicleEntity {
+public class LightCycleEntity extends VehicleEntity implements MovingLightBlock.Emitter {
+    // How brightly a light cycle lights the road around it
+    private static final int LIGHT = 12;
     // Used for controlling the vehicle
     private boolean pressingLeft;
     private boolean pressingRight;
@@ -194,7 +197,16 @@ public class LightCycleEntity extends VehicleEntity {
         this.applyEffectsFromBlocks();
         this.applyEffectsFromBlocks();
 
+        if (tickCount % 2 == 0) {
+            MovingLightBlock.shine(level(), blockPosition(), LIGHT);
+        }
+
         // Here is where you could add code for causing Programs to enter the vehicle
+    }
+
+    @Override
+    public int emittedLight() {
+        return LIGHT;
     }
 
     private void updateVelocity() {

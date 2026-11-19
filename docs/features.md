@@ -89,7 +89,7 @@ patrols leave you alone; at −0.5 and below you're wanted. See [regime.md](regi
 ## Known gaps
 
 - **Placeholder art** for every new mob (programs share one model with generated skins).
-- **No moving light**: the Bool and light cycles glow but don't light the world.
+- **Derez cubes don't light the world** (they're client-side particles); the Bool, light cycles and the System Core do.
 - Light cycles drive jittery and slow, and lay no walls yet; strongholds are small and few. More in [TODO.md](TODO.md).
 - Features placed at chunk generation (the garage, the core chamber, the Portal Keeper, the greeter Bool) only
   appear in chunks generated with this version.

@@ -19,6 +19,7 @@ import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.WallBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.block.state.properties.BlockSetType;
 import org.jetbrains.annotations.NotNull;
 
@@ -281,6 +282,22 @@ public class ModBlocks {
                     .isViewBlocking((state, world, pos, box) -> false)
                     .setId(ResourceKey.create(Registries.BLOCK, GRID_PORTAL_ID))));
 
+
+    // The light glowing entities cast as they move; placed by them only, so it has no item
+    public static final Identifier MOVING_LIGHT_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "moving_light");
+    public static final Block MOVING_LIGHT = Registry.register(BuiltInRegistries.BLOCK, MOVING_LIGHT_ID,
+            new MovingLightBlock(BlockBehaviour.Properties
+                    .of()
+                    .replaceable()
+                    .noCollision()
+                    .noOcclusion()
+                    .noLootTable()
+                    .instabreak()
+                    .pushReaction(PushReaction.POPPED)
+                    .lightLevel(state -> state.getValue(MovingLightBlock.LEVEL))
+                    .isSuffocating(Blocks::never)
+                    .isViewBlocking((state, world, pos, box) -> false)
+                    .setId(ResourceKey.create(Registries.BLOCK, MOVING_LIGHT_ID))));
 
     private static Block registerBlock(Identifier name, Block block) {
         registerBlockItem(name, block);

@@ -3,16 +3,11 @@
 Ideas and planned work for the grid world generator that aren't scheduled into a phase yet. See
 `docs/grid-structures.md` for how the current generator and building templates work.
 
-## Derezzing
-
-Four styles are in (`/derez style`), voxel statues by default with the others kept as options; see `Derez` and
-`DerezStatue`.
-
 ## Light
 
-- **Moving light.** The Bool, light cycles, derez cubes and the System Core glow but don't light the world around
-  them. Vanilla has no moving light source; options are placing and clearing invisible light blocks as they move,
-  or a dynamic-lights mod hook.
+- **Light from derez cubes.** The Bool, light cycles and the System Core light the world through self-clearing
+  light blocks (`MovingLightBlock`); derez cubes are client-side particles, so they can't. A dynamic-lights mod hook
+  would let them (and the held Data Disc) glow on the world too.
 
 ## Characters
 

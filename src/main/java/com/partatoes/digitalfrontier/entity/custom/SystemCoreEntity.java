@@ -1,5 +1,6 @@
 package com.partatoes.digitalfrontier.entity.custom;
 
+import com.partatoes.digitalfrontier.block.custom.MovingLightBlock;
 import com.partatoes.digitalfrontier.entity.ModEntities;
 import com.partatoes.digitalfrontier.grid.core.CoreManager;
 import com.partatoes.digitalfrontier.grid.layout.CoreChamber;
@@ -37,7 +38,9 @@ import net.minecraft.world.phys.Vec3;
  * decayed ones before they arrive). Below half health it fires homing bolts that freeze, throw or lift what they hit
  * (see {@link CoreBolt}) and calls enforcer squads; below a fifth, faster, and some bolts black out the view. Its life and death are run by {@link CoreManager}.
  */
-public class SystemCoreEntity extends Monster {
+public class SystemCoreEntity extends Monster implements MovingLightBlock.Emitter {
+    // The core floods its chamber with light, from its middle
+    private static final int LIGHT = 15;
     private static final EntityDataAccessor<Byte> PHASE = SynchedEntityData.defineId(SystemCoreEntity.class, EntityDataSerializers.BYTE);
     private static final double PULL_RANGE = 24;
     private static final double ABSORB_RANGE = 2.5;
@@ -89,6 +92,9 @@ public class SystemCoreEntity extends Monster {
     protected void customServerAiStep(ServerLevel world) {
         super.customServerAiStep(world);
         setDeltaMovement(Vec3.ZERO);
+        if (tickCount % 2 == 0) {
+            MovingLightBlock.shine(world, blockPosition().above(2), LIGHT);
+        }
         if (tickCount % 20 == 0 && !CoreManager.isCurrent(this)) {
             discard();
             return;
@@ -175,6 +181,11 @@ public class SystemCoreEntity extends Monster {
             world.addFreshEntity(enforcer);
         }
         world.playSound(null, getX(), getY(), getZ(), SoundEvents.BEACON_POWER_SELECT, SoundSource.HOSTILE, 2.0f, 0.4f);
+    }
+
+    @Override
+    public int emittedLight() {
+        return LIGHT;
     }
 
     /** Whether damage came from the core or its bolts: the regime's own mobs shrug it off, so they never turn on it. */

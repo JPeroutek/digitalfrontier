@@ -100,6 +100,9 @@ public class ModModelProvider extends FabricModelProvider {
                 .put(TextureSlot.SIDE, TextureMapping.getBlockTexture(ModBlocks.GRIDSTONE_BRICKS_BLOCK))
                 .put(TextureSlot.BOTTOM, TextureMapping.getBlockTexture(ModBlocks.GRIDSTONE_BLOCK)), blockStateModelGenerator.modelOutput);
         blockStateModelGenerator.blockStateOutput.accept(BlockModelGenerators.createSimpleBlock(ModBlocks.DIGITIZING_LASER, BlockModelGenerators.plainVariant(laserModel)));
+        // Moving light is never drawn: vanilla's particle-only light model, for every level
+        blockStateModelGenerator.blockStateOutput.accept(BlockModelGenerators.createSimpleBlock(ModBlocks.MOVING_LIGHT,
+                BlockModelGenerators.plainVariant(Identifier.withDefaultNamespace("block/light_15"))));
         Identifier tuningLaserModel = ModelTemplates.CUBE_BOTTOM_TOP.create(ModBlocks.GRID_TUNING_LASER, new TextureMapping()
                 .put(TextureSlot.TOP, TextureMapping.getBlockTexture(ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("thick_ring").get(DyeColor.ORANGE)))
                 .put(TextureSlot.SIDE, TextureMapping.getBlockTexture(ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("border_1").get(DyeColor.CYAN)))

@@ -45,6 +45,7 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add(ModBlocks.DIGITIZING_LASER, "Digitizing Laser");
         translationBuilder.add(ModItems.LASER_TUNER, "Laser Tuner");
         translationBuilder.add(ModBlocks.GRID_PORTAL, "Portal");
+        translationBuilder.add(ModBlocks.MOVING_LIGHT, "Moving Light");
         translationBuilder.add(ModItems.ESCAPE_KEY, "Escape Key");
         translationBuilder.add(ModItems.MEMORY_PAGING, "Memory Paging");
         translationBuilder.add("message.digitalfrontier.exited_grid", "Left the grid");

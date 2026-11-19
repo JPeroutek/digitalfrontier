@@ -1,5 +1,6 @@
 package com.partatoes.digitalfrontier.entity.custom;
 
+import com.partatoes.digitalfrontier.block.custom.MovingLightBlock;
 import com.partatoes.digitalfrontier.grid.arrival.GridArrival;
 import com.partatoes.digitalfrontier.grid.core.CoreManager;
 import com.partatoes.digitalfrontier.grid.core.CoreState;
@@ -47,7 +48,9 @@ import java.util.EnumSet;
  * drift about the clean streets of the city. It keeps out of fights: while its owner is in one it hovers above, out
  * of reach, and only players other than its owner can hurt it.
  */
-public class BoolEntity extends TamableAnimal {
+public class BoolEntity extends TamableAnimal implements MovingLightBlock.Emitter {
+    // How brightly a Bool lights the space around it
+    private static final int LIGHT = 10;
     private static final EntityDataAccessor<Byte> SIGNAL = SynchedEntityData.defineId(BoolEntity.class, EntityDataSerializers.BYTE);
     private static final double THREAT_RANGE = 16;
     // How recently its owner must have hit or been hit for it to keep clear
@@ -95,8 +98,16 @@ public class BoolEntity extends TamableAnimal {
     }
 
     @Override
+    public int emittedLight() {
+        return LIGHT;
+    }
+
+    @Override
     protected void customServerAiStep(ServerLevel world) {
         super.customServerAiStep(world);
+        if (tickCount % 2 == 0) {
+            MovingLightBlock.shine(world, blockPosition(), LIGHT);
+        }
         if (tickCount % 10 != 0) {
             return;
         }
