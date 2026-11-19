@@ -3,6 +3,15 @@
 Ideas and planned work for the grid world generator that aren't scheduled into a phase yet. See
 `docs/grid-structures.md` for how the current generator and building templates work.
 
+## Progression
+
+- **A survival source for bits.** Nothing drops, generates or crafts Binary 0/1, so Pixel Dust, Pixels, Bytes and
+  everything made from them (the Digitizing Laser, Data Disc, Memory Paging, Core Dump, Lightcycle Baton) are
+  creative-only. Candidates: programs or static dropping bits, bits from mining static or Luminance Ore, or a
+  Mechanic trade.
+- **The Portal Keeper's lines** say the Portal needs an Escape Key, but the Portal lets anyone out. Either gate the
+  Portal on a key or change the lines.
+
 ## Tuned grids
 
 - **Idle unloading.** Every tuned grid stays loaded from server start (Fantasy persistent worlds), costing memory
