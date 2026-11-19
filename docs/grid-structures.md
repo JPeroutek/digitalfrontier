@@ -138,6 +138,7 @@ id (`digitalfrontier:<name>`), which F3 shows when you stand on it.
 | `floors` | no | Parts for the repeated middle section. Each floor picks one at random. |
 | `roof` | no | Part placed once on top. |
 | `min_floors` / `max_floors` | no (0 / 64) | Clamp on the floor count the layout asks for. The layout asks for up to 24 floors in the core, tapering to about 3 at the city edge. |
+| `residents` | no | Job programs that work here (`mechanic`, `portal_keeper`), one each, spawned on the ground floor when the chunk generates. They stay at their post and trade; their offers are `data/<namespace>/grid/job/<job>.json`. The city core always sets aside one building chunk for a building with a `mechanic` resident, if any is loaded (`/grid locate <grid> garage`). |
 
 At least one of `base`, `floors` or `roof` is required. Floors stop early rather than build past the top of
 the world (Y 319).
@@ -259,8 +260,8 @@ Laser's "Decay" slider). Where a grid is decayed, the same template comes out:
 | Tier | What happens to your blocks |
 |---|---|
 | LOW | Pattern lines show the wrong color; gridstone and gridstone bricks crack. |
-| UNSTABLE | Holes through walls and floors; 4×4 columns of the building slide up or down; pattern lines glitch. |
-| CORRUPTED, SEVERE | Blocks turn to static; some buildings break off partway up and float apart in fragments. |
+| UNSTABLE | Holes through walls and floors; 4×4 columns of the building slide up or down; pattern lines glitch; the first stray blocks of static. |
+| CORRUPTED, SEVERE | Static grows thick (it rises with the cube of decay, from a block or two a chunk to a third of all blocks); some buildings break off partway up and float apart in fragments. |
 
 Site buildings (terminals, the Portal, strongholds) keep their shape: only their materials decay. Arrival Pads
 and Portal blocks are never changed.
@@ -287,6 +288,8 @@ claims them.
 
 The regime color is the grid setting `regime_color` (a dye color, red by default). It isn't on the tuning laser;
 set it in a grid's settings by hand.
+
+What the regime does with its ground, recruiting programs and judging players, is in `docs/regime.md`.
 
 ## Testing your structures
 

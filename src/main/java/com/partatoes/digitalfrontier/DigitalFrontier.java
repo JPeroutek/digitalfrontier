@@ -9,6 +9,8 @@ import com.partatoes.digitalfrontier.grid.GridCommands;
 import com.partatoes.digitalfrontier.grid.GridManager;
 import com.partatoes.digitalfrontier.grid.GridRegistries;
 import com.partatoes.digitalfrontier.grid.GridSpawner;
+import com.partatoes.digitalfrontier.grid.core.CoreManager;
+import com.partatoes.digitalfrontier.grid.regime.Regime;
 import com.partatoes.digitalfrontier.grid.stronghold.StrongholdEvents;
 import com.partatoes.digitalfrontier.grid.stronghold.StrongholdManager;
 import com.partatoes.digitalfrontier.grid.tuning.GridTuningNetworking;
@@ -69,6 +71,8 @@ public class DigitalFrontier implements ModInitializer {
 		StrongholdManager.register();
 		StrongholdEvents.register();
 		GridSpawner.register();
+		Regime.register();
+		CoreManager.register();
 		ModCompat.register();
 
 		// The films' names and the project's character skins, off unless a player or server owner turns it on.

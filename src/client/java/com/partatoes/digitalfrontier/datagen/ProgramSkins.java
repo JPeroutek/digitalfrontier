@@ -1,6 +1,7 @@
 package com.partatoes.digitalfrontier.datagen;
 
 import java.awt.image.BufferedImage;
+import java.util.Random;
 
 /**
  * Placeholder program skins, painted in code on the 64×64 player layout: a dark suit with glowing seams, a visor
@@ -8,7 +9,7 @@ import java.awt.image.BufferedImage;
  * helmet. They're stand-ins until real art exists; the overlay layers are left empty.
  */
 final class ProgramSkins {
-    enum Emblem { DIAMOND, RING, BARS, CHEVRON, CROSS }
+    enum Emblem { DIAMOND, RING, BARS, CHEVRON, CROSS, HORN }
 
     /**
      * @param faceplate a closed helmet with a vertical slit, instead of a visor band
@@ -22,6 +23,15 @@ final class ProgramSkins {
     static final Look BLUE = new Look(0x7FB6FF, Emblem.BARS, false, false);
     static final Look SOVEREIGN = new Look(0xFFB000, Emblem.CHEVRON, false, true);
     static final Look WARDEN = new Look(0xFF6A00, Emblem.CROSS, true, false);
+    static final Look RECRUITER = new Look(0xFF2A2A, Emblem.HORN, false, true);
+    // A program near the end of its drift into decay
+    static final Look FRAYING = new Look(0xFF8A1E, Emblem.DIAMOND, false, false);
+    // Job programs
+    static final Look MECHANIC = new Look(0x9BFF4F, Emblem.BARS, false, true);
+    static final Look PORTAL_KEEPER = new Look(0xE2CCFF, Emblem.RING, true, false);
+    // Redeemed lieutenants: the same suits, their circuitry gone white
+    static final Look SOVEREIGN_RESTORED = new Look(0xF4FBFF, Emblem.CHEVRON, false, true);
+    static final Look WARDEN_RESTORED = new Look(0xF4FBFF, Emblem.CROSS, true, false);
 
     private static final int SUIT = 0xFF1A1E24;
     private static final int SUIT_LIGHT = 0xFF242A32;
@@ -85,6 +95,120 @@ final class ProgramSkins {
         }
     }
 
+    /**
+     * A Bool's frame (see BoolModel, whose cubes are 5 and 7 pixels a side, at V 0 and 12), drawn cut out: every
+     * face's rim and a point at its centre in its glow, the rest open. Its panes are a separate texture.
+     */
+    static BufferedImage paintBool(int glow) {
+        BufferedImage image = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
+        int rim = 0xFF000000 | glow;
+        boolFaces((x, y, size) -> {
+            fill(image, x, y, size, size, rim);
+            fill(image, x + 1, y + 1, size - 2, size - 2, 0);
+            fill(image, x + size / 2, y + size / 2, 1, 1, rim);
+        });
+        return image;
+    }
+
+    /**
+     * The panes filling a Bool's faces, drawn over its frame by a pass that doesn't write depth: a faint, mostly
+     * see-through tint of its glow inside each rim, so every face shows through every other whatever order they're
+     * drawn in.
+     */
+    static BufferedImage paintBoolPanes(int glow) {
+        BufferedImage image = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
+        boolFaces((x, y, size) -> fill(image, x + 1, y + 1, size - 2, size - 2, 0x48000000 | glow));
+        return image;
+    }
+
+    /**
+     * A Bool's halo, drawn around it the same way: a faint wash of its glow, strongest at each face's centre and
+     * fading toward the edges, so the enlarged copy reads as light rather than a second solid.
+     */
+    static BufferedImage paintBoolHalo(int glow) {
+        BufferedImage image = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
+        boolFaces((x, y, size) -> {
+            fill(image, x, y, size, size, 0x0C000000 | glow);
+            fill(image, x + 1, y + 1, size - 2, size - 2, 0x1C000000 | glow);
+            fill(image, x + 2, y + 2, size - 4, size - 4, 0x30000000 | glow);
+        });
+        return image;
+    }
+
+    @FunctionalInterface
+    private interface FacePainter {
+        void paint(int x, int y, int size);
+    }
+
+    // Every face of the Bool's two cubes (size, V), in the standard box layout: top and bottom, then the four sides
+    private static void boolFaces(FacePainter painter) {
+        for (int[] cube : new int[][]{{5, 0}, {7, 12}}) {
+            int size = cube[0];
+            int v = cube[1];
+            painter.paint(size, v, size);
+            painter.paint(2 * size, v, size);
+            for (int side = 0; side < 4; side++) {
+                painter.paint(side * size, v + size, size);
+            }
+        }
+    }
+
+    /** The Disinfection Pad's block texture: a dark tile, a bright rim, and a glowing cross. */
+    static BufferedImage paintPad() {
+        BufferedImage image = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+        int glow = 0xFF7FFFD4;
+        fill(image, 0, 0, 16, 16, 0xFF0B1418);
+        hLine(image, 0, 0, 16, glow);
+        hLine(image, 0, 15, 16, glow);
+        vLine(image, 0, 0, 16, glow);
+        vLine(image, 15, 0, 16, glow);
+        fill(image, 6, 3, 4, 10, glow);
+        fill(image, 3, 6, 10, 4, glow);
+        fill(image, 7, 4, 2, 8, 0xFFFFFFFF);
+        fill(image, 4, 7, 8, 2, 0xFFFFFFFF);
+        return image;
+    }
+
+    /**
+     * The System Core's texture (64×128, see SystemCoreModel): dark cells with red rims, a few lit through, laid over the
+     * whole sheet so every face of its three blocks shows the same circuitry.
+     */
+    static BufferedImage paintCore() {
+        BufferedImage image = new BufferedImage(64, 128, BufferedImage.TYPE_INT_ARGB);
+        Random random = new Random(0xC0AE);
+        for (int cellX = 0; cellX < 64; cellX += 4) {
+            for (int cellY = 0; cellY < 128; cellY += 4) {
+                boolean lit = random.nextInt(6) == 0;
+                fill(image, cellX, cellY, 4, 4, 0xFFB01818);
+                fill(image, cellX + 1, cellY + 1, 2, 2, lit ? 0xFFFF6040 : 0xFF140606);
+            }
+        }
+        return image;
+    }
+
+    /** The core seal's block texture: a dark plate crossed by red bars, its rim lit. */
+    static BufferedImage paintSeal() {
+        BufferedImage image = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+        fill(image, 0, 0, 16, 16, 0xFF120606);
+        hLine(image, 0, 0, 16, 0xFFFF3030);
+        hLine(image, 0, 15, 16, 0xFFFF3030);
+        vLine(image, 0, 0, 16, 0xFFFF3030);
+        vLine(image, 15, 0, 16, 0xFFFF3030);
+        for (int i = 2; i < 14; i++) {
+            set(image, i, i, 0xFFD02020);
+            set(image, 15 - i, i, 0xFFD02020);
+        }
+        fill(image, 6, 6, 4, 4, 0xFFFF6040);
+        return image;
+    }
+
+    private static int scale(int rgb, double factor) {
+        int r = (int) (((rgb >> 16) & 0xFF) * factor);
+        int g = (int) (((rgb >> 8) & 0xFF) * factor);
+        int b = (int) ((rgb & 0xFF) * factor);
+        return r << 16 | g << 8 | b;
+    }
+
     // On the 8-wide, 6-tall chest area starting at (x, y)
     private static void emblem(BufferedImage image, int x, int y, Emblem emblem, int glow) {
         switch (emblem) {
@@ -119,6 +243,15 @@ final class ProgramSkins {
                     set(image, x + 1 + i, y + i, glow);
                     set(image, x + 6 - i, y + i, glow);
                 }
+            }
+            // A loudhailer: a mouthpiece widening into a flared bell
+            case HORN -> {
+                vLine(image, x + 1, y + 2, 2, glow);
+                vLine(image, x + 2, y + 2, 2, glow);
+                vLine(image, x + 3, y + 1, 4, glow);
+                vLine(image, x + 4, y + 1, 4, glow);
+                vLine(image, x + 5, y, 6, glow);
+                vLine(image, x + 6, y, 6, glow);
             }
         }
     }

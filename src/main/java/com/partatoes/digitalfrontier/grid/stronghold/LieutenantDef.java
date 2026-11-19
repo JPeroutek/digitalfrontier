@@ -21,6 +21,10 @@ import net.minecraft.world.level.storage.loot.LootTable;
  * @param minGridRegime     only strongholds of grids whose regime is at least this strong (0 to 1) can have this lieutenant
  * @param lootTable         what it drops when derezzed; without one, the lieutenant entity's default table
  *                          ({@code digitalfrontier:entities/lieutenant})
+ * @param restore           when it's redeemed instead of derezzed: tested at the moment it's defeated (see
+ *                          {@link StrongholdManager#tryRestore}); without one,
+ *                          it can't be
+ * @param restoredTexture   its skin once redeemed; defaults to the archetype's redeemed skin
  */
 public record LieutenantDef(
         Component name,
@@ -33,7 +37,9 @@ public record LieutenantDef(
         float minGridRegime,
         float maxGridRegime,
         Optional<ResourceKey<LootTable>> lootTable,
-        Respawn respawn) {
+        Respawn respawn,
+        Optional<Trigger> restore,
+        Optional<Identifier> restoredTexture) {
 
     public static final Codec<LieutenantDef> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             ComponentSerialization.CODEC.fieldOf("name").forGetter(LieutenantDef::name),
@@ -46,13 +52,25 @@ public record LieutenantDef(
             Codec.floatRange(0, 1).optionalFieldOf("min_grid_regime", 0f).forGetter(LieutenantDef::minGridRegime),
             Codec.floatRange(0, 1).optionalFieldOf("max_grid_regime", 1f).forGetter(LieutenantDef::maxGridRegime),
             ResourceKey.codec(Registries.LOOT_TABLE).optionalFieldOf("loot_table").forGetter(LieutenantDef::lootTable),
-            Respawn.CODEC.fieldOf("respawn").forGetter(LieutenantDef::respawn)
+            Respawn.CODEC.fieldOf("respawn").forGetter(LieutenantDef::respawn),
+            Trigger.CODEC.optionalFieldOf("restore").forGetter(LieutenantDef::restore),
+            Identifier.CODEC.optionalFieldOf("restored_texture").forGetter(LieutenantDef::restoredTexture)
     ).apply(instance, LieutenantDef::new));
 
     /** The same lieutenant in another skin. */
     public LieutenantDef withTexture(Identifier skin) {
         return new LieutenantDef(name, archetype, Optional.of(skin), health, weight, minGridCorruption, maxGridCorruption, minGridRegime, maxGridRegime,
-                lootTable, respawn);
+                lootTable, respawn, restore, restoredTexture);
+    }
+
+    /** The same lieutenant with another skin once redeemed. */
+    public LieutenantDef withRestoredTexture(Identifier skin) {
+        return new LieutenantDef(name, archetype, texture, health, weight, minGridCorruption, maxGridCorruption, minGridRegime, maxGridRegime,
+                lootTable, respawn, restore, Optional.of(skin));
+    }
+
+    public Identifier restoredTextureOrDefault() {
+        return restoredTexture.orElse(archetype.defaultRestoredTexture());
     }
 
     public Identifier textureOrDefault() {
@@ -78,9 +96,9 @@ public record LieutenantDef(
     /** How a lieutenant fights. Behavior lives in code; each definition picks one. */
     public enum Archetype implements StringRepresentable {
         /** Commands the regime: keeps its distance, calls in enforcers, hits hard when cornered. */
-        RULER("ruler", 300, 0.26, "sovereign64"),
+        RULER("ruler", 300, 0.26, "sovereign64", "sovereign_restored64"),
         /** The silent enforcer: fast, relentless, closes distance in sudden dashes. */
-        DUELIST("duelist", 220, 0.36, "warden64");
+        DUELIST("duelist", 220, 0.36, "warden64", "warden_restored64");
 
         public static final Codec<Archetype> CODEC = StringRepresentable.fromEnum(Archetype::values);
 
@@ -88,8 +106,10 @@ public record LieutenantDef(
         private final double defaultHealth;
         private final double speed;
         private final String skin;
+        private final String restoredSkin;
 
-        Archetype(String name, double defaultHealth, double speed, String skin) {
+        Archetype(String name, double defaultHealth, double speed, String skin, String restoredSkin) {
+            this.restoredSkin = restoredSkin;
             this.name = name;
             this.defaultHealth = defaultHealth;
             this.speed = speed;
@@ -116,6 +136,10 @@ public record LieutenantDef(
 
         public Identifier defaultTexture() {
             return Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "textures/entity/" + skin + ".png");
+        }
+
+        public Identifier defaultRestoredTexture() {
+            return Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "textures/entity/" + restoredSkin + ".png");
         }
 
         @Override

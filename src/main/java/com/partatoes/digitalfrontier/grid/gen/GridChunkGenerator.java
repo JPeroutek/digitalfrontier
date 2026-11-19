@@ -2,7 +2,9 @@ package com.partatoes.digitalfrontier.grid.gen;
 
 import com.mojang.serialization.MapCodec;
 import com.partatoes.digitalfrontier.entity.ModEntities;
+import com.partatoes.digitalfrontier.entity.custom.BoolEntity;
 import com.partatoes.digitalfrontier.entity.custom.ProgramEntity;
+import com.partatoes.digitalfrontier.grid.jobs.ProgramJob;
 import com.partatoes.digitalfrontier.grid.layout.ChunkPlan;
 import com.partatoes.digitalfrontier.grid.layout.CorruptionTier;
 import com.partatoes.digitalfrontier.grid.layout.GridLayout;
@@ -42,6 +44,7 @@ import com.partatoes.digitalfrontier.entity.custom.CorruptedProgramEntity;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.jetbrains.annotations.Nullable;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
@@ -242,6 +245,8 @@ public class GridChunkGenerator extends ChunkGenerator {
         GridChunkBuild build = build(chunkPos.x(), chunkPos.z());
         ChunkPlan plan = build.plan();
         spawnInPassage(region, build, plan);
+        spawnGreeter(region, build);
+        spawnResidents(region, build);
         boolean inhabited = plan.zone() == Zone.CITY_CORE || plan.zone() == Zone.CITY || plan.zone() == Zone.WAYPOINT;
         boolean open = plan.type() == PlanType.STREET || plan.type() == PlanType.PLAZA;
         if (!inhabited || !open || plan.tier().compareTo(CorruptionTier.LOW) > 0) {
@@ -265,6 +270,59 @@ public class GridChunkGenerator extends ChunkGenerator {
             program.setPersistenceRequired();
             region.addFreshEntityWithPassengers(program);
         }
+    }
+
+    // The job programs a building names, each at its own spot on the ground floor
+    private static void spawnResidents(WorldGenRegion region, GridChunkBuild build) {
+        List<ProgramJob> residents = build.residents();
+        ChunkPos chunkPos = region.getCenter();
+        for (int i = 0; i < residents.size(); i++) {
+            BlockPos spot = groundFloorSpot(build, i);
+            if (spot == null) {
+                continue;
+            }
+            ProgramEntity program = ModEntities.PROGRAM.create(region.getLevel(), EntitySpawnReason.CHUNK_GENERATION);
+            if (program == null) {
+                return;
+            }
+            BlockPos home = chunkPos.getWorldPosition().offset(spot);
+            program.snapTo(home.getX() + 0.5, home.getY(), home.getZ() + 0.5, 0, 0);
+            program.setJob(residents.get(i), home);
+            region.addFreshEntityWithPassengers(program);
+        }
+    }
+
+    // A place to stand, as a local position: two air blocks over a solid one, as low as possible above the street,
+    // trying spots around the chunk in turn
+    @Nullable
+    private static BlockPos groundFloorSpot(GridChunkBuild build, int nth) {
+        int[][] spots = {{4, 4}, {11, 11}, {4, 11}, {11, 4}, {8, 3}, {3, 8}, {12, 8}, {8, 12}};
+        for (int i = 0; i < spots.length; i++) {
+            int[] spot = spots[(nth * 3 + i) % spots.length];
+            for (int y = GridLayout.FLOOR_Y + 1; y < GridLayout.FLOOR_Y + 24; y++) {
+                if (!build.blockAt(spot[0], y - 1, spot[1]).isAir() && build.blockAt(spot[0], y, spot[1]).isAir()
+                        && build.blockAt(spot[0], y + 1, spot[1]).isAir()) {
+                    return new BlockPos(spot[0], y, spot[1]);
+                }
+            }
+        }
+        return null;
+    }
+
+    // A wild Bool waits on the avenue just outside the main arrival terminal, so every newcomer can find one
+    private void spawnGreeter(WorldGenRegion region, GridChunkBuild build) {
+        Site arrival = layout().mainArrival();
+        ChunkPos chunkPos = region.getCenter();
+        if (chunkPos.x() != arrival.chunkX() || chunkPos.z() != arrival.chunkZ() - 1) {
+            return;
+        }
+        BoolEntity bool = ModEntities.BOOL.create(region.getLevel(), EntitySpawnReason.CHUNK_GENERATION);
+        if (bool == null) {
+            return;
+        }
+        bool.snapTo(chunkPos.getMinBlockX() + 8.5, build.columnTop(8, 8) + 2, chunkPos.getMinBlockZ() + 8.5, 0, 0);
+        bool.setPersistenceRequired();
+        region.addFreshEntityWithPassengers(bool);
     }
 
     // Subway maintenance passages in unstable ground shelter a corrupted program, one that fights back where it's worse

@@ -62,6 +62,21 @@ public class ModBlocks {
             new BoosterBlock(BlockBehaviour.Properties
                     .ofFullCopy(Blocks.DEEPSLATE)
                     .setId(ResourceKey.create(Registries.BLOCK, BOOSTER_BLOCK_ID))));
+    // Closes the shaft down to the System Core's chamber until the regime's last lieutenant falls; unbreakable
+    public static final Identifier CORE_SEAL_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "core_seal");
+    public static final Block CORE_SEAL = registerBlock(CORE_SEAL_ID,
+            new Block(BlockBehaviour.Properties
+                    .ofFullCopy(Blocks.BEDROCK)
+                    .lightLevel(state -> 10)
+                    .noLootTable()
+                    .setId(ResourceKey.create(Registries.BLOCK, CORE_SEAL_ID))));
+    // Cures corrupted programs that step on it
+    public static final Identifier DISINFECTION_PAD_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "disinfection_pad");
+    public static final Block DISINFECTION_PAD = registerBlock(DISINFECTION_PAD_ID,
+            new DisinfectionPadBlock(BlockBehaviour.Properties
+                    .ofFullCopy(Blocks.DEEPSLATE)
+                    .lightLevel(state -> 7)
+                    .setId(ResourceKey.create(Registries.BLOCK, DISINFECTION_PAD_ID))));
     public static final Identifier GRIDSTONE_STAIRS_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "gridstone_stairs");
     public static final Block GRIDSTONE_STAIRS = registerBlock(GRIDSTONE_STAIRS_ID,
             new StairBlock(ModBlocks.GRIDSTONE_BLOCK.defaultBlockState(),

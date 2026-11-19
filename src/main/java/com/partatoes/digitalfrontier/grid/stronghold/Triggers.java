@@ -4,12 +4,16 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.partatoes.digitalfrontier.entity.custom.BoolEntity;
+import com.partatoes.digitalfrontier.grid.core.CoreManager;
+import com.partatoes.digitalfrontier.grid.regime.Regime;
 import com.partatoes.digitalfrontier.grid.stronghold.Trigger.EventTrigger;
 import com.partatoes.digitalfrontier.grid.stronghold.Trigger.StateTrigger;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.attribute.EnvironmentAttributes;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.ReadOnlyScoreInfo;
 import net.minecraft.world.scores.ScoreHolder;
@@ -37,6 +41,11 @@ public final class Triggers {
                 Map.entry(Thunder.TYPE, Thunder.CODEC),
                 Map.entry(Score.TYPE, Score.CODEC),
                 Map.entry(AllDefeated.TYPE, AllDefeated.CODEC),
+                Map.entry(CoreDefeated.TYPE, CoreDefeated.CODEC),
+                // States of a defeat, for restore triggers
+                Map.entry(CompanionPresent.TYPE, CompanionPresent.CODEC),
+                Map.entry(DefeatedUnarmored.TYPE, DefeatedUnarmored.CODEC),
+                Map.entry(KillerAlignment.TYPE, KillerAlignment.CODEC),
                 // Events
                 Map.entry(GridEntered.TYPE, GridEntered.CODEC),
                 Map.entry(StrongholdEntered.TYPE, StrongholdEntered.CODEC),
@@ -49,6 +58,7 @@ public final class Triggers {
                 Map.entry(PlayerDerezzed.TYPE, PlayerDerezzed.CODEC),
                 Map.entry(PortalUsed.TYPE, PortalUsed.CODEC),
                 Map.entry(ProgramDerezzed.TYPE, ProgramDerezzed.CODEC),
+                Map.entry(ProgramRestored.TYPE, ProgramRestored.CODEC),
                 Map.entry(MemoryPaged.TYPE, MemoryPaged.CODEC),
                 Map.entry(Function.TYPE, Function.CODEC),
                 // Combinators
@@ -167,6 +177,78 @@ public final class Triggers {
 
         public boolean holds(TriggerContext context) {
             return context.allDefeated();
+        }
+    }
+
+    /** This grid's System Core has been derezzed (see docs/lieutenants.md). */
+    public record CoreDefeated() implements StateTrigger {
+        static final String TYPE = "core_defeated";
+        static final MapCodec<CoreDefeated> CODEC = unit(CoreDefeated::new);
+
+        public String type() {
+            return TYPE;
+        }
+
+        public boolean holds(TriggerContext context) {
+            return CoreManager.defeated(context.grid());
+        }
+    }
+
+    // ---- States of a defeat, for restore triggers ----
+
+    /** A tamed Bool is within this many blocks of the lieutenant as it falls: it recognizes a friend. */
+    public record CompanionPresent(int radius) implements StateTrigger {
+        static final String TYPE = "companion_present";
+        static final MapCodec<CompanionPresent> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
+                Codec.intRange(1, 128).optionalFieldOf("radius", 16).forGetter(CompanionPresent::radius)).apply(i, CompanionPresent::new));
+
+        public String type() {
+            return TYPE;
+        }
+
+        public boolean holds(TriggerContext context) {
+            TriggerContext.Defeat defeat = context.defeat();
+            return defeat != null && !context.grid().getEntitiesOfClass(BoolEntity.class,
+                    defeat.lieutenant().getBoundingBox().inflate(radius), BoolEntity::isTame).isEmpty();
+        }
+    }
+
+    /** The player who brought the lieutenant down wears no armour: they came in the open. */
+    public record DefeatedUnarmored() implements StateTrigger {
+        static final String TYPE = "defeated_unarmored";
+        static final MapCodec<DefeatedUnarmored> CODEC = unit(DefeatedUnarmored::new);
+
+        public String type() {
+            return TYPE;
+        }
+
+        public boolean holds(TriggerContext context) {
+            TriggerContext.Defeat defeat = context.defeat();
+            if (defeat == null || defeat.killer() == null) {
+                return false;
+            }
+            for (EquipmentSlot slot : EquipmentSlot.values()) {
+                if (slot.getType() == EquipmentSlot.Type.HUMANOID_ARMOR && !defeat.killer().getItemBySlot(slot).isEmpty()) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
+    /** The player who brought the lieutenant down is at most this aligned with the regime (see docs/regime.md). */
+    public record KillerAlignment(float max) implements StateTrigger {
+        static final String TYPE = "killer_alignment";
+        static final MapCodec<KillerAlignment> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
+                Codec.floatRange(-1, 1).fieldOf("max").forGetter(KillerAlignment::max)).apply(i, KillerAlignment::new));
+
+        public String type() {
+            return TYPE;
+        }
+
+        public boolean holds(TriggerContext context) {
+            TriggerContext.Defeat defeat = context.defeat();
+            return defeat != null && defeat.killer() != null && Regime.alignment(defeat.killer()) <= max;
         }
     }
 
@@ -346,6 +428,21 @@ public final class Triggers {
 
         public boolean matches(GridEvent event, TriggerContext context) {
             return event instanceof GridEvent.ProgramDerezzed derezzed && within(derezzed.pos(), context, radius);
+        }
+    }
+
+    /** A corrupted program was cured on a Disinfection Pad. */
+    public record ProgramRestored(int radius) implements EventTrigger {
+        static final String TYPE = "program_restored";
+        static final MapCodec<ProgramRestored> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
+                Codec.INT.optionalFieldOf("radius", -1).forGetter(ProgramRestored::radius)).apply(i, ProgramRestored::new));
+
+        public String type() {
+            return TYPE;
+        }
+
+        public boolean matches(GridEvent event, TriggerContext context) {
+            return event instanceof GridEvent.ProgramRestored restored && within(restored.pos(), context, radius);
         }
     }
 

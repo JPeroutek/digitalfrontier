@@ -1,6 +1,7 @@
 package com.partatoes.digitalfrontier.datagen;
 
 import com.partatoes.digitalfrontier.DigitalFrontier;
+import com.partatoes.digitalfrontier.block.custom.DisinfectionPadBlock;
 import com.partatoes.digitalfrontier.entity.ModEntities;
 import com.partatoes.digitalfrontier.item.ModItems;
 import net.fabricmc.fabric.api.datagen.v1.FabricPackOutput;
@@ -35,6 +36,25 @@ public class ModEntityLootProvider extends SimpleFabricLootTableSubProvider {
         exporter.accept(ModEntities.LIEUTENANT.getDefaultLootTable().orElseThrow(), lieutenantLoot(ModItems.MEMORY_PAGING));
         // The ruler guards something better
         exporter.accept(SOVEREIGN_LOOT, lieutenantLoot(ModItems.CORE_DUMP));
+        // The regime's heart: backups for whoever broke it
+        exporter.accept(ModEntities.SYSTEM_CORE.getDefaultLootTable().orElseThrow(), LootTable.lootTable()
+                .withPool(LootPool.lootPool()
+                        .setRolls(ContextIntProviders.exactly(1))
+                        .add(LootItem.lootTableItem(ModItems.CORE_DUMP)
+                                .apply(SetItemCountFunction.setCount(ContextIntProviders.exactly(2)))))
+                .withPool(LootPool.lootPool()
+                        .setRolls(ContextIntProviders.exactly(1))
+                        .add(LootItem.lootTableItem(ModItems.DATA_DISC)))
+                .withPool(LootPool.lootPool()
+                        .setRolls(ContextIntProviders.exactly(1))
+                        .add(LootItem.lootTableItem(ModItems.LUMINESSENCE)
+                                .apply(SetItemCountFunction.setCount(ContextIntProviders.between(8, 16))))));
+        // What the corruption held, released when a Disinfection Pad cures a program
+        exporter.accept(DisinfectionPadBlock.CURE_LOOT, LootTable.lootTable()
+                .withPool(LootPool.lootPool()
+                        .setRolls(ContextIntProviders.exactly(1))
+                        .add(LootItem.lootTableItem(ModItems.LUMINESSENCE)
+                                .apply(SetItemCountFunction.setCount(ContextIntProviders.between(1, 2))))));
     }
 
     private static LootTable.Builder lieutenantLoot(Item rareDrop) {

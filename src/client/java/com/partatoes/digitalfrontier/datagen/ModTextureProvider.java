@@ -67,6 +67,24 @@ public class ModTextureProvider implements DataProvider {
         }
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.SOVEREIGN), "sovereign64")));
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.WARDEN), "warden64")));
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.RECRUITER), "recruiter64")));
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.FRAYING), "program_fraying")));
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.MECHANIC), "job/mechanic")));
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.PORTAL_KEEPER), "job/portal_keeper")));
+        futures.add(CompletableFuture.runAsync(() -> writeBufferedImageToPath(writer, ProgramSkins.paintPad(), "disinfection_pad")));
+        futures.add(CompletableFuture.runAsync(() -> writeBufferedImageToPath(writer, ProgramSkins.paintSeal(), "core_seal")));
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paintCore(), "system_core")));
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.SOVEREIGN_RESTORED), "sovereign_restored64")));
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.WARDEN_RESTORED), "warden_restored64")));
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paintBool(0x4FE3FF), "bool_idle")));
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paintBool(0xFFF2A0), "bool_yes")));
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paintBool(0xFF3030), "bool_no")));
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paintBoolPanes(0x4FE3FF), "bool_idle_panes")));
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paintBoolPanes(0xFFF2A0), "bool_yes_panes")));
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paintBoolPanes(0xFF3030), "bool_no_panes")));
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paintBoolHalo(0x4FE3FF), "bool_idle_halo")));
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paintBoolHalo(0xFFF2A0), "bool_yes_halo")));
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paintBoolHalo(0xFF3030), "bool_no_halo")));
 
         // Combine all futures into a single future that completes when all variants are done
         return CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));

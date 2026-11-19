@@ -39,8 +39,6 @@ Ideas and planned work for the grid world generator that aren't scheduled into a
   obvious from the road. Placed from the layout where a road chunk's control first reaches CONTROLLED. No pylons
   or boundary markers off the roads.
 - **Bigger, more detailed strongholds, and more of them.**
-- **A final boss.** `all_lieutenants_defeated` is in place to bring back (or summon) something bigger once the
-  whole regime falls.
 - **Real art.** Corrupted programs, enforcers and lieutenants use the Program model with existing or generated
   skins; decay shows as a render jitter (regime mobs don't jitter).
 - **Accessories.** Core Dumps keep Trinkets Updated slots. Accessories, whose compatibility layers also ran

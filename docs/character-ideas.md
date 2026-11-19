@@ -58,12 +58,16 @@ Possible conditions:
 **Builds on:** this fits the trigger system. Add a `restore` block to `LieutenantDef` holding a `Trigger`,
 evaluated at the moment of defeat.
 
+**Built:** see "Redemption" in `docs/lieutenants.md`. The Warden is redeemed with a tamed Bool nearby; the lore
+pack gives the redeemed Warden the Tron skin. Restore triggers can also use `defeated_unarmored`, `killer_alignment`,
+and any event counted during the lieutenant's reign.
+
 ### 1.3 Repurposing
 **Inspired by:** Clu's repurposing of programs, Keller's code pathogen, and the circuitry colours.
 
 **What it adds:** decay becomes something that happens *to* programs. Decay and the regime are separate axes
 (see `docs/grid-structures.md`): decay is the only one that turns programs by area. The regime recruits instead,
-through recruiters and bribery, by each program's sentiment toward it (planned; see the regime docs once built).
+through recruiters and bribery, by each program's sentiment toward it (see `docs/regime.md`).
 - Neutral (white or blue) Programs near corrupted ones, or in decayed districts, slowly turn.
 - Their circuitry shifts through yellow to orange, a visible stage, before they become corrupted programs.
 - A city bordering decay therefore slowly loses its civilians unless the player intervenes.
@@ -85,6 +89,17 @@ thank the player.
 
 **Builds on:** a new `Triggers` record, `programs_restored`, the inverse of the existing event triggers.
 
+**Built,** with 1.3:
+- **Drifting:** each program has a decay, 0 to 1, saved as `Decay`. Every 2 seconds the ground it stands on (above
+  0.3 decay) and corrupted programs within 8 blocks wear it down; clean ground lets it recover. Programs show it from
+  0.3 (they jitter) and fray orange from 0.6; at 1 they become corrupted programs. On corrupted ground that takes
+  under two minutes; on unstable ground, most of a day. The `digitalfrontier:program_decay` game rule (default
+  true) turns it off.
+- **Disinfection Pad:** two from three Luminessence over three gridstone. A corrupted program that steps on one
+  becomes a clean program again, with no decay and a fresh sentiment, drops 1-2 Luminessence, and fires the
+  `program_restored` event trigger (see `docs/lieutenants.md`). Nothing else on the pad is affected.
+- **Not yet:** hints from restored programs.
+
 ### 1.5 The final boss
 `docs/TODO.md` already plans one around `all_lieutenants_defeated`. There are two directions to choose between:
 
@@ -97,6 +112,10 @@ thank the player.
   over the city once every stronghold has fallen.
   - Earlier lieutenants return as phases: a duelist, then a commander.
   - The ship's shadow and the Voice of the Grid's announcements build up the event.
+
+**Built:** the **System Core** (the lore pack calls it the Master Control Program); see "The System Core" in
+`docs/lieutenants.md`. Defeating it weakens the regime (its patrols and recruiting) rather than lowering decay, since
+decay and the regime are separate. **Not yet:** a trophy drop, and the usurper.
 
 The system core is the more distinct of the two: The Sovereign already covers the "ruler in person" fight.
 
@@ -135,6 +154,19 @@ are:
 
 **Builds on:** the Luminance Ore Detector's "direction to a thing" logic.
 
+**Built** as the **Bool** (the lore pack calls it Bit):
+- **Finding one:** one waits on the avenue outside the main arrival terminal, and wild ones appear rarely (3% of
+  spawns, never two within 64 blocks) on the clean streets of the free city.
+- **Befriending:** right-click with Luminessence, a 1-in-3 chance per piece. Right-click with an empty hand to make
+  it stay or follow.
+- **"No":** red, spiky, a low buzz, while a corrupted program, enforcer, recruiter or lieutenant is within 16
+  blocks of its owner.
+- **"Yes":** a bright diamond and a chime while its owner faces (within 15°) the nearest stronghold whose lieutenant
+  still stands.
+- **Staying alive:** while its owner is fighting it hangs back above them. Only players other than its owner can
+  hurt it, so it survives a lieutenant fight.
+- **Not yet:** other things to track (ore, exit terminals), and the Byte upgrade.
+
 ### 2.2 ISOs and the Sea of Simulation
 **Inspired by:** ISOs, which arise on their own from the Sea of Simulation; Quorra, Radia, Gibson and the Bostrum
 Colony; Clu's Purge.
@@ -162,6 +194,15 @@ These are NPC programs with jobs, each tied to a POI the city generator can plac
 | **Racer** | Ter, Mercury | a rooftop black market or racetrack | Light cycle races for wagers. |
 | **Healer** | Moto, Tron's healing chamber | a clinic in rebel territory | Heals, and cures the player's corruption status, if one exists. |
 | **Down-and-out programs** | the Destitute Program, the Monks | streets and alleys | Ambient life: programs with no function. Some are dormant ISOs, or players' lost companions. |
+
+**Built:** the **Mechanic** (a garage in the city core, plus the odd one elsewhere) and the **Portal Keeper** (the lore
+pack calls it the Tower Guardian), as job programs that stay at their post and trade through the vanilla trading
+screen. The Mechanic sells booster blocks, light barrier emitters, coal dust and Light Cycle Batons; the Portal Keeper
+explains the Portal and sells one Escape Key a day. Prices are in Luminessence, a quarter cheaper for players as
+aligned with the regime as the program is, and a quarter dearer for those on the opposite extreme (see
+`docs/regime.md`). Offers are data (`data/<namespace>/grid/job/<job>.json`) and restock daily. Job programs
+never decay and are never recruited. **Not yet:** light cycle tuning and re-packing, and the Keeper's message to the
+overworld.
 
 ### 2.4 The games
 **Inspired by:** the Disc Arena, the Light Cycle Grid, the Ring Game (Hyperball), tank matches, and the Voice of
@@ -202,6 +243,17 @@ announcer line broadcast grid-wide. Players can also enter voluntarily, and cons
 - **Memory backup:** a player's own disc could act as a Core Dump-style backup, keeping the inventory once when
   it's in the offhand at death and breaking afterwards. That would tie into `MemoryPaging`.
 - **Dual discs:** the Warden's signature, as a rare drop that fires two discs.
+
+**Built** as the **Data Disc** (the lore pack calls it the Identity Disc). Crafted from four Luminessence around a
+Byte; 250 uses, repaired with Luminessence.
+- **Throwing:** it leaves the hand, flies straight, ricochets off up to 3 surfaces (keeping 90% of its speed each
+  time), and turns back after about a second and a quarter, or after its last bounce. On the way back it passes
+  through walls. It deals 7 damage to each creature it passes through, once per leg, and loses 1 durability per hit.
+- **Catching:** it returns to the main hand if that's empty, otherwise the inventory. If its thrower died, left,
+  or changed dimension, it drops where it is.
+- **Memory backup:** dying in a grid with no Core Dump but a Data Disc in the offhand, it counts as a Core Dump:
+  you keep your inventory, and the disc is spent. A Core Dump, if you carry one, is used first.
+- **Not yet:** records and dual discs.
 
 ### 3.2 Other gear
 - **Light staff:** reach, and a sweeping block. Inspired by the Sentries, Mercury and Ares.

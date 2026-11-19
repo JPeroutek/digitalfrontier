@@ -40,6 +40,10 @@ class TriggerTest {
                   {"type": "overworld_thunder"},
                   {"type": "scoreboard", "objective": "regime", "holder": "#power", "min": 3},
                   {"type": "all_lieutenants_defeated"},
+                  {"type": "core_defeated"},
+                  {"type": "companion_present", "radius": 24},
+                  {"type": "defeated_unarmored"},
+                  {"type": "killer_alignment", "max": -0.5},
                   {"type": "grid_entered", "new_players_only": true},
                   {"type": "stronghold_entered", "after_absence": 600},
                   {"type": "item_crafted", "item": "minecraft:diamond"},
@@ -51,6 +55,7 @@ class TriggerTest {
                   {"type": "player_derezzed"},
                   {"type": "portal_used"},
                   {"type": "program_derezzed", "radius": 64},
+                  {"type": "program_restored", "radius": 32},
                   {"type": "memory_paged"},
                   {"type": "function", "signal": "reboot"},
                   {"type": "all_of", "triggers": [{"type": "not", "trigger": {"type": "overworld_thunder"}}]},
@@ -216,6 +221,35 @@ class TriggerTest {
         assertEquals(300, def.healthOrDefault());
         assertEquals(3, def.respawn().maxRespawns());
         assertTrue(def.lootTable().isEmpty(), "no loot_table: the entity type's default table");
+    }
+
+    @Test
+    void defeatStatesNeverHoldOutsideADefeat() {
+        // So a restore-only trigger in a respawn tree can't bring a lieutenant back
+        FakeContext context = new FakeContext(new CompiledTrigger(new Triggers.PortalUsed()));
+        assertNull(context.defeat());
+        assertFalse(new Triggers.CompanionPresent(16).holds(context));
+        assertFalse(new Triggers.DefeatedUnarmored().holds(context));
+        assertFalse(new Triggers.KillerAlignment(1f).holds(context));
+    }
+
+    @Test
+    void definitionsCanBeRedeemable() {
+        String json = """
+                {"name": "The Warden", "archetype": "duelist", "respawn": {"trigger": {"type": "function"}},
+                 "restore": {"type": "any_of", "triggers": [{"type": "companion_present"}, {"type": "count", "count": 2, "trigger": {"type": "block_broken"}}]},
+                 "restored_texture": "mypack:textures/entity/tron.png"}""";
+        LieutenantDef def = LieutenantDef.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseString(json)).getOrThrow();
+        assertTrue(def.restore().isPresent());
+        assertEquals(Identifier.fromNamespaceAndPath("mypack", "textures/entity/tron.png"), def.restoredTextureOrDefault());
+        CompiledTrigger restore = new CompiledTrigger(def.restore().orElseThrow());
+        assertEquals(2, restore.leaves().size());
+        assertEquals(new Triggers.CompanionPresent(16), restore.leaves().getFirst(), "radius defaults to 16");
+
+        LieutenantDef plain = LieutenantDef.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseString(
+                "{\"name\": \"X\", \"archetype\": \"ruler\", \"respawn\": {\"trigger\": {\"type\": \"function\"}}}")).getOrThrow();
+        assertTrue(plain.restore().isEmpty(), "not redeemable without a restore trigger");
+        assertEquals(LieutenantDef.Archetype.RULER.defaultRestoredTexture(), plain.restoredTextureOrDefault());
     }
 
     @Test

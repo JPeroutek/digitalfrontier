@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
+import java.util.function.ToDoubleFunction;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
@@ -20,16 +21,22 @@ import net.minecraft.world.entity.Mob;
 // State carries the chosen texture; it must not be a player render state, which the player renderer would take over
 public class GridMobRenderer<T extends Mob> extends HumanoidMobRenderer<T, HumanoidRenderState, ProgramModel> {
     private final Function<T, Identifier> texture;
-    private final float jitter;
+    private final ToDoubleFunction<T> jitter;
 
     public static class State extends HumanoidRenderState {
         Identifier texture;
+        float jitter;
     }
 
     /**
      * @param jitter 0 for none; around 0.5 for corrupted programs, 1 for the most corrupted
      */
     public GridMobRenderer(EntityRendererProvider.Context context, Function<T, Identifier> texture, float jitter) {
+        this(context, texture, entity -> jitter);
+    }
+
+    /** With a jitter worked out per entity, e.g. from how far a program has decayed. */
+    public GridMobRenderer(EntityRendererProvider.Context context, Function<T, Identifier> texture, ToDoubleFunction<T> jitter) {
         super(context, new ProgramModel(context.bakeLayer(ModModelLayers.PROGRAM)), 0.5f);
         this.texture = texture;
         this.jitter = jitter;
@@ -53,6 +60,7 @@ public class GridMobRenderer<T extends Mob> extends HumanoidMobRenderer<T, Human
     public void extractRenderState(T entity, HumanoidRenderState state, float tickDelta) {
         super.extractRenderState(entity, state, tickDelta);
         ((State) state).texture = texture.apply(entity);
+        ((State) state).jitter = (float) jitter.applyAsDouble(entity);
     }
 
     @Override
@@ -63,6 +71,7 @@ public class GridMobRenderer<T extends Mob> extends HumanoidMobRenderer<T, Human
     @Override
     public void submit(HumanoidRenderState state, PoseStack matrices, SubmitNodeCollector queue, CameraRenderState cameraState) {
         ThreadLocalRandom random = ThreadLocalRandom.current();
+        float jitter = ((State) state).jitter;
         boolean glitch = jitter > 0 && random.nextFloat() < 0.12f * jitter;
         if (glitch) {
             matrices.pushPose();

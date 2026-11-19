@@ -1,6 +1,7 @@
 package com.partatoes.digitalfrontier.item;
 
 import com.partatoes.digitalfrontier.DigitalFrontier;
+import com.partatoes.digitalfrontier.item.custom.DataDiscItem;
 import com.partatoes.digitalfrontier.item.custom.DimensionTeleporterItem;
 import com.partatoes.digitalfrontier.item.custom.EscapeKeyItem;
 import com.partatoes.digitalfrontier.item.custom.LightCycleBaton;
@@ -71,6 +72,14 @@ public class ModItems {
             .stacksTo(16)
             .rarity(Rarity.EPIC)
             .setId(ResourceKey.create(Registries.ITEM, CORE_DUMP_ID))));
+
+    // A throwing disc that ricochets and returns; in the offhand it stands in for a Core Dump once
+    public static final Identifier DATA_DISC_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "data_disc");
+    public static final Item DATA_DISC = registerItem(DATA_DISC_ID, new DataDiscItem(new Item.Properties()
+            .durability(250)
+            .repairable(LUMINESSENCE)
+            .rarity(Rarity.UNCOMMON)
+            .setId(ResourceKey.create(Registries.ITEM, DATA_DISC_ID))));
 
     private static Item registerItem(Identifier id, Item item) {
         return Registry.register(BuiltInRegistries.ITEM, id, item);

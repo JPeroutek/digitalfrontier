@@ -7,6 +7,7 @@ import com.mojang.serialization.JsonOps;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.block.ModBlocks;
 import com.partatoes.digitalfrontier.grid.layout.StreetAxis.RoadClass;
+import com.partatoes.digitalfrontier.grid.jobs.ProgramJob;
 import com.partatoes.digitalfrontier.grid.layout.Zone;
 import com.partatoes.digitalfrontier.grid.parts.GridBuildingDef;
 import com.partatoes.digitalfrontier.grid.parts.SpiralStair;
@@ -139,6 +140,16 @@ public class ModGridStarterProvider implements DataProvider {
                 .box(3, 1, 12, 3, 6, 12, BRICKS).box(12, 1, 12, 12, 6, 12, BRICKS)
                 .plate(7, 3, GLASS)
                 .ring(7, 7, 3, LIGHT));
+        // Garage: a lit bay with a wide door, a workbench along the back, and the Mechanic inside
+        parts.put("grid/starter/garage/bay", new StarterPart(16, 7)
+                .ring(0, 5, 1, BRICKS)
+                .openings(2, 3, 1, 4, GLASS)
+                .box(4, 0, 1, 11, 4, 1, AIR)
+                .plate(6, 1, BRICKS)
+                .ring(6, 6, 1, LIGHT)
+                .box(4, 5, 1, 11, 5, 1, STRIPE)
+                .box(3, 0, 13, 12, 0, 13, SLAB)
+                .box(6, 2, 14, 9, 3, 14, TARGET));
         // Portal: a tall column of light on a lit dais, visible from far across the outlands
         parts.put("grid/starter/portal/beam", new StarterPart(16, 48)
                 .plate(0, 2, BRICKS)
@@ -414,7 +425,13 @@ public class ModGridStarterProvider implements DataProvider {
                 Optional.of(id("grid/starter/stronghold/roof")), 3, 5));
         defs.put("starter_portal",new GridBuildingDef(GridBuildingDef.Kind.PORTAL,
                 List.of(Zone.OUTSKIRTS, Zone.OUTLANDS, Zone.UNALLOCATED), 10, 1,
-                Optional.of(id("grid/starter/portal/beam")), List.of(), Optional.empty(), 0, 0));
+                Optional.of(id("grid/starter/portal/beam")), List.of(), Optional.empty(), 0, 0)
+                .withResidents(List.of(ProgramJob.PORTAL_KEEPER)));
+        // Rare by weight; the city core always has one (GridLayout#garage)
+        defs.put("starter_garage", new GridBuildingDef(GridBuildingDef.Kind.BUILDING,
+                List.of(Zone.CITY_CORE, Zone.CITY), 1, 1,
+                Optional.of(id("grid/starter/garage/bay")), List.of(), Optional.empty(), 0, 0)
+                .withResidents(List.of(ProgramJob.MECHANIC)));
         level(defs, "skyroad", GridBuildingDef.Kind.SKYROAD);
         level(defs, "skyroad_junction", GridBuildingDef.Kind.SKYROAD_JUNCTION);
         level(defs, "skyroad_ramp_lower", GridBuildingDef.Kind.SKYROAD_RAMP_LOWER);

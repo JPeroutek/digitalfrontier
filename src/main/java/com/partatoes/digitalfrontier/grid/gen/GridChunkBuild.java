@@ -1,7 +1,9 @@
 package com.partatoes.digitalfrontier.grid.gen;
 
 import com.partatoes.digitalfrontier.block.ModBlocks;
+import com.partatoes.digitalfrontier.grid.jobs.ProgramJob;
 import com.partatoes.digitalfrontier.grid.layout.ChunkPlan;
+import com.partatoes.digitalfrontier.grid.layout.CoreChamber;
 import com.partatoes.digitalfrontier.grid.layout.GridLayout;
 import com.partatoes.digitalfrontier.grid.layout.GridRandom;
 import com.partatoes.digitalfrontier.grid.layout.MultiChunk;
@@ -19,8 +21,11 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LadderBlock;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
@@ -34,6 +39,9 @@ import static com.partatoes.digitalfrontier.grid.layout.GridLayout.FLOOR_Y;
  */
 final class GridChunkBuild {
     private static final int MAX_Y = 319;
+    // The System Core's chamber: a ladder against a west wall, and the regime's red light
+    private static final BlockState CORE_LADDER = Blocks.LADDER.defaultBlockState().setValue(LadderBlock.FACING, Direction.EAST);
+    private static final BlockState CORE_LIGHT = ModBlocks.GRIDSTONE_PATTERNS_AND_COLORS.get("full").get(DyeColor.RED).defaultBlockState();
     private static final double STREET_FURNITURE_CHANCE = 0.35;
     private static final Rotation[] ROTATIONS = Rotation.values();
 
@@ -106,6 +114,13 @@ final class GridChunkBuild {
                 case STREET, OPEN -> null;
             };
             candidate = kind == null ? null : assets.pick(kind, 1, plan.zone(), roll(seed, chunkX, chunkZ, 0));
+            // The core's garage chunk: a building the Mechanic works in, if any is loaded
+            if (kind == GridBuildingDef.Kind.BUILDING && layout.isGarage(chunkX, chunkZ)) {
+                GridAssets.Candidate garage = assets.pickWithResident(kind, 1, plan.zone(), ProgramJob.MECHANIC, roll(seed, chunkX, chunkZ, 0));
+                if (garage != null) {
+                    candidate = garage;
+                }
+            }
         }
         if (candidate == null) {
             return new GridChunkBuild(layout, assets, plan, chunkX, chunkZ, null, List.of(), chunkX, chunkZ, 1, Rotation.NONE);
@@ -202,6 +217,13 @@ final class GridChunkBuild {
     @Nullable
     Identifier buildingId() {
         return buildingId;
+    }
+
+    // The job programs that work in this chunk's building; a 2×2 building's live in its origin chunk
+    List<ProgramJob> residents() {
+        GridBuildingDef def = buildingId == null ? null : assets.building(buildingId);
+        boolean origin = footprintX == chunkX * 16 && footprintZ == chunkZ * 16;
+        return def == null || !origin ? List.of() : def.residents();
     }
 
     /** Highest Y any block of this chunk can occupy. */
@@ -449,6 +471,13 @@ final class GridChunkBuild {
     }
 
     private BlockState uncorruptedBlockAt(int localX, int y, int localZ) {
+        // The System Core's chamber and shaft cut through everything, the city's levels included
+        if (CoreChamber.touches(chunkX, chunkZ)) {
+            BlockState core = coreChamberBlockAt(chunkX * 16 + localX, y, chunkZ * 16 + localZ);
+            if (core != null) {
+                return core;
+            }
+        }
         // The city's levels win wherever they put something
         GridTransit.ChunkTransit levels = transit();
         if (levels.any()) {
@@ -471,6 +500,45 @@ final class GridChunkBuild {
             if (top.is(ModBlocks.GRID_PORTAL)) {
                 return top;
             }
+        }
+        return Blocks.AIR.defaultBlockState();
+    }
+
+    /**
+     * The System Core's chamber (see {@link CoreChamber}): a hall lit by red rings, a shaft down from the street with
+     * a ladder on its west wall and a lit rim, closed by the core seal in the chamber's ceiling; the ladder carries on
+     * down a pillar to the floor. Null where the chamber leaves the block to the ground or the city.
+     */
+    @Nullable
+    private static BlockState coreChamberBlockAt(int x, int y, int z) {
+        boolean shaftRing = x >= CoreChamber.SHAFT_MIN - 1 && x <= CoreChamber.SHAFT_MAX + 1
+                && z >= CoreChamber.SHAFT_MIN - 1 && z <= CoreChamber.SHAFT_MAX + 1 && !CoreChamber.inShaft(x, z);
+        if (y > CoreChamber.TOP && y <= FLOOR_Y) {
+            if (CoreChamber.inShaft(x, z)) {
+                if (y == CoreChamber.SEAL_Y) {
+                    return ModBlocks.CORE_SEAL.defaultBlockState();
+                }
+                return x == CoreChamber.LADDER_X ? CORE_LADDER : Blocks.AIR.defaultBlockState();
+            }
+            if (shaftRing) {
+                return y == FLOOR_Y ? CORE_LIGHT : ModBlocks.GRIDSTONE_BRICKS_BLOCK.defaultBlockState();
+            }
+            return null;
+        }
+        boolean border = x == CoreChamber.MIN || x == CoreChamber.MAX || z == CoreChamber.MIN || z == CoreChamber.MAX;
+        boolean inside = x >= CoreChamber.MIN && x <= CoreChamber.MAX && z >= CoreChamber.MIN && z <= CoreChamber.MAX;
+        if (inside && (y == CoreChamber.FLOOR - 1 || y == CoreChamber.TOP + 1)) {
+            return border ? CORE_LIGHT : null;
+        }
+        if (!CoreChamber.inChamber(x, y, z)) {
+            return null;
+        }
+        boolean underShaft = z >= CoreChamber.SHAFT_MIN && z <= CoreChamber.SHAFT_MAX;
+        if (underShaft && x == CoreChamber.PILLAR_X) {
+            return ModBlocks.GRIDSTONE_BRICKS_BLOCK.defaultBlockState();
+        }
+        if (underShaft && x == CoreChamber.LADDER_X) {
+            return CORE_LADDER;
         }
         return Blocks.AIR.defaultBlockState();
     }

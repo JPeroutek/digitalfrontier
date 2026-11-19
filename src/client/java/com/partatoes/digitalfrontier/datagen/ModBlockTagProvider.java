@@ -48,6 +48,7 @@ public class ModBlockTagProvider extends FabricTagsProvider.BlockTagsProvider {
                 .add(key(ModBlocks.GRIDSTONE_BRICKS_BLOCK))
                 .add(key(ModBlocks.LUMINANCE_ORE))
                 .add(key(ModBlocks.BOOSTER_BLOCK))
+                .add(key(ModBlocks.DISINFECTION_PAD))
                 .add(key(ModBlocks.GRIDSTONE_STAIRS))
                 .add(key(ModBlocks.GRIDSTONE_SLAB))
                 .add(key(ModBlocks.GRIDSTONE_WALL))

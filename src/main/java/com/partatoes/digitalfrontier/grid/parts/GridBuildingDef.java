@@ -2,6 +2,7 @@ package com.partatoes.digitalfrontier.grid.parts;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.partatoes.digitalfrontier.grid.jobs.ProgramJob;
 import com.partatoes.digitalfrontier.grid.layout.GridLayout;
 import com.partatoes.digitalfrontier.grid.layout.StreetAxis.RoadClass;
 import com.partatoes.digitalfrontier.grid.layout.Zone;
@@ -21,6 +22,8 @@ import net.minecraft.util.StringRepresentable;
  * @param footprint size in chunks: 1 for 16×16 parts, 2 for 32×32 parts
  * @param floors    candidate floor parts; each floor picks one at random
  * @param road      for street furniture: the kind of road it's for (default {@code street})
+ * @param residents job programs that work here, spawned on its ground floor when the chunk generates (see
+ *                  {@link ProgramJob})
  */
 public record GridBuildingDef(
         Kind kind,
@@ -32,7 +35,8 @@ public record GridBuildingDef(
         Optional<Identifier> roof,
         int minFloors,
         int maxFloors,
-        Optional<RoadClass> road) {
+        Optional<RoadClass> road,
+        List<ProgramJob> residents) {
 
     public static final Codec<GridBuildingDef> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Kind.CODEC.fieldOf("kind").forGetter(GridBuildingDef::kind),
@@ -44,13 +48,24 @@ public record GridBuildingDef(
             Identifier.CODEC.optionalFieldOf("roof").forGetter(GridBuildingDef::roof),
             Codec.intRange(0, 64).optionalFieldOf("min_floors", 0).forGetter(GridBuildingDef::minFloors),
             Codec.intRange(0, 64).optionalFieldOf("max_floors", 64).forGetter(GridBuildingDef::maxFloors),
-            RoadClass.CODEC.optionalFieldOf("road").forGetter(GridBuildingDef::road)
+            RoadClass.CODEC.optionalFieldOf("road").forGetter(GridBuildingDef::road),
+            ProgramJob.CODEC.listOf().optionalFieldOf("residents", List.of()).forGetter(GridBuildingDef::residents)
     ).apply(instance, GridBuildingDef::new));
 
     // Everything but street furniture is the same for every road
     public GridBuildingDef(Kind kind, List<Zone> zones, int weight, int footprint, Optional<Identifier> base, List<Identifier> floors,
                            Optional<Identifier> roof, int minFloors, int maxFloors) {
         this(kind, zones, weight, footprint, base, floors, roof, minFloors, maxFloors, Optional.empty());
+    }
+
+    public GridBuildingDef(Kind kind, List<Zone> zones, int weight, int footprint, Optional<Identifier> base, List<Identifier> floors,
+                           Optional<Identifier> roof, int minFloors, int maxFloors, Optional<RoadClass> road) {
+        this(kind, zones, weight, footprint, base, floors, roof, minFloors, maxFloors, road, List.of());
+    }
+
+    /** The same building, with job programs working in it. */
+    public GridBuildingDef withResidents(List<ProgramJob> residents) {
+        return new GridBuildingDef(kind, zones, weight, footprint, base, floors, roof, minFloors, maxFloors, road, List.copyOf(residents));
     }
 
     /** The road class street furniture is for; null for every other kind. */

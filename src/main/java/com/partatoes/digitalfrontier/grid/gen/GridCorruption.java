@@ -24,10 +24,10 @@ import static com.partatoes.digitalfrontier.grid.layout.GridLayout.FLOOR_Y;
  * <ul>
  *   <li>LOW: barely anything; a few pattern lines flicker, their glow dropping out now and then, so lightly
  *       corrupted buildings keep their clean look.</li>
- *   <li>UNSTABLE: pattern lines stray from their district color, to its neighbours on the color wheel at first and
+ *   <li>UNSTABLE: the first stray blocks of static, growing steadily denser from here on; pattern lines stray from their district color, to its neighbours on the color wheel at first and
  *       further around it as intensity rises, or glitch; gridstone cracks; holes through walls, floors and
  *       streets; columns of buildings shifted up or down ("misaligned rows").</li>
- *   <li>CORRUPTED and up: blocks dissolve into static; buildings break off above a cut and float apart.</li>
+ *   <li>CORRUPTED and up: static grows thick; buildings break off above a cut and float apart.</li>
  * </ul>
  * Structural effects (holes, shifts, breaks) are skipped on site chunks so terminals and strongholds stay intact;
  * their materials still corrupt. The Portal's chunk isn't corrupted at all (see {@link GridChunkBuild}), and
@@ -51,6 +51,8 @@ final class GridCorruption {
     private static final int HOLE_CELL = 3;
     private static final int SHIFT_GROUP = 4;
     private static final int FRAGMENT_CELL = 4;
+    // The share of blocks that are static at full intensity
+    private static final double STATIC_MAX = 0.36;
 
     private static final int SALT_RECOLOR = 5001;
     private static final int SALT_RECOLOR_PICK = 5002;
@@ -190,7 +192,7 @@ final class GridCorruption {
     }
 
     private static BlockState material(long seed, float intensity, int blockX, int y, int blockZ, BlockState state) {
-        if (intensity >= CORRUPTED && roll(seed, blockX, y, blockZ, SALT_STATIC) < (intensity - CORRUPTED) * 1.2) {
+        if (roll(seed, blockX, y, blockZ, SALT_STATIC) < staticChance(intensity)) {
             return ModBlocks.STATIC_BLOCK.defaultBlockState();
         }
         Pattern pattern = patterns().get(state.getBlock());
@@ -213,6 +215,16 @@ final class GridCorruption {
             return ModBlocks.CRACKED_GRIDSTONE_BLOCK.defaultBlockState();
         }
         return state;
+    }
+
+    /**
+     * The chance a block has dissolved into static. It creeps in from UNSTABLE with the cube of how far past it the
+     * intensity is, so a chunk shows a stray block or two at first, about ten by 0.6, and a third of its blocks at
+     * full intensity: a chunk holds well over a thousand blocks, so any linear onset would jump straight to dozens.
+     */
+    static double staticChance(float intensity) {
+        double past = Math.max(0, (intensity - UNSTABLE) / (1 - UNSTABLE));
+        return past * past * past * STATIC_MAX;
     }
 
     /**

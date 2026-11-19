@@ -7,8 +7,10 @@ import com.partatoes.digitalfrontier.grid.gen.GridChunkGenerator;
 import com.partatoes.digitalfrontier.grid.layout.GridLayout;
 import com.partatoes.digitalfrontier.grid.layout.GridRandom;
 import com.partatoes.digitalfrontier.grid.layout.Site;
+import com.partatoes.digitalfrontier.grid.regime.Regime;
 import com.partatoes.digitalfrontier.grid.stronghold.Lieutenants.Lieutenant;
 import com.partatoes.digitalfrontier.grid.stronghold.StrongholdState.Stronghold;
+import com.partatoes.digitalfrontier.grid.stronghold.TriggerContext.Defeat;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -17,8 +19,10 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -77,7 +81,26 @@ public final class StrongholdManager {
             }
             Stronghold stronghold = stronghold(grid, generator.layout(), state, site);
             Lieutenant lieutenant = stronghold.lieutenant() == null ? null : Lieutenants.get(stronghold.lieutenant());
-            if (lieutenant == null || stronghold.alive()) {
+            if (lieutenant == null) {
+                continue;
+            }
+            // While it's alive, events count toward redeeming it instead
+            if (stronghold.alive()) {
+                if (lieutenant.restore() == null) {
+                    continue;
+                }
+                stronghold.fitRestoreProgress(lieutenant.restore().leaves().size());
+                RestoreContext context = new RestoreContext(grid, state, site.id(), stronghold, lieutenant, center(site), null);
+                for (Trigger leaf : lieutenant.restore().leaves()) {
+                    if (leaf instanceof Trigger.EventTrigger eventTrigger && eventTrigger.matches(event, context)
+                            && grid.getRandom().nextDouble() < context.chance(leaf)) {
+                        int index = lieutenant.restore().index(leaf);
+                        stronghold.restoreProgress.set(index, stronghold.restoreProgress.get(index) + 1);
+                        counted = true;
+                        consume |= leaf instanceof Triggers.ItemUsed itemUsed && itemUsed.consume();
+                        state.setDirty();
+                    }
+                }
                 continue;
             }
             stronghold.fitProgress(lieutenant.respawn().leaves().size());
@@ -120,6 +143,52 @@ public final class StrongholdManager {
             return;
         }
         defeat(grid, state, entity.strongholdId(), stronghold, entity.getDisplayName());
+    }
+
+    /**
+     * Called as a lieutenant takes a fatal blow: if its definition's {@code restore} trigger holds now, it's redeemed
+     * instead of derezzed. The redeemed lieutenant turns on the regime and stays; its stronghold forgets it, never picks
+     * it again in this grid, and picks another lieutenant, which returns by its own respawn trigger.
+     *
+     * @return whether it was redeemed (and so mustn't die)
+     */
+    public static boolean tryRestore(LieutenantEntity entity, DamageSource source) {
+        if (!(entity.level() instanceof ServerLevel grid) || entity.strongholdId() == null) {
+            return false;
+        }
+        GridChunkGenerator generator = GridArrival.generator(grid);
+        StrongholdState state = StrongholdState.of(grid);
+        Stronghold stronghold = state.get(entity.strongholdId());
+        if (generator == null || stronghold == null || !stronghold.alive() || !entity.getUUID().equals(stronghold.entity)) {
+            return false;
+        }
+        Lieutenant lieutenant = stronghold.lieutenant() == null ? null : Lieutenants.get(stronghold.lieutenant());
+        Site site = strongholds(generator.layout()).stream().filter(s -> s.id().equals(entity.strongholdId())).findFirst().orElse(null);
+        if (lieutenant == null || lieutenant.restore() == null || site == null) {
+            return false;
+        }
+        Player killer = source.getEntity() instanceof Player player ? player : entity.getLastHurtByPlayer();
+        stronghold.fitRestoreProgress(lieutenant.restore().leaves().size());
+        RestoreContext context = new RestoreContext(grid, state, site.id(), stronghold, lieutenant, center(site),
+                new Defeat(entity, killer));
+        if (!lieutenant.restore().root().test(context)) {
+            return false;
+        }
+
+        entity.redeem(lieutenant.def().restoredTextureOrDefault());
+        state.addRedeemed(lieutenant.id());
+        // The stronghold falls to another lieutenant, which isn't there yet: its respawn trigger brings it
+        Stronghold replacement = new Stronghold(pickLieutenant(generator.layout(), state, site).orElse(null));
+        replacement.alive = false;
+        replacement.defeatedAt = grid.getGameTime();
+        state.put(site.id(), replacement);
+        broadcast(grid, Component.translatable("message.digitalfrontier.lieutenant_redeemed", entity.getDisplayName()).withStyle(ChatFormatting.GOLD));
+        if (killer != null) {
+            Regime.shiftAlignment(killer, Regime.rules().alignment().redeemLieutenant());
+        }
+        // To the other strongholds, it's a fall like any other
+        fire(grid, new GridEvent.LieutenantDefeated(lieutenant.id(), site.id()));
+        return true;
     }
 
     /** Marks a lieutenant defeated without a fight (removing it if it's loaded), e.g. to test respawn triggers. */
@@ -248,6 +317,7 @@ public final class StrongholdManager {
         stronghold.alive = true;
         stronghold.respawns++;
         stronghold.progress.replaceAll(count -> 0);
+        stronghold.restoreProgress.replaceAll(count -> 0);
         state.setDirty();
         Lieutenant lieutenant = Lieutenants.get(stronghold.lieutenant());
         Component name = lieutenant != null ? lieutenant.def().name() : Component.literal(String.valueOf(stronghold.lieutenant()));
@@ -288,9 +358,11 @@ public final class StrongholdManager {
     }
 
     // Strongholds pick in site order (stronghold_0 first), each preferring a lieutenant no other stronghold of the
-    // grid has; once every eligible lieutenant is taken, they can repeat
+    // grid has; once every eligible lieutenant is taken, they can repeat. One redeemed in this grid is never picked again
     private static Optional<Identifier> pickLieutenant(GridLayout layout, StrongholdState state, Site site) {
-        List<Lieutenant> eligible = Lieutenants.eligible(layout.settings());
+        List<Lieutenant> eligible = Lieutenants.eligible(layout.settings()).stream()
+                .filter(lieutenant -> !state.redeemed().contains(lieutenant.id()))
+                .toList();
         List<Identifier> taken = state.all().values().stream().map(Stronghold::lieutenant).toList();
         List<Lieutenant> untaken = eligible.stream().filter(lieutenant -> !taken.contains(lieutenant.id())).toList();
         if (!untaken.isEmpty()) {
@@ -358,6 +430,36 @@ public final class StrongholdManager {
         @Override
         public double chance(Trigger leaf) {
             return lieutenantEntry.respawn().chance(leaf);
+        }
+    }
+
+    // For a restore trigger: its own leaves' counts, made while the lieutenant was alive, and the defeat being judged
+    private record RestoreContext(ServerLevel grid, StrongholdState state, String stronghold, Stronghold record, Lieutenant lieutenantEntry,
+                                  BlockPos center, @Nullable Defeat defeat) implements TriggerContext {
+        @Override
+        public Identifier lieutenant() {
+            return lieutenantEntry.id();
+        }
+
+        @Override
+        public long defeatedAt() {
+            return record.defeatedAt();
+        }
+
+        @Override
+        public boolean allDefeated() {
+            return state.all().values().stream().filter(other -> other.lieutenant() != null).noneMatch(Stronghold::alive);
+        }
+
+        @Override
+        public int count(Trigger leaf) {
+            int index = lieutenantEntry.restore().index(leaf);
+            return index < record.restoreProgress().size() ? record.restoreProgress().get(index) : 0;
+        }
+
+        @Override
+        public double chance(Trigger leaf) {
+            return lieutenantEntry.restore().chance(leaf);
         }
     }
 }

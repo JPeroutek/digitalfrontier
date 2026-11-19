@@ -397,4 +397,18 @@ class GridLayoutTest {
         assertEquals(ControlTier.SEAT, layout.planAt(stronghold.chunkX(), stronghold.chunkZ()).controlTier());
         assertEquals(CorruptionTier.CLEAN, layout.planAt(stronghold.chunkX(), stronghold.chunkZ()).tier());
     }
+
+    @Test
+    void everyCityCoreSetsAsideAGarage() {
+        for (long seed = 0; seed < 32; seed++) {
+            GridLayout layout = new GridLayout(withSeed(seed));
+            GridLayout.ChunkSpot garage = layout.garage().orElseThrow(() -> new AssertionError("no garage"));
+            ChunkPlan plan = layout.planAt(garage.chunkX(), garage.chunkZ());
+            assertEquals(Zone.CITY_CORE, plan.zone(), "seed " + seed);
+            assertEquals(PlanType.BUILDING, plan.type(), "seed " + seed);
+            assertNull(plan.multiChunk(), "a single-chunk building, seed " + seed);
+            assertTrue(layout.isGarage(garage.chunkX(), garage.chunkZ()));
+            assertEquals(garage, new GridLayout(withSeed(seed)).garage().orElseThrow(), "the same every time");
+        }
+    }
 }

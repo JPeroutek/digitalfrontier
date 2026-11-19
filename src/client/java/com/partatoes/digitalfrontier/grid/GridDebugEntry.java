@@ -2,6 +2,7 @@ package com.partatoes.digitalfrontier.grid;
 
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.grid.gen.GridChunkGenerator;
+import com.partatoes.digitalfrontier.grid.regime.RegimeState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.debug.DebugScreenDisplayer;
 import net.minecraft.client.gui.components.debug.DebugScreenEntries;
@@ -13,10 +14,11 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.LevelChunk;
 import org.jetbrains.annotations.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The digitalfrontier:grid F3 section: what the grid generates where the camera is (zone, decay, control, building, site
+ * The digitalfrontier:grid F3 section: what the grid generates where the camera is (zone, decay, control, building, site, the player's regime alignment
  * and levels). Enabled from the debug options (F3 + F6). Like vanilla's chunk_generation_stats it asks the server's
  * chunk generator, so it only shows in single player.
  */
@@ -48,6 +50,9 @@ public final class GridDebugEntry implements DebugScreenEntry {
             lastPos = pos;
             lastLevel = level;
         }
-        displayer.addToGroup(ID, lines);
+        // Read every time: it changes without the camera moving
+        List<String> shown = new ArrayList<>(lines);
+        shown.add(String.format("Regime alignment: %.2f", RegimeState.of(level).alignment(camera.getUUID())));
+        displayer.addToGroup(ID, shown);
     }
 }

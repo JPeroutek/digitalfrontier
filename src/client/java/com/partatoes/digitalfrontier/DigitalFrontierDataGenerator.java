@@ -2,6 +2,7 @@ package com.partatoes.digitalfrontier;
 
 import com.partatoes.digitalfrontier.datagen.*;
 import com.partatoes.digitalfrontier.datagen.grid.ModGridStarterProvider;
+import com.partatoes.digitalfrontier.datagen.grid.ModJobTradesProvider;
 import com.partatoes.digitalfrontier.datagen.grid.ModLieutenantProvider;
 import com.partatoes.digitalfrontier.datagen.grid.ModLorePackProvider;
 import com.partatoes.digitalfrontier.world.ModBiomes;
@@ -28,6 +29,7 @@ public class DigitalFrontierDataGenerator implements DataGeneratorEntrypoint {
 		pack.addProvider(ModDimensionProvider::new);
 		pack.addProvider(ModGridStarterProvider::new);
 		pack.addProvider(ModLieutenantProvider::new);
+		pack.addProvider(ModJobTradesProvider::new);
 		pack.addProvider(ModLorePackProvider::new);
 		pack.addProvider(ModEnglishLangProvider::new);
 		pack.addProvider(ModTextureProvider::new);

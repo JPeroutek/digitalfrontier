@@ -15,20 +15,25 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /** The strongholds of one grid, saved with that grid's world. */
 public final class StrongholdState extends SavedData {
     private static final String STRONGHOLDS_KEY = "strongholds";
+    private static final String REDEEMED_KEY = "redeemed";
     private static final Codec<Map<String, Stronghold>> CODEC = Codec.unboundedMap(Codec.STRING, Stronghold.CODEC);
     // Saved through the same NBT as before 1.21.5, so a bad entry only drops that stronghold
     private static final SavedDataType<StrongholdState> TYPE = new SavedDataType<>(Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "strongholds"),
             StrongholdState::new, CompoundTag.CODEC.xmap(StrongholdState::fromNbt, state -> state.writeNbt(new CompoundTag())), null);
 
     private final Map<String, Stronghold> strongholds = new HashMap<>();
+    // Lieutenants redeemed in this grid: no stronghold picks them again
+    private final Set<Identifier> redeemed = new HashSet<>();
 
     public static StrongholdState of(ServerLevel grid) {
         return ModSavedData.computeIfAbsent(grid.getDataStorage(), TYPE);
@@ -48,16 +53,30 @@ public final class StrongholdState extends SavedData {
         setDirty();
     }
 
+    public Set<Identifier> redeemed() {
+        return redeemed;
+    }
+
+    void addRedeemed(Identifier lieutenant) {
+        redeemed.add(lieutenant);
+        setDirty();
+    }
+
     private static StrongholdState fromNbt(CompoundTag nbt) {
         StrongholdState state = new StrongholdState();
         CODEC.parse(NbtOps.INSTANCE, nbt.get(STRONGHOLDS_KEY))
                 .resultOrPartial(error -> DigitalFrontier.LOGGER.error("Couldn't read grid strongholds: {}", error))
                 .ifPresent(state.strongholds::putAll);
+        // Absent in grids saved before redemption
+        if (nbt.get(REDEEMED_KEY) != null) {
+            Identifier.CODEC.listOf().parse(NbtOps.INSTANCE, nbt.get(REDEEMED_KEY)).result().ifPresent(state.redeemed::addAll);
+        }
         return state;
     }
 
     private CompoundTag writeNbt(CompoundTag nbt) {
         CODEC.encodeStart(NbtOps.INSTANCE, strongholds).ifSuccess(encoded -> nbt.put(STRONGHOLDS_KEY, encoded));
+        Identifier.CODEC.listOf().encodeStart(NbtOps.INSTANCE, List.copyOf(redeemed)).ifSuccess(encoded -> nbt.put(REDEEMED_KEY, encoded));
         return nbt;
     }
 
@@ -73,8 +92,9 @@ public final class StrongholdState extends SavedData {
                 Codec.INT.optionalFieldOf("respawns", 0).forGetter(s -> s.respawns),
                 UUIDUtil.AUTHLIB_CODEC.optionalFieldOf("entity").forGetter(s -> Optional.ofNullable(s.entity)),
                 Codec.INT.listOf().optionalFieldOf("progress", List.of()).forGetter(s -> s.progress),
-                Codec.LONG.optionalFieldOf("last_occupied", Long.MIN_VALUE / 2).forGetter(s -> s.lastOccupied)
-        ).apply(instance, (lieutenant, alive, defeatedAt, respawns, entity, progress, lastOccupied) -> {
+                Codec.LONG.optionalFieldOf("last_occupied", Long.MIN_VALUE / 2).forGetter(s -> s.lastOccupied),
+                Codec.INT.listOf().optionalFieldOf("restore_progress", List.of()).forGetter(s -> s.restoreProgress)
+        ).apply(instance, (lieutenant, alive, defeatedAt, respawns, entity, progress, lastOccupied, restoreProgress) -> {
             Stronghold stronghold = new Stronghold(lieutenant.orElse(null));
             stronghold.alive = alive;
             stronghold.defeatedAt = defeatedAt;
@@ -82,6 +102,7 @@ public final class StrongholdState extends SavedData {
             stronghold.entity = entity.orElse(null);
             stronghold.progress.addAll(progress);
             stronghold.lastOccupied = lastOccupied;
+            stronghold.restoreProgress.addAll(restoreProgress);
             return stronghold;
         }));
 
@@ -93,6 +114,8 @@ public final class StrongholdState extends SavedData {
         @Nullable
         UUID entity;
         final List<Integer> progress = new ArrayList<>();
+        // Like progress, for the leaves of its restore trigger, counted while the lieutenant is alive
+        final List<Integer> restoreProgress = new ArrayList<>();
         // Game time a player was last near; long ago for a stronghold nobody has visited
         long lastOccupied = Long.MIN_VALUE / 2;
         // Not saved: worked out again on the first check after loading
@@ -131,6 +154,19 @@ public final class StrongholdState extends SavedData {
             while (progress.size() > leaves) {
                 progress.removeLast();
             }
+        }
+
+        void fitRestoreProgress(int leaves) {
+            while (restoreProgress.size() < leaves) {
+                restoreProgress.add(0);
+            }
+            while (restoreProgress.size() > leaves) {
+                restoreProgress.removeLast();
+            }
+        }
+
+        public List<Integer> restoreProgress() {
+            return restoreProgress;
         }
     }
 }

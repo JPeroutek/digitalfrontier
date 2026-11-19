@@ -1,11 +1,15 @@
 package com.partatoes.digitalfrontier.grid;
 
 import com.partatoes.digitalfrontier.entity.ModEntities;
+import com.partatoes.digitalfrontier.entity.custom.BoolEntity;
 import com.partatoes.digitalfrontier.entity.custom.CorruptedProgramEntity;
 import com.partatoes.digitalfrontier.entity.custom.EnforcerEntity;
 import com.partatoes.digitalfrontier.entity.custom.ProgramEntity;
+import com.partatoes.digitalfrontier.entity.custom.RecruiterEntity;
+import com.partatoes.digitalfrontier.grid.regime.Regime;
 import com.partatoes.digitalfrontier.grid.arrival.GridArrival;
 import com.partatoes.digitalfrontier.grid.gen.GridChunkGenerator;
+import com.partatoes.digitalfrontier.grid.core.CoreManager;
 import com.partatoes.digitalfrontier.grid.layout.ChunkPlan;
 import com.partatoes.digitalfrontier.grid.layout.ControlTier;
 import com.partatoes.digitalfrontier.grid.layout.CorruptionTier;
@@ -30,13 +34,15 @@ import java.util.function.Consumer;
  * Who appears around players in a grid depends on where they'd stand. On the regime's ground (see
  * {@link #effectiveControl}):
  * <ul>
- *   <li>PATROLLED: pairs of enforcers, or programs going about their business.</li>
+ *   <li>PATROLLED: pairs of enforcers, or programs going about their business. While the regime has fewer lasting
+ *       members than it wants (see {@link Regime#ideal}), a patrol may bring a recruiter.</li>
  *   <li>CONTROLLED and SEAT: enforcer patrols, bigger at the seat. Lieutenants never spawn this way; their
  *       strongholds bring them.</li>
  * </ul>
  * Elsewhere, by decay tier:
  * <ul>
- *   <li>CLEAN / LOW: programs, in the city, waypoints and outskirts, and on the regime's watched ground.</li>
+ *   <li>CLEAN / LOW: programs, in the city, waypoints and outskirts, and on the regime's watched ground. Rarely,
+ *       in the free city, a wild Bool.</li>
  *   <li>UNSTABLE: corrupted programs, which glitch away when hit.</li>
  *   <li>CORRUPTED: corrupted programs that fight back.</li>
  *   <li>SEVERE: corrupted programs that fight back, in pairs.</li>
@@ -49,6 +55,10 @@ public final class GridSpawner {
     private static final int MAX_DISTANCE = 48;
     /** Grid mobs allowed within {@link #MAX_DISTANCE} of a player before no more spawn near them. */
     private static final int CAP = 8;
+    /** A recruiter only comes with a patrol if there's no other this close. */
+    private static final int RECRUITER_SPACING = 64;
+    private static final float BOOL_CHANCE = 0.03f;
+    private static final int BOOL_SPACING = 64;
 
     private GridSpawner() {
     }
@@ -70,7 +80,8 @@ public final class GridSpawner {
     private static void trySpawn(ServerLevel world, GridChunkGenerator generator, ServerPlayer player) {
         AABB area = player.getBoundingBox().inflate(MAX_DISTANCE);
         int nearby = world.getEntitiesOfClass(Mob.class, area,
-                mob -> mob instanceof ProgramEntity || mob instanceof CorruptedProgramEntity || mob instanceof EnforcerEntity).size();
+                mob -> mob instanceof ProgramEntity || mob instanceof CorruptedProgramEntity || mob instanceof EnforcerEntity
+                        || mob instanceof RecruiterEntity).size();
         if (nearby >= CAP) {
             return;
         }
@@ -92,6 +103,10 @@ public final class GridSpawner {
         ChunkPlan plan = layout.planAt(x >> 4, z >> 4);
         float control = effectiveControl(world, layout, plan, x >> 4, z >> 4);
         ControlTier held = ControlTier.fromIntensity(control);
+        // With its core derezzed, the regime holds everything a step less firmly
+        if (CoreManager.defeated(world)) {
+            held = held.weaker();
+        }
         boolean hostilesAllowed = world.getDifficulty() != Difficulty.PEACEFUL;
         // Where both run high (rare: control suppresses decay), the stronger wins
         if (held.compareTo(ControlTier.PATROLLED) >= 0 && (plan.tier().compareTo(CorruptionTier.UNSTABLE) < 0 || control >= plan.corruption())) {
@@ -118,6 +133,13 @@ public final class GridSpawner {
         }
         switch (plan.tier()) {
             case CLEAN, LOW -> {
+                // Now and then a wild Bool, in the free city, never two close together
+                if ((plan.zone() == Zone.CITY_CORE || plan.zone() == Zone.CITY) && held == ControlTier.FREE
+                        && world.getRandom().nextFloat() < BOOL_CHANCE
+                        && world.getEntitiesOfClass(BoolEntity.class, new AABB(pos).inflate(BOOL_SPACING), bool -> true).isEmpty()) {
+                    spawn(world, ModEntities.BOOL, pos.above(2), bool -> { });
+                    return;
+                }
                 // Programs live in the city, the waypoints and the outskirts, and as the regime's citizens on its watched ground
                 if (plan.zone() == Zone.CITY_CORE || plan.zone() == Zone.CITY || plan.zone() == Zone.WAYPOINT || plan.zone() == Zone.OUTSKIRTS
                         || held == ControlTier.WATCHED) {
@@ -147,9 +169,14 @@ public final class GridSpawner {
         return stronghold != null && !stronghold.alive() ? plan.control() * 0.5f : plan.control();
     }
 
+    // While the regime is short of members, a patrol brings a recruiter along, one per area
     private static void spawnPatrol(ServerLevel world, BlockPos pos, int size) {
         for (int i = 0; i < size; i++) {
             spawn(world, ModEntities.ENFORCER, pos.offset(world.getRandom().nextInt(3) - 1, 0, world.getRandom().nextInt(3) - 1), enforcer -> { });
+        }
+        if (!CoreManager.defeated(world) && Regime.population(world) < Regime.ideal(world)
+                && world.getEntitiesOfClass(RecruiterEntity.class, new AABB(pos).inflate(RECRUITER_SPACING), recruiter -> true).isEmpty()) {
+            spawn(world, ModEntities.RECRUITER, pos, recruiter -> { });
         }
     }
 

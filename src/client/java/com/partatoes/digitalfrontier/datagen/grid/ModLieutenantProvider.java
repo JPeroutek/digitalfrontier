@@ -64,7 +64,8 @@ public class ModLieutenantProvider implements DataProvider {
                         new Triggers.AllOf(List.of(new Triggers.Thunder(), new Triggers.Time(2 * DAY))),
                         // Once the whole regime has fallen, the ruler is quickest to rebuild it
                         new Triggers.AllOf(List.of(new Triggers.AllDefeated(), new Triggers.Time(3 * DAY))),
-                        new Triggers.Function(Optional.empty())))));
+                        new Triggers.Function(Optional.empty()))),
+                Optional.empty(), Optional.empty()));
 
         // The duelist waits for its stronghold to be deserted, then for someone to come back, or for fresh blood
         defs.put("the_warden", new LieutenantDef(
@@ -78,7 +79,9 @@ public class ModLieutenantProvider implements DataProvider {
                         new Triggers.AllOf(List.of(new Triggers.MoonPhase(List.of(0)), new Triggers.Time(DAY))),
                         new Triggers.Count(2, new Triggers.MemoryPaged()),
                         new Triggers.Count(3, new Triggers.PortalUsed()),
-                        new Triggers.Function(Optional.of("reboot_warden"))))));
+                        new Triggers.Function(Optional.of("reboot_warden")))),
+                // Redeemed if a companion that knew it before the regime is there when it falls
+                Optional.of(new Triggers.CompanionPresent(16)), Optional.empty()));
         return defs;
     }
 

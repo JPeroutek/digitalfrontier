@@ -19,6 +19,7 @@ public class ModLootTableProvider extends FabricBlockLootSubProvider {
         dropSelf(ModBlocks.GRIDSTONE_BRICKS_BLOCK);
         dropSelf(ModBlocks.PIXEL_LAMP);
         dropSelf(ModBlocks.BOOSTER_BLOCK);
+        dropSelf(ModBlocks.DISINFECTION_PAD);
         dropSelf(ModBlocks.KEYBOARD_BLOCK);
 
         dropSelf(ModBlocks.GRIDSTONE_STAIRS);

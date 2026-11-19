@@ -52,6 +52,10 @@ public sealed interface GridEvent {
     record ProgramDerezzed(BlockPos pos) implements GridEvent {
     }
 
+    /** A corrupted program was cured on a Disinfection Pad. */
+    record ProgramRestored(BlockPos pos) implements GridEvent {
+    }
+
     record MemoryPaged() implements GridEvent {
     }
 

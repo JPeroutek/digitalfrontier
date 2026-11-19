@@ -38,6 +38,7 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add(ModBlocks.GRIDSTONE_BRICKS_BLOCK, "Gridstone Bricks");
         translationBuilder.add(ModBlocks.LUMINANCE_ORE, "Luminance Ore");
         translationBuilder.add(ModBlocks.BOOSTER_BLOCK, "Boost Block");
+        translationBuilder.add(ModBlocks.DISINFECTION_PAD, "Disinfection Pad");
         translationBuilder.add(ModBlocks.LIGHT_BARRIER, "Light Barrier");
         translationBuilder.add(ModBlocks.LIGHT_BARRIER_EMITTER, "Light Barrier Emitter");
         translationBuilder.add(ModBlocks.ARRIVAL_PAD, "Arrival Pad");
@@ -50,6 +51,8 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add("message.digitalfrontier.escape_key_outside_grid", "The Escape Key only works inside the grid");
         translationBuilder.add("message.digitalfrontier.memory_paged", "Memory paged back in at %s");
         translationBuilder.add(ModItems.CORE_DUMP, "Core Dump");
+        translationBuilder.add(ModItems.DATA_DISC, "Data Disc");
+        translationBuilder.add(ModEntities.DATA_DISC, "Data Disc");
 
         // Corruption
         translationBuilder.add(ModBlocks.STATIC_BLOCK, "Static");
@@ -59,12 +62,29 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         // Inhabitants and strongholds
         translationBuilder.add(ModEntities.CORRUPTED_PROGRAM, "Corrupted Program");
         translationBuilder.add(ModEntities.ENFORCER, "Enforcer");
+        translationBuilder.add(ModEntities.RECRUITER, "Recruiter");
+        translationBuilder.add(ModEntities.BOOL, "Bool");
+        translationBuilder.add(ModEntities.SYSTEM_CORE, "System Core");
+        translationBuilder.add(ModBlocks.CORE_SEAL, "Core Seal");
+        translationBuilder.add("message.digitalfrontier.core_awake", "The regime's last lieutenant has fallen, and the System Core stirs beneath the city center. The shaft at %s is open.");
+        translationBuilder.add("message.digitalfrontier.core_defeated", "The System Core is derezzed. The regime is broken.");
+        translationBuilder.add("commands.digitalfrontier.grid.core.status", "System Core: %s (the shaft down to it is at %s)");
+        translationBuilder.add("commands.digitalfrontier.grid.core.reset", "System Core reset: dormant, its seal closed, and its fallen lieutenants back");
+        translationBuilder.add("entity.digitalfrontier.program.mechanic", "Mechanic");
+        translationBuilder.add("entity.digitalfrontier.program.portal_keeper", "Portal Keeper");
+        translationBuilder.add("entity.digitalfrontier.program.portal_keeper.line0", "The Portal opens on the real world, but only with an Escape Key. I keep one for those who can pay.");
+        translationBuilder.add("entity.digitalfrontier.program.portal_keeper.line1", "Step through with a key in hand and you wake where you last slept, out there.");
+        translationBuilder.add("entity.digitalfrontier.program.portal_keeper.line2", "The regime watches this place. Whatever you are to them, the Portal doesn't care.");
+        translationBuilder.add("entity.digitalfrontier.recruiter.tribute", "The regime notes your tribute");
         translationBuilder.add(ModEntities.LIEUTENANT, "Lieutenant");
         translationBuilder.add("lieutenant.digitalfrontier.the_sovereign", "The Sovereign");
         translationBuilder.add("lieutenant.digitalfrontier.the_warden", "The Warden");
         translationBuilder.add("pack.digitalfrontier.lore", "Digital Frontier: Lore Names");
         translationBuilder.add("pack.digitalfrontier.lore.description", "The films' names and character skins");
         translationBuilder.add("commands.digitalfrontier.grid.locate", "%s is at %s");
+        translationBuilder.add("message.digitalfrontier.lieutenant_redeemed", "%s has been redeemed and turns on the regime");
+        translationBuilder.add("commands.digitalfrontier.grid.regime.status", "The regime has %s lasting members; it wants %s");
+        translationBuilder.add("commands.digitalfrontier.grid.regime.alignment", "%s's alignment with the regime: %s");
         translationBuilder.add("commands.digitalfrontier.grid.locate.unknown", "This grid has no site %s");
         translationBuilder.add(ModBlocks.STRONGHOLD_UPLINK, "Stronghold Uplink");
         translationBuilder.add("message.digitalfrontier.lieutenant_defeated", "%s has been derezzed");

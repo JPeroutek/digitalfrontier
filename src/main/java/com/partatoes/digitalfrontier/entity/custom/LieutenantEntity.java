@@ -56,6 +56,8 @@ public class LieutenantEntity extends Monster {
     private static final EntityDataAccessor<String> TEXTURE = SynchedEntityData.defineId(LieutenantEntity.class, EntityDataSerializers.STRING);
     // So a client without a pack's skin can fall back to the archetype's
     private static final EntityDataAccessor<String> ARCHETYPE = SynchedEntityData.defineId(LieutenantEntity.class, EntityDataSerializers.STRING);
+    // Redeemed: turned back from the regime (see StrongholdManager#tryRestore)
+    private static final EntityDataAccessor<Boolean> REDEEMED = SynchedEntityData.defineId(LieutenantEntity.class, EntityDataSerializers.BOOLEAN);
     private static final int LEASH = 24;
     private static final int MAX_ENFORCERS = 4;
 
@@ -112,7 +114,28 @@ public class LieutenantEntity extends Monster {
 
     /** The skin of its archetype, for when its own texture isn't available. Works on the client too. */
     public Identifier defaultTexture() {
-        return LieutenantDef.Archetype.byName(entityData.get(ARCHETYPE)).defaultTexture();
+        LieutenantDef.Archetype archetype = LieutenantDef.Archetype.byName(entityData.get(ARCHETYPE));
+        return redeemed() ? archetype.defaultRestoredTexture() : archetype.defaultTexture();
+    }
+
+    public boolean redeemed() {
+        return entityData.get(REDEEMED);
+    }
+
+    /**
+     * Turned back from the regime: whole again, in its redeemed skin, it stops fighting players and turns on the
+     * regime's people around its old stronghold. Its stronghold no longer counts it as its lieutenant.
+     */
+    public void redeem(Identifier skin) {
+        entityData.set(REDEEMED, true);
+        entityData.set(TEXTURE, skin.toString());
+        setHealth(getMaxHealth());
+        removeAllEffects();
+        setTarget(null);
+        setLastHurtByMob(null);
+        setLastHurtByPlayer((Player) null, 0);
+        bossBar.removeAllPlayers();
+        level().playSound(null, getX(), getY(), getZ(), SoundEvents.BEACON_ACTIVATE, SoundSource.HOSTILE, 1.5f, 1.2f);
     }
 
     private void setArchetype(LieutenantDef.Archetype archetype) {
@@ -125,6 +148,7 @@ public class LieutenantEntity extends Monster {
         super.defineSynchedData(builder);
         builder.define(TEXTURE, "");
         builder.define(ARCHETYPE, LieutenantDef.Archetype.RULER.getSerializedName());
+        builder.define(REDEEMED, false);
     }
 
     @Override
@@ -136,26 +160,42 @@ public class LieutenantEntity extends Monster {
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 16));
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
+        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true, (target, world) -> !redeemed()));
+        // Redeemed, it turns on the regime's people
+        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, EnforcerEntity.class, true, (target, world) -> redeemed()));
+        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, RecruiterEntity.class, true, (target, world) -> redeemed()));
+    }
+
+    // Redeemed, it never fights players, even ones who hit it
+    @Override
+    public void setTarget(@Nullable LivingEntity target) {
+        super.setTarget(redeemed() && target instanceof Player ? null : target);
     }
 
     @Override
     protected void customServerAiStep(ServerLevel world) {
         super.customServerAiStep(world);
         // A copy the stronghold no longer expects (defeated, respawned elsewhere, duplicated) removes itself
-        if (tickCount % 20 == 0 && !StrongholdManager.isCurrent(this)) {
+        if (tickCount % 20 == 0 && !redeemed() && !StrongholdManager.isCurrent(this)) {
             discard();
             return;
         }
-        bossBar.setName(getDisplayName());
-        bossBar.setProgress(getHealth() / getMaxHealth());
+        if (!redeemed()) {
+            bossBar.setName(getDisplayName());
+            bossBar.setProgress(getHealth() / getMaxHealth());
+        }
 
         LivingEntity target = getTarget();
         if (target == null || --abilityCooldown > 0) {
             return;
         }
         switch (archetype) {
-            case RULER -> summonEnforcers(world);
+            // Redeemed, a ruler has no guard left to call
+            case RULER -> {
+                if (!redeemed()) {
+                    summonEnforcers(world);
+                }
+            }
             case DUELIST -> dashAt(target);
         }
     }
@@ -192,6 +232,10 @@ public class LieutenantEntity extends Monster {
 
     @Override
     public void die(DamageSource damageSource) {
+        // Its restore trigger can turn the fatal blow into a redemption
+        if (level() instanceof ServerLevel && !redeemed() && StrongholdManager.tryRestore(this, damageSource)) {
+            return;
+        }
         super.die(damageSource);
         if (level() instanceof ServerLevel) {
             StrongholdManager.onDefeated(this);
@@ -224,7 +268,9 @@ public class LieutenantEntity extends Monster {
     @Override
     public void startSeenByPlayer(ServerPlayer player) {
         super.startSeenByPlayer(player);
-        bossBar.addPlayer(player);
+        if (!redeemed()) {
+            bossBar.addPlayer(player);
+        }
     }
 
     @Override
@@ -245,6 +291,7 @@ public class LieutenantEntity extends Monster {
         view.putString("Archetype", archetype.getSerializedName());
         view.store("Home", BlockPos.CODEC, home);
         view.putString("Texture", entityData.get(TEXTURE));
+        view.putBoolean("Redeemed", redeemed());
     }
 
     @Override
@@ -255,7 +302,8 @@ public class LieutenantEntity extends Monster {
         setArchetype(LieutenantDef.Archetype.byName(view.getStringOr("Archetype", "")));
         view.read("Home", BlockPos.CODEC).ifPresent(pos -> home = pos);
         entityData.set(TEXTURE, view.getStringOr("Texture", ""));
-        if (hasCustomName()) {
+        entityData.set(REDEEMED, view.getBooleanOr("Redeemed", false));
+        if (hasCustomName() && !redeemed()) {
             bossBar.setName(getDisplayName());
         }
     }

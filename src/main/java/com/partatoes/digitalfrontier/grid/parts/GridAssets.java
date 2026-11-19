@@ -1,5 +1,6 @@
 package com.partatoes.digitalfrontier.grid.parts;
 
+import com.partatoes.digitalfrontier.grid.jobs.ProgramJob;
 import com.partatoes.digitalfrontier.grid.layout.StreetAxis.RoadClass;
 import com.partatoes.digitalfrontier.grid.layout.Zone;
 import org.jetbrains.annotations.Nullable;
@@ -63,6 +64,18 @@ public final class GridAssets {
         return pick(new CandidateKey(kind, footprint, zone, null), roll);
     }
 
+    /** Like {@link #pick}, among only the definitions a job program works in. */
+    @Nullable
+    public Candidate pickWithResident(GridBuildingDef.Kind kind, int footprint, Zone zone, ProgramJob job, double roll) {
+        List<Candidate> options = candidates.get(new CandidateKey(kind, footprint, zone, null));
+        return options == null ? null : pick(options.stream().filter(candidate -> candidate.def().residents().contains(job)).toList(), roll);
+    }
+
+    @Nullable
+    public GridBuildingDef building(Identifier id) {
+        return buildings.get(id);
+    }
+
     /** Street furniture for one kind of road. */
     @Nullable
     public Candidate pickStreet(RoadClass road, Zone zone, double roll) {
@@ -71,8 +84,12 @@ public final class GridAssets {
 
     @Nullable
     private Candidate pick(CandidateKey key, double roll) {
-        List<Candidate> options = candidates.get(key);
-        if (options == null) {
+        return pick(candidates.get(key), roll);
+    }
+
+    @Nullable
+    private static Candidate pick(@Nullable List<Candidate> options, double roll) {
+        if (options == null || options.isEmpty()) {
             return null;
         }
         int total = options.stream().mapToInt(candidate -> candidate.def().weight()).sum();

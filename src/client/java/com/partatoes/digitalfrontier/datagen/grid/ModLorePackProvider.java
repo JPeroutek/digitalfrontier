@@ -27,6 +27,9 @@ public class ModLorePackProvider implements DataProvider {
     private static final Map<String, String> LIEUTENANT_SKINS = Map.of(
             "the_sovereign", "clu64",
             "the_warden", "rinzler64");
+    // Shipped lieutenant → its lore skin once redeemed: the duelist was a good program before the regime took it
+    private static final Map<String, String> REDEEMED_SKINS = Map.of(
+            "the_warden", "tron64");
 
     private final PackOutput.PathProvider lieutenants;
     private final PackOutput.PathProvider lang;
@@ -42,6 +45,11 @@ public class ModLorePackProvider implements DataProvider {
         Map<String, String> names = new LinkedHashMap<>();
         names.put("lieutenant.digitalfrontier.the_sovereign", "Clu");
         names.put("lieutenant.digitalfrontier.the_warden", "Rinzler");
+        names.put("entity.digitalfrontier.bool", "Bit");
+        names.put("item.digitalfrontier.data_disc", "Identity Disc");
+        names.put("entity.digitalfrontier.data_disc", "Identity Disc");
+        names.put("entity.digitalfrontier.program.portal_keeper", "Tower Guardian");
+        names.put("entity.digitalfrontier.system_core", "Master Control Program");
         return names;
     }
 
@@ -52,6 +60,10 @@ public class ModLorePackProvider implements DataProvider {
             String skin = LIEUTENANT_SKINS.get(name);
             LieutenantDef lore = skin == null ? def
                     : def.withTexture(Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "textures/entity/lore/" + skin + ".png"));
+            String redeemedSkin = REDEEMED_SKINS.get(name);
+            if (redeemedSkin != null) {
+                lore = lore.withRestoredTexture(Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "textures/entity/lore/" + redeemedSkin + ".png"));
+            }
             JsonElement json = LieutenantDef.CODEC.encodeStart(JsonOps.INSTANCE, lore).getOrThrow();
             futures.add(DataProvider.saveStable(writer, json, lieutenants.json(Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, name))));
         });

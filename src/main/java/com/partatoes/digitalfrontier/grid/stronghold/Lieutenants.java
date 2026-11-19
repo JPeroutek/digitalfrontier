@@ -21,7 +21,8 @@ import java.util.Map;
 public final class Lieutenants implements SimpleSynchronousResourceReloadListener {
     private static final String FOLDER = "grid/lieutenant";
 
-    public record Lieutenant(Identifier id, LieutenantDef def, CompiledTrigger respawn) {
+    /** A loaded definition with its triggers compiled; {@code restore} is null for one that can't be redeemed. */
+    public record Lieutenant(Identifier id, LieutenantDef def, CompiledTrigger respawn, @Nullable CompiledTrigger restore) {
     }
 
     private static volatile Map<Identifier, Lieutenant> loaded = Map.of();
@@ -55,7 +56,8 @@ public final class Lieutenants implements SimpleSynchronousResourceReloadListene
             try (Reader reader = resource.openAsReader()) {
                 LieutenantDef.CODEC.parse(JsonOps.INSTANCE, JsonParser.parseReader(reader))
                         .resultOrPartial(error -> DigitalFrontier.LOGGER.error("Invalid grid lieutenant {}: {}", id, error))
-                        .ifPresent(def -> lieutenants.put(id, new Lieutenant(id, def, new CompiledTrigger(def.respawn().trigger()))));
+                        .ifPresent(def -> lieutenants.put(id, new Lieutenant(id, def, new CompiledTrigger(def.respawn().trigger()),
+                                def.restore().map(CompiledTrigger::new).orElse(null))));
             } catch (Exception e) {
                 DigitalFrontier.LOGGER.error("Failed to read grid lieutenant {}", id, e);
             }

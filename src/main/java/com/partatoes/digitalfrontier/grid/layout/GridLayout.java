@@ -34,6 +34,7 @@ public final class GridLayout {
     private static final int SALT_STREETS_X = 10;
     private static final int SALT_STREETS_Z = 11;
     private static final int SALT_UPKEEP = 12;
+    private static final int SALT_GARAGE = 13;
 
     private final GridLayoutSettings settings;
     private final List<Site> sites;
@@ -47,6 +48,9 @@ public final class GridLayout {
     private final StreetAxis xAxis;
     private final StreetAxis zAxis;
     private final TransitLayout transit;
+    // The city core building chunk set aside for a garage, if the core has any building chunk
+    @Nullable
+    private final ChunkSpot garage;
 
     public GridLayout(GridLayoutSettings settings) {
         this.settings = settings;
@@ -99,6 +103,44 @@ public final class GridLayout {
         this.xAxis = new StreetAxis(settings.streetStyle(), seed, SALT_STREETS_X, settings.blockSize(), extent);
         this.zAxis = new StreetAxis(settings.streetStyle(), seed, SALT_STREETS_Z, settings.blockSize(), extent);
         this.transit = new TransitLayout(settings, xAxis, zAxis, waypoints);
+        this.garage = findGarage();
+    }
+
+    /** A chunk, by its coordinates. */
+    public record ChunkSpot(int chunkX, int chunkZ) {
+    }
+
+    /**
+     * The building chunk in the city core set aside for a garage, so every city has one (a weighted pick can't promise
+     * that): of the core's single-chunk building chunks, the one the seed favours. Empty if the core has none.
+     */
+    public Optional<ChunkSpot> garage() {
+        return Optional.ofNullable(garage);
+    }
+
+    public boolean isGarage(int chunkX, int chunkZ) {
+        return garage != null && garage.chunkX() == chunkX && garage.chunkZ() == chunkZ;
+    }
+
+    @Nullable
+    private ChunkSpot findGarage() {
+        int core = settings.coreRadius();
+        ChunkSpot best = null;
+        long bestRoll = Long.MAX_VALUE;
+        for (int x = -core; x <= core; x++) {
+            for (int z = -core; z <= core; z++) {
+                if (zoneAt(x, z) != Zone.CITY_CORE) {
+                    continue;
+                }
+                ChunkPlan plan = shapeAt(x, z);
+                long roll = GridRandom.hash(settings.gridSeed(), x, z, SALT_GARAGE);
+                if (plan.type() == PlanType.BUILDING && plan.multiChunk() == null && roll < bestRoll) {
+                    best = new ChunkSpot(x, z);
+                    bestRoll = roll;
+                }
+            }
+        }
+        return best;
     }
 
     /** One stronghold up to a 64% regime (the default grid has 50%), two up to 84%, three above that. */

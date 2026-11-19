@@ -86,13 +86,19 @@ public final class MemoryPaging {
             return;
         }
         // A Core Dump does everything Memory Paging does and more, so it's used first
+        // A Data Disc in the offhand is a backup of its owner: it stands in for a Core Dump, and is spent doing it
         ItemStack coreDump = find(player, ModItems.CORE_DUMP);
-        ItemStack used = coreDump.isEmpty() ? find(player, ModItems.MEMORY_PAGING) : coreDump;
+        if (coreDump.isEmpty() && player.getOffhandItem().is(ModItems.DATA_DISC)) {
+            coreDump = player.getOffhandItem();
+        }
+        boolean keepsInventory = !coreDump.isEmpty();
+        ItemStack used = keepsInventory ? coreDump : find(player, ModItems.MEMORY_PAGING);
         if (used.isEmpty()) {
             return;
         }
+        // Decided before spending it: the last Core Dump in a stack is empty once used
         used.shrink(1);
-        if (!coreDump.isEmpty()) {
+        if (keepsInventory) {
             player.setAttached(KEEP_INVENTORY, true);
         }
         Identifier grid = player.level().dimension().identifier();

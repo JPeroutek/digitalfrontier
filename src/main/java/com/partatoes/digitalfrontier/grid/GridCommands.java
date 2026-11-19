@@ -1,14 +1,20 @@
 package com.partatoes.digitalfrontier.grid;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.partatoes.digitalfrontier.grid.arrival.GridArrival;
 import com.partatoes.digitalfrontier.grid.arrival.TerminalRef;
 import com.partatoes.digitalfrontier.grid.layout.GridLayout;
 import com.partatoes.digitalfrontier.grid.layout.GridLayoutSettings;
 import com.partatoes.digitalfrontier.grid.layout.Site;
+import com.partatoes.digitalfrontier.grid.core.CoreManager;
+import com.partatoes.digitalfrontier.grid.core.CoreState;
 import com.partatoes.digitalfrontier.grid.gen.GridChunkGenerator;
+import com.partatoes.digitalfrontier.grid.regime.Regime;
+import com.partatoes.digitalfrontier.grid.regime.RegimeState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import com.partatoes.digitalfrontier.grid.stronghold.GridEvent;
@@ -24,6 +30,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
@@ -36,17 +43,23 @@ import net.minecraft.server.level.ServerPlayer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static net.minecraft.commands.Commands.argument;
 import static net.minecraft.commands.Commands.literal;
 
 /**
- * {@code /grid list}, {@code /grid code} and {@code /grid lieutenant status <grid>} for everyone;
+ * {@code /grid list}, {@code /grid code}, {@code /grid lieutenant status <grid>} and
+ * {@code /grid regime status <grid> [player]} and {@code /grid core status <grid>} for everyone;
+ * {@code /grid regime alignment <grid> <player> <value>}, {@code /grid core reset <grid>},
  * {@code /grid open <code>}, {@code /grid delete <id>}, {@code /grid locate <grid> <site>},
  * {@code /grid lieutenant trigger <grid> [signal]} and
  * {@code /grid lieutenant respawn <grid> <stronghold>} for operators.
  */
 public final class GridCommands {
+    // Not a layout site, but locatable: the building chunk the city core sets aside for a garage
+    private static final String GARAGE = "garage";
+
     private GridCommands() {
     }
 
@@ -72,8 +85,8 @@ public final class GridCommands {
                         .then(gridArgument()
                                 .then(argument("site", StringArgumentType.word())
                                         .suggests((context, builder) -> SharedSuggestionProvider.suggest(
-                                                gridWorld(context).map(GridCommands::sites).orElse(List.of()).stream()
-                                                        .map(Site::id).toList(), builder))
+                                                Stream.concat(gridWorld(context).map(GridCommands::sites).orElse(List.of()).stream()
+                                                        .map(Site::id), Stream.of(GARAGE)).toList(), builder))
                                         .executes(GridCommands::locate))))
                 .then(literal("lieutenant")
                         .then(literal("status")
@@ -91,7 +104,82 @@ public final class GridCommands {
                         .then(literal("defeat")
                                 .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                                 .then(gridArgument()
-                                        .then(strongholdArgument().executes(GridCommands::lieutenantDefeat))))));
+                                        .then(strongholdArgument().executes(GridCommands::lieutenantDefeat)))))
+                .then(literal("core")
+                        .then(literal("status")
+                                .then(gridArgument().executes(GridCommands::coreStatus)))
+                        .then(literal("reset")
+                                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                                .then(gridArgument().executes(GridCommands::coreReset))))
+                .then(literal("regime")
+                        .then(literal("status")
+                                .then(gridArgument()
+                                        .executes(context -> regimeStatus(context, false))
+                                        .then(argument("player", EntityArgument.player())
+                                                .executes(context -> regimeStatus(context, true)))))
+                        .then(literal("alignment")
+                                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                                .then(gridArgument()
+                                        .then(argument("player", EntityArgument.player())
+                                                .then(argument("value", FloatArgumentType.floatArg(-1, 1))
+                                                        .executes(GridCommands::regimeAlignment)))))));
+    }
+
+    private static int coreStatus(CommandContext<CommandSourceStack> context) {
+        Optional<ServerLevel> grid = gridWorld(context);
+        if (grid.isEmpty()) {
+            context.getSource().sendFailure(Component.translatable("commands.digitalfrontier.grid.unknown", IdentifierArgument.getId(context, "grid").toString()));
+            return 0;
+        }
+        CoreState.Phase phase = CoreManager.phase(grid.get());
+        BlockPos shaft = CoreManager.shaftTop();
+        context.getSource().sendSuccess(() -> Component.translatable("commands.digitalfrontier.grid.core.status",
+                phase.getSerializedName(), shaft.getX() + ", " + shaft.getY() + ", " + shaft.getZ()), false);
+        return phase.ordinal();
+    }
+
+    private static int coreReset(CommandContext<CommandSourceStack> context) {
+        Optional<ServerLevel> grid = gridWorld(context);
+        if (grid.isEmpty()) {
+            context.getSource().sendFailure(Component.translatable("commands.digitalfrontier.grid.unknown", IdentifierArgument.getId(context, "grid").toString()));
+            return 0;
+        }
+        CoreManager.reset(grid.get());
+        context.getSource().sendSuccess(() -> Component.translatable("commands.digitalfrontier.grid.core.reset"), true);
+        return 1;
+    }
+
+    // The regime's size against what it wants, and a player's alignment: the given player's, or the caller's own
+    private static int regimeStatus(CommandContext<CommandSourceStack> context, boolean named) throws CommandSyntaxException {
+        Optional<ServerLevel> grid = gridWorld(context);
+        if (grid.isEmpty()) {
+            context.getSource().sendFailure(Component.translatable("commands.digitalfrontier.grid.unknown", IdentifierArgument.getId(context, "grid").toString()));
+            return 0;
+        }
+        int population = Regime.population(grid.get());
+        int ideal = Regime.ideal(grid.get());
+        context.getSource().sendSuccess(() -> Component.translatable("commands.digitalfrontier.grid.regime.status", population, ideal), false);
+        ServerPlayer player = named ? EntityArgument.getPlayer(context, "player") : context.getSource().getPlayer();
+        if (player != null) {
+            float alignment = RegimeState.of(grid.get()).alignment(player.getUUID());
+            context.getSource().sendSuccess(() -> Component.translatable("commands.digitalfrontier.grid.regime.alignment",
+                    player.getDisplayName(), String.format("%.2f", alignment)), false);
+        }
+        return population;
+    }
+
+    private static int regimeAlignment(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        Optional<ServerLevel> grid = gridWorld(context);
+        if (grid.isEmpty()) {
+            context.getSource().sendFailure(Component.translatable("commands.digitalfrontier.grid.unknown", IdentifierArgument.getId(context, "grid").toString()));
+            return 0;
+        }
+        ServerPlayer player = EntityArgument.getPlayer(context, "player");
+        float value = FloatArgumentType.getFloat(context, "value");
+        RegimeState.of(grid.get()).setAlignment(player.getUUID(), value);
+        context.getSource().sendSuccess(() -> Component.translatable("commands.digitalfrontier.grid.regime.alignment",
+                player.getDisplayName(), String.format("%.2f", value)), true);
+        return 1;
     }
 
     private static RequiredArgumentBuilder<CommandSourceStack, String> strongholdArgument() {
@@ -132,21 +220,25 @@ public final class GridCommands {
         return generator == null ? List.of() : generator.layout().sites();
     }
 
-    // Where a layout site is, with a click to teleport there: for testing, and for finding things in a big grid
+    // Where a layout site (or the city's reserved garage) is, with a click to teleport there: for testing, and for
+    // finding things in a big grid
     private static int locate(CommandContext<CommandSourceStack> context) {
         Optional<ServerLevel> grid = gridWorld(context);
         String id = StringArgumentType.getString(context, "site");
-        Optional<Site> site = grid.flatMap(world -> sites(world).stream().filter(s -> s.id().equals(id)).findFirst());
-        if (site.isEmpty()) {
+        Optional<GridLayout.ChunkSpot> spot = GARAGE.equals(id)
+                ? grid.map(GridArrival::generator).flatMap(generator -> generator.layout().garage())
+                : grid.flatMap(world -> sites(world).stream().filter(s -> s.id().equals(id)).findFirst())
+                        .map(s -> new GridLayout.ChunkSpot(s.chunkX(), s.chunkZ()));
+        if (spot.isEmpty()) {
             context.getSource().sendFailure(Component.translatable("commands.digitalfrontier.grid.locate.unknown", id));
             return 0;
         }
-        int x = site.get().chunkX() * 16 + 8;
-        int z = site.get().chunkZ() * 16 + 8;
+        int x = spot.get().chunkX() * 16 + 8;
+        int z = spot.get().chunkZ() * 16 + 8;
         // On top of whatever is there, generating the chunk if it hasn't been. The grid's generator doesn't fill
         // in heightmaps, so the column is searched instead
         ServerLevel world = grid.get();
-        world.getChunk(site.get().chunkX(), site.get().chunkZ());
+        world.getChunk(spot.get().chunkX(), spot.get().chunkZ());
         BlockPos.MutableBlockPos column = new BlockPos.MutableBlockPos(x, world.getMaxY(), z);
         while (column.getY() > world.getMinY() && world.getBlockState(column).getCollisionShape(world, column).isEmpty()) {
             column.move(Direction.DOWN);

@@ -50,6 +50,8 @@ Each lieutenant is a file at `data/<namespace>/grid/lieutenant/<name>.json`. The
 | `respawn.min_delay` | no (0) | Ticks after the defeat before anything can bring it back (24000 ticks = 1 day). |
 | `respawn.max_respawns` | no (-1) | How many times it can come back; -1 for no limit. |
 | `respawn.trigger` | yes | When it comes back; see below. |
+| `restore` | no | A trigger that, if it holds at the moment the lieutenant is defeated, **redeems** it instead; see "Redemption" below. Without one it can't be redeemed. |
+| `restored_texture` | no | Its skin once redeemed. Defaults to the archetype's redeemed skin (`sovereign_restored64`, `warden_restored64`: the same suit, its circuitry white). |
 
 Each stronghold picks its lieutenant once, when the grid first needs it, by weight and grid seed. Strongholds
 pick in order (`stronghold_0` first), each preferring a lieutenant no other stronghold of the grid has; only once
@@ -110,6 +112,7 @@ its trigger is satisfied (and `min_delay` has passed). Event counts reset at eve
 | `overworld_thunder` | | It's thundering in the real world (a power surge). |
 | `scoreboard` | `objective`, `holder`, `min` | That score is at least `min`. `holder` is a player name or a fake one like `#regime`. |
 | `all_lieutenants_defeated` | | Every stronghold in the grid has a defeated lieutenant. |
+| `core_defeated` | | The grid's System Core has been derezzed (see "The System Core" below). |
 
 ### Events
 
@@ -129,7 +132,8 @@ them out matches anything. `radius` is in blocks around the stronghold; -1 means
 | `player_derezzed` | `radius` (-1) | A player dies in the grid. |
 | `portal_used` | | Someone leaves the grid through its Portal. |
 | `program_derezzed` | `radius` (-1) | A player kills a clean program. |
-| `memory_paged` | | A player cheats death with Memory Paging or a Core Dump. |
+| `program_restored` | `radius` (-1) | A Disinfection Pad cures a corrupted program. |
+| `memory_paged` | | A player cheats death with Memory Paging, a Core Dump, or a Data Disc in the offhand. |
 | `function` | `signal` | `/grid lieutenant trigger <grid> [signal]` runs, e.g. from a datapack function. With `signal` set, only that signal counts. |
 
 ### Combinators
@@ -156,6 +160,64 @@ chance per second:
 }
 ```
 
+## Redemption
+
+Lieutenants are the regime's, good programs turned to its cause, and some can be turned back. A lieutenant whose
+definition has a `restore` trigger is tested as it takes its fatal blow: if the trigger holds, it isn't derezzed.
+Instead it heals, takes its `restored_texture`, and from then on never fights players; it attacks enforcers and
+recruiters around its old stronghold, and enforcers attack it. Its stronghold picks a different lieutenant, which
+isn't there yet: it arrives by its own respawn trigger, as if just defeated. A redeemed lieutenant is never picked
+again in that grid, and to the other strongholds its redemption counts as a `lieutenant_defeated`. The player who
+redeemed it loses 0.3 alignment with the regime (see `docs/regime.md`).
+
+The shipped Warden is redeemed if a tamed Bool is within 16 blocks when it falls:
+`"restore": {"type": "companion_present"}`.
+
+A `restore` trigger is built from the same triggers as a respawn trigger, plus three about the defeat itself, which
+never hold at any other time:
+
+| Type | Fields (defaults) | Holds when |
+|---|---|---|
+| `companion_present` | `radius` (16) | A tamed Bool is within `radius` blocks of the lieutenant. |
+| `defeated_unarmored` | | The player who brought it down wears no armour. |
+| `killer_alignment` | `max` | The player who brought it down has an alignment with the regime of at most `max`. |
+
+Events under `restore` count while the lieutenant is alive, from when it last (re)appeared; e.g.
+`{"type": "count", "count": 3, "trigger": {"type": "block_broken"}}` redeems it once three blocks were broken near
+its stronghold during its reign. `time` counts from its last defeat.
+
+## The System Core
+
+Under the center of every grid's city, below the subway, is a chamber where the regime's heart sleeps. A shaft
+leads down to it from the crossing of the central avenues (its mouth is ringed in red light), with a ladder on its
+west wall, but an unbreakable **core seal** closes its foot while the regime's lieutenants stand.
+
+When every stronghold has lost its lieutenant (defeated, or redeemed), the core **wakes**: the grid is told, the
+seal opens, and a tamed Bool's "yes" points at the core. It stays awake even if lieutenants return. The core
+appears when a player comes within 48 blocks of it. It never moves, and fights in three phases:
+
+| Health | Phase | What it does |
+|---|---|---|
+| over half | absorbing | Calls up a decayed program at the chamber's edge every 5 seconds (up to 6), and draws every program within 24 blocks toward it. Any that reaches it is absorbed and heals it 15. Disinfection Pads in the chamber cure decayed programs on their way in. |
+| under half | exposed | Its shell breaks: homing bolts every 3 seconds, and a pair of enforcers every 15. |
+| under a fifth | enraged | Bolts every 1.25 seconds, enforcers every 10, and glitch bolts join the mix. |
+
+Each bolt deals 4 damage and does one more thing, shown by its trail:
+
+| Bolt | Trail | On a hit |
+|---|---|---|
+| Freeze | snowflakes | Held in place for a second, frosting over. |
+| Knockback | gusts | Thrown away from the core (less with knockback resistance). |
+| Levitate | end rods | Lifted for 3 seconds. |
+| Glitch (enraged only) | ink | Darkness for 3 seconds. |
+
+The regime's own enforcers and recruiters shrug the bolts off, so a squad never turns on the core.
+
+It has 600 health and 10 armour. Derezzed, it drops two Core Dumps, a Data Disc and 8-16 Luminessence
+(`digitalfrontier:entities/system_core`), and the regime is broken in that grid for good: patrols spawn as if its
+control were a tier weaker, no more recruiters come, and it wants half as many members. Players within 48 blocks
+lose 0.3 alignment. The `core_defeated` trigger can bring this into lieutenants' respawn rules.
+
 ## Commands
 
 | Command | Who | Does |
@@ -164,5 +226,7 @@ chance per second:
 | `/grid lieutenant trigger <grid> [signal]` | operators | Fires a `function` event. |
 | `/grid lieutenant defeat <grid> <stronghold>` | operators | Marks a lieutenant defeated without a fight, to test triggers. |
 | `/grid lieutenant respawn <grid> <stronghold>` | operators | Brings a defeated lieutenant back now. |
+| `/grid core status <grid>` | everyone | The System Core's state: `dormant`, `awake` or `defeated`, and where its shaft is. |
+| `/grid core reset <grid>` | operators | Puts the core back to sleep: it goes, its seal closes, and every fallen lieutenant returns. |
 
 Grids are named by id, e.g. `digitalfrontier:default`; strongholds by site id, e.g. `stronghold_0`.

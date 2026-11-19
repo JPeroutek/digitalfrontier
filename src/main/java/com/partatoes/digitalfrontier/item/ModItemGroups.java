@@ -33,6 +33,7 @@ public class ModItemGroups {
                         entries.accept(ModItems.ESCAPE_KEY);
                         entries.accept(ModItems.MEMORY_PAGING);
                         entries.accept(ModItems.CORE_DUMP);
+                        entries.accept(ModItems.DATA_DISC);
                         entries.accept(ModBlocks.GRID_PORTAL);
 
                         entries.accept(ModBlocks.PIXEL_BLOCK);
@@ -42,6 +43,7 @@ public class ModItemGroups {
                         entries.accept(ModBlocks.GRIDSTONE_BRICKS_BLOCK);
                         entries.accept(ModBlocks.LUMINANCE_ORE);
                         entries.accept(ModBlocks.BOOSTER_BLOCK);
+                        entries.accept(ModBlocks.DISINFECTION_PAD);
                         entries.accept(ModBlocks.KEYBOARD_BLOCK);
 
                         entries.accept(ModBlocks.GRIDSTONE_STAIRS);

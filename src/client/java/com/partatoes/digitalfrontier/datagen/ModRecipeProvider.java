@@ -141,6 +141,25 @@ public class ModRecipeProvider extends FabricRecipeProvider {
                         .unlockedBy(getHasName(Items.TOTEM_OF_UNDYING), has(Items.TOTEM_OF_UNDYING))
                         .save(output);
 
+                // Gridstone charged with Luminessence: cheap, so curing programs is a way to play from the start
+                shaped(RecipeCategory.REDSTONE, ModBlocks.DISINFECTION_PAD, 2)
+                        .pattern("LLL")
+                        .pattern("GGG")
+                        .define('L', ModItems.LUMINESSENCE)
+                        .define('G', ModBlocks.GRIDSTONE_BLOCK)
+                        .unlockedBy(getHasName(ModItems.LUMINESSENCE), has(ModItems.LUMINESSENCE))
+                        .save(output);
+
+                // Early: Luminessence from the first Luminance ore, around a Byte
+                shaped(RecipeCategory.COMBAT, ModItems.DATA_DISC, 1)
+                        .pattern(" L ")
+                        .pattern("LBL")
+                        .pattern(" L ")
+                        .define('L', ModItems.LUMINESSENCE)
+                        .define('B', ModItems.BYTE)
+                        .unlockedBy(getHasName(ModItems.LUMINESSENCE), has(ModItems.LUMINESSENCE))
+                        .save(output);
+
                 // Memory Paging that keeps the inventory: a step further into the late game
                 shaped(RecipeCategory.TOOLS, ModItems.CORE_DUMP, 1)
                         .pattern("ENE")

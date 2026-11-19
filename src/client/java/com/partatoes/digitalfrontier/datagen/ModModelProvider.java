@@ -20,6 +20,7 @@ import net.minecraft.client.data.models.model.ModelLocationUtils;
 import net.minecraft.client.data.models.model.ModelTemplate;
 import net.minecraft.client.data.models.model.ModelTemplates;
 import net.minecraft.client.data.models.model.TextureMapping;
+import net.minecraft.client.resources.model.sprite.Material;
 import net.minecraft.client.data.models.model.TextureSlot;
 import net.minecraft.client.data.models.model.TexturedModel;
 import net.minecraft.client.renderer.block.dispatch.Variant;
@@ -53,6 +54,8 @@ public class ModModelProvider extends FabricModelProvider {
         blockStateModelGenerator.createTrivialCube(ModBlocks.PIXEL_BLOCK);
         blockStateModelGenerator.createTrivialCube(ModBlocks.LUMINANCE_ORE);
         blockStateModelGenerator.createTrivialCube(ModBlocks.BOOSTER_BLOCK);
+        blockStateModelGenerator.createTrivialCube(ModBlocks.DISINFECTION_PAD);
+        blockStateModelGenerator.createTrivialCube(ModBlocks.CORE_SEAL);
 
         gridstonePool.wall(ModBlocks.GRIDSTONE_WALL);
         gridstonePool.stairs(ModBlocks.GRIDSTONE_STAIRS);
@@ -224,6 +227,10 @@ public class ModModelProvider extends FabricModelProvider {
         itemModelGenerator.itemModelOutput.accept(ModItems.ESCAPE_KEY, ItemModelUtils.plainModel(Identifier.withDefaultNamespace("item/trial_key")));
         itemModelGenerator.itemModelOutput.accept(ModItems.MEMORY_PAGING, ItemModelUtils.plainModel(Identifier.withDefaultNamespace("item/recovery_compass_16")));
         itemModelGenerator.itemModelOutput.accept(ModItems.CORE_DUMP, ItemModelUtils.plainModel(Identifier.withDefaultNamespace("item/heart_of_the_sea")));
+        // The disc art already in the mod
+        itemModelGenerator.itemModelOutput.accept(ModItems.DATA_DISC, ItemModelUtils.plainModel(ModelTemplates.FLAT_HANDHELD_ITEM.create(
+                ModItems.DATA_DISC, TextureMapping.layer0(new Material(Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "item/disk_white_small"))),
+                itemModelGenerator.modelOutput)));
 
     }
 }
