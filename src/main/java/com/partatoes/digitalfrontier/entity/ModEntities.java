@@ -1,5 +1,6 @@
 package com.partatoes.digitalfrontier.entity;
 
+import com.partatoes.digitalfrontier.entity.vehicle.RecognizerEntity;
 import com.partatoes.digitalfrontier.entity.projectile.ThrownLightGrenade;
 import com.partatoes.digitalfrontier.DigitalFrontier;
 import com.partatoes.digitalfrontier.entity.custom.BoolEntity;
@@ -44,6 +45,9 @@ public class ModEntities {
             EntityType.Builder.of(BoolEntity::new, MobCategory.CREATURE).sized(0.5f, 0.5f).clientTrackingRange(10));
     public static final EntityType<ThrownDataDisc> DATA_DISC = register(DATA_DISC_ID,
             EntityType.Builder.<ThrownDataDisc>of(ThrownDataDisc::new, MobCategory.MISC).sized(0.5f, 0.25f).clientTrackingRange(4).updateInterval(2));
+    public static final Identifier RECOGNIZER_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "recognizer");
+    public static final EntityType<RecognizerEntity> RECOGNIZER = register(RECOGNIZER_ID,
+            EntityType.Builder.<RecognizerEntity>of(RecognizerEntity::new, MobCategory.MISC).sized(4.0f, 3.5f).clientTrackingRange(12));
     public static final Identifier LIGHT_GRENADE_ID = Identifier.fromNamespaceAndPath(DigitalFrontier.MOD_ID, "light_grenade");
     public static final EntityType<ThrownLightGrenade> LIGHT_GRENADE = register(LIGHT_GRENADE_ID,
             EntityType.Builder.<ThrownLightGrenade>of(ThrownLightGrenade::new, MobCategory.MISC).sized(0.25f, 0.25f).clientTrackingRange(4).updateInterval(10));

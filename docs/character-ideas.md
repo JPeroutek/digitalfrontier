@@ -133,6 +133,9 @@ are:
 - **chute**: drops in from skyroads and Recognizers.
 
 ### 1.7 Recognizer patrols and conscription
+**Built** as a piloted vehicle (`docs/regime.md`): patrols, searchlight, chute drops, and stealing one. Conscription
+to the arena comes with the games.
+
 **Inspired by:** Recognizers carrying captured programs and Sam to the games.
 
 **What it adds:** a **Recognizer**, a large flying arch-shaped patrol entity, sweeps over corrupted districts.

@@ -83,6 +83,21 @@ Each member has a role, likelier to be heavy or ranged the deeper into the regim
 
 A role can be given by hand: `/summon digitalfrontier:enforcer ~ ~ ~ {Role:"heavy",Leader:1b}`.
 
+## Recognizers
+
+A **Recognizer** is a great flying arch, piloted by an enforcer. Now and then one comes on patrol over CONTROLLED and
+SEAT land (never two within 128 blocks, and none once the System Core is broken), looping 24 blocks up over its beat
+with a red searchlight sweeping below. A player in the light whom the regime doesn't tolerate (or who is
+overclocked) is **spotted**: the light brightens, the Recognizer hangs over them, and every 30 seconds it drops two
+enforcers on Chutes, up to four at a time.
+
+**Taking one:** kill the pilot (Data Discs and grenades reach the cockpit) and the Recognizer settles to the ground.
+Right-click it to climb into the cockpit and fly it: forward and back to thrust, left and right to turn, jump to climb,
+sprint to dive. Enforcers attack whoever flies a stolen Recognizer. It has 120 health and breaks into bits and
+Luminessence when destroyed.
+
+`/summon digitalfrontier:recognizer` brings one with its pilot.
+
 ## Recruiting
 
 **Recruiters** are the regime's recruitment agents: unarmed, persistent, and found with patrols on its ground while

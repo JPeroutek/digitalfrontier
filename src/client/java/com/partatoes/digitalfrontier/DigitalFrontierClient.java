@@ -12,6 +12,8 @@ import com.partatoes.digitalfrontier.entity.vehicle.LightCycleModel;
 import com.partatoes.digitalfrontier.entity.vehicle.LightCycleRenderer;
 import com.partatoes.digitalfrontier.entity.custom.Decay;
 import com.partatoes.digitalfrontier.entity.custom.EnforcerEntity;
+import com.partatoes.digitalfrontier.entity.vehicle.RecognizerModel;
+import com.partatoes.digitalfrontier.entity.vehicle.RecognizerRenderer;
 import com.partatoes.digitalfrontier.entity.custom.LieutenantEntity;
 import com.partatoes.digitalfrontier.entity.custom.ProgramEntity;
 import com.partatoes.digitalfrontier.grid.GridDebugEntry;
@@ -73,6 +75,8 @@ public class DigitalFrontierClient implements ClientModInitializer {
 		EntityRendererRegistry.register(ModEntities.BOOL, BoolRenderer::new);
 		EntityRendererRegistry.register(ModEntities.DATA_DISC, ThrownItemRenderer::new);
 		EntityRendererRegistry.register(ModEntities.LIGHT_GRENADE, ThrownItemRenderer::new);
+		EntityRendererRegistry.register(ModEntities.RECOGNIZER, RecognizerRenderer::new);
+		ModelLayerRegistry.registerModelLayer(ModModelLayers.RECOGNIZER, RecognizerModel::getTexturedModelData);
 		ModelLayerRegistry.registerModelLayer(ModModelLayers.BOOL, BoolModel::getTexturedModelData);
 		EntityRendererRegistry.register(ModEntities.SYSTEM_CORE, SystemCoreRenderer::new);
 		ModelLayerRegistry.registerModelLayer(ModModelLayers.SYSTEM_CORE, SystemCoreModel::getTexturedModelData);

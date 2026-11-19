@@ -80,6 +80,7 @@ public class ModTextureProvider implements DataProvider {
         futures.add(CompletableFuture.runAsync(() -> writeTexture(writer, GearArt.overclock(), "item", "overclock")));
         futures.add(CompletableFuture.runAsync(() -> writeTexture(writer, GearArt.canopy(), "entity/equipment/wings", "chute")));
         futures.add(CompletableFuture.runAsync(() -> writeTexture(writer, GearArt.fadingBarrier(), "block", "fading_barrier")));
+        futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, GearArt.recognizer(), "recognizer")));
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paintDerezCube(), "derez_cube")));
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.MECHANIC), "job/mechanic")));
         futures.add(CompletableFuture.runAsync(() -> writeEntity(writer, ProgramSkins.paint(ProgramSkins.PORTAL_KEEPER), "job/portal_keeper")));

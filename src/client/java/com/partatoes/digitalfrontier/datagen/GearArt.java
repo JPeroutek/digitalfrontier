@@ -104,6 +104,25 @@ final class GearArt {
         return image;
     }
 
+    /** The Recognizer's hull: dark plating with red seams, and a bright eye panel (128×64, the model's layout). */
+    static BufferedImage recognizer() {
+        BufferedImage image = blank(128, 64);
+        int hull = 0xFF1C1F24;
+        int seam = 0xFFFF3030;
+        for (int y = 0; y < 64; y++) {
+            for (int x = 0; x < 128; x++) {
+                set(image, x, y, x % 8 == 0 || y % 8 == 0 ? seam : hull);
+            }
+        }
+        // The eye, under the beam
+        for (int y = 40; y < 46; y++) {
+            for (int x = 28; x < 48; x++) {
+                set(image, x, y, 0xFFFF6A6A);
+            }
+        }
+        return image;
+    }
+
     /** A Fading Barrier block: a see-through pane of light with a bright frame. */
     static BufferedImage fadingBarrier() {
         BufferedImage image = blank(16);

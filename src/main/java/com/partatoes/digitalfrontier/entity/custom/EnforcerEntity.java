@@ -1,5 +1,6 @@
 package com.partatoes.digitalfrontier.entity.custom;
 
+import com.partatoes.digitalfrontier.entity.vehicle.RecognizerEntity;
 import com.partatoes.digitalfrontier.effect.Overclock;
 import com.partatoes.digitalfrontier.entity.projectile.ThrownLightGrenade;
 import com.partatoes.digitalfrontier.grid.regime.Regime;
@@ -96,7 +97,9 @@ public class EnforcerEntity extends Monster {
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this).setAlertOthers());
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true,
-                (target, world) -> Regime.alignment(target) < Regime.rules().alignment().toleratedFrom() || Overclock.marked(target)));
+                (target, world) -> Regime.alignment(target) < Regime.rules().alignment().toleratedFrom() || Overclock.marked(target)
+                        // A player in a Recognizer's cockpit has stolen it
+                        || target.getVehicle() instanceof RecognizerEntity recognizer && recognizer.getControllingPassenger() == target));
         this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, ProgramEntity.class, true,
                 (target, world) -> target instanceof ProgramEntity program && program.sentiment() <= Sentiment.REBEL));
         // And lieutenants that have turned on it

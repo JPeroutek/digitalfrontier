@@ -57,6 +57,7 @@ public class ModEnglishLangProvider extends FabricLanguageProvider {
         translationBuilder.add(ModItems.DATA_DISC, "Data Disc");
         translationBuilder.add(ModEntities.DATA_DISC, "Data Disc");
         translationBuilder.add(ModItems.LIGHT_STAFF, "Light Staff");
+        translationBuilder.add(ModEntities.RECOGNIZER, "Recognizer");
         translationBuilder.add(ModItems.LIGHT_GRENADE, "Light Grenade");
         translationBuilder.add(ModEntities.LIGHT_GRENADE, "Light Grenade");
         translationBuilder.add(ModItems.FORCE_SHIELD, "Force Shield");

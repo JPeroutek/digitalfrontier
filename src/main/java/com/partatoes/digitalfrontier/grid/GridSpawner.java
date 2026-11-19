@@ -1,5 +1,6 @@
 package com.partatoes.digitalfrontier.grid;
 
+import com.partatoes.digitalfrontier.entity.vehicle.RecognizerEntity;
 import com.partatoes.digitalfrontier.grid.squad.SquadRoles;
 import java.util.UUID;
 import com.partatoes.digitalfrontier.entity.ModEntities;
@@ -59,6 +60,8 @@ public final class GridSpawner {
     private static final int CAP = 8;
     /** A recruiter only comes with a patrol if there's no other this close. */
     private static final int RECRUITER_SPACING = 64;
+    private static final float RECOGNIZER_CHANCE = 0.04f;
+    private static final int RECOGNIZER_SPACING = 128;
     private static final float BOOL_CHANCE = 0.03f;
     private static final int BOOL_SPACING = 64;
 
@@ -122,11 +125,17 @@ public final class GridSpawner {
                 }
                 case CONTROLLED -> {
                     if (hostilesAllowed) {
+                        if (spawnRecognizer(world, pos)) {
+                            return;
+                        }
                         spawnPatrol(world, pos, held);
                     }
                 }
                 default -> {
                     if (hostilesAllowed) {
+                        if (spawnRecognizer(world, pos)) {
+                            return;
+                        }
                         spawnPatrol(world, pos, held);
                     }
                 }
@@ -186,6 +195,23 @@ public final class GridSpawner {
                 && world.getEntitiesOfClass(RecruiterEntity.class, new AABB(pos).inflate(RECRUITER_SPACING), recruiter -> true).isEmpty()) {
             spawn(world, ModEntities.RECRUITER, pos, recruiter -> { });
         }
+    }
+
+    // Now and then a Recognizer comes on patrol over controlled land, never two close together, and none once the
+    // regime is broken
+    private static boolean spawnRecognizer(ServerLevel world, BlockPos pos) {
+        if (world.getRandom().nextFloat() >= RECOGNIZER_CHANCE || CoreManager.defeated(world)
+                || !world.getEntitiesOfClass(RecognizerEntity.class, new AABB(pos).inflate(RECOGNIZER_SPACING), recognizer -> true).isEmpty()) {
+            return false;
+        }
+        RecognizerEntity recognizer = ModEntities.RECOGNIZER.create(world, EntitySpawnReason.NATURAL);
+        if (recognizer == null) {
+            return false;
+        }
+        BlockPos above = RecognizerEntity.cruiseAbove(pos);
+        recognizer.snapTo(above.getX() + 0.5, above.getY(), above.getZ() + 0.5, world.getRandom().nextFloat() * 360, 0);
+        world.addFreshEntity(recognizer);
+        return true;
     }
 
     private static <T extends Mob> void spawn(ServerLevel world, EntityType<T> type, BlockPos pos, Consumer<T> setup) {
